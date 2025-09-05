@@ -145,3 +145,23 @@
     .sidebar{position:relative;height:auto}
     .content{height:auto}
   }
+  
+  /* Experience & Extracurriculars links */
+.company a,
+.extracurricular-item a {
+  color: #7fc8e8; 
+  text-decoration: none;
+  transition: color 0.25s ease, border-bottom 0.25s ease;
+}
+
+.company a:hover,
+.extracurricular-item a:hover {
+  color: #ff944d; 
+  border-bottom: 1px solid #ff944d;
+}
+
+.company a:visited,
+.extracurricular-item a:visited {
+  color: #a0b3c6; 
+}
+

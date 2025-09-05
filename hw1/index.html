@@ -6,13 +6,15 @@
   <title>Arthur Lin | Portfolio</title>
   <style>
     :root{
-      --bg:#0e0f12;
-      --panel:#1a1c22;
-      --muted:#9aa3ad;
-      --accent:#ff6a00;
-      --text:#e9eef3;
-      --card:#22252d;
-      --link:#1ecbe1;
+        --bg:#0e0f12;
+        --panel:#1a1c22;
+        --muted:#9aa3ad;
+        --accent:#ff6a00;
+        --accent-soft:#ff944d;     
+        --text:#e9eef3;
+        --card:#22252d;
+        --link:#1ecbe1;
+        --link-soft:#7fc8e8;      
     }
 
     *{box-sizing:border-box}
@@ -97,7 +99,25 @@
         transform: translateX(-50%) translateY(-5px);
       }
     }
+    /* Experience & Extracurriculars links */
+    .company a,
+    .extracurricular-item a {
+      color: var(--link-soft);
+      text-decoration: none;
+      transition: color 0.25s ease, border-bottom 0.25s ease;
+    }
 
+    .company a:hover,
+    .extracurricular-item a:hover {
+      color: var(--accent-soft);
+      border-bottom: 1px solid var(--accent-soft);
+    }
+
+    .company a:visited,
+    .extracurricular-item a:visited {
+      color: var(--accent); 
+      border-bottom: none;
+    }
     /* Layout */
     .layout{
       display:grid;
@@ -458,7 +478,7 @@
       gap: 20px;
       flex-shrink: 0;
       align-items: center;
-      min-width: 400px;
+      min-width: 480px;
     }
     .extracurricular-img {
       width: 220px;
@@ -473,6 +493,31 @@
       box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     }
     
+    /* Carousel (CSS-only) */
+    .carousel{position:relative;width:360px;height:270px;overflow:visible}
+    .carousel input{position:absolute;opacity:0}
+    .carousel .slides{position:relative;width:100%;height:100%}
+    .carousel .slide{position:absolute;inset:0;opacity:0;transition:opacity .25s ease}
+    .carousel img{width:100%;height:100%;object-fit:cover;border-radius:12px;border:2px solid #2a2d36;background:transparent}
+    .carousel .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;border:1px solid #3a3f4e}
+    .carousel .prev{left:-28px}
+    .carousel .next{right:-28px}
+    /* Show slides based on radio state */
+    #piano-1:checked ~ .slides .s1{opacity:1}
+    #piano-2:checked ~ .slides .s2{opacity:1}
+    #travel-1:checked ~ .slides .t1{opacity:1}
+    #travel-2:checked ~ .slides .t2{opacity:1}
+    #study-1:checked ~ .slides figure{opacity:1}
+    /* Toggle which navs are active */
+    #piano-1:checked ~ .state-1{display:flex}
+    #piano-1:checked ~ .state-2{display:none}
+    #piano-2:checked ~ .state-1{display:none}
+    #piano-2:checked ~ .state-2{display:flex}
+    #travel-1:checked ~ .state-a{display:flex}
+    #travel-1:checked ~ .state-b{display:none}
+    #travel-2:checked ~ .state-a{display:none}
+    #travel-2:checked ~ .state-b{display:flex}
+
     @media (max-width: 1200px) {
       .extracurricular-images {
         min-width: 350px;
@@ -707,6 +752,10 @@
             <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/raspberrypi/raspberrypi-original.svg" alt="Raspberry Pi">
             <span>Raspberry Pi</span>
           </li>
+          <li class="skill">
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/arduino/arduino-original.svg" alt="Arduino IDE">
+            <span>Arduino IDE</span>
+          </li>
         </ul>
       </section>
 
@@ -721,10 +770,12 @@
                   Conducting rigorous research in 3D reconstruction of endoscopy images. Applying advanced computer vision techniques to reconstruct 3D models from endoscopy images. From the traditional pipeline to the proposed pipeline with deep learning techniques integrated. To tackle the problem without ground truth data, severe lighting effect, and blur images with fisheye distortion, we've made a series of enhancement to the pipeline to improve the reconstruction quality.
                 </p>
               </article>
-
+      
           <article class="job">
             <h4>Undergraduate Project Student</h4>
-            <div class="company">NTU Robot Learning Lab</div>
+            <div class="company">
+              <a href="https://nturll.xyz/about" target="_blank" rel="noreferrer">NTU Robot Learning Lab</a>
+            </div>
             <div class="period">2024 - 2025</div>
             <p>
               Conducting cutting-edge research in deep reinforcement learning and robotics. Reproduced and validated Algorithm Distillation models, identifying inconsistencies in original papers and proposing experimental improvements. Developed expertise in meta-RL, over-parameterization, and systematic problem-solving approaches. Utilized advanced tools including Wandb for experiment tracking and Python debugging for efficient workflows. Gained valuable experience in research methodology, technical writing, and collaborative problem-solving in academic environments.
@@ -733,7 +784,9 @@
           
           <article class="job">
             <h4>Engineering Intern</h4>
-            <div class="company">Industrial Technology Research Institute (ITRI)</div>
+            <div class="company">
+              <a href="https://www.itri.org.tw/" target="_blank" rel="noreferrer">Industrial Technology Research Institute (ITRI)</a>
+            </div>
             <div class="period">Summer 2023</div>
             <p>
               Contributed to innovative AI Aquarium project, a CES 2023 Innovation Awards honoree. Conducted comprehensive research on diffusion-based data augmentation techniques, achieving 20% improvement in mAP for fish detection pipelines. Developed adversarial-based prompt improvement methods and designed detailed experiment documentation. Gained hands-on experience in computer vision, data visualization, and industrial applications of machine learning. Collaborated with senior researchers on real-world AI deployment challenges.
@@ -783,11 +836,25 @@
           <li class="extracurricular-item">
             <div class="extracurricular-content">
               <div class="extracurricular-text">
-                <strong>NTU Piano Club - 36th Director</strong> — Served as director, organizing public performances and collaborative concerts with other universities. Led club activities, managed events, and fostered musical community. Brought 16 years of piano experience to leadership role, inspiring fellow musicians and promoting musical culture on campus.
+                <strong>
+                  <a href="https://www.facebook.com/NTUpiano/" target="_blank" rel="noreferrer">
+                  NTU Piano Club - 36th Director
+                  </a>
+                </strong> — Served as director, organizing public performances and collaborative concerts with other universities. Led club activities, managed events, and fostered musical community. Brought 16 years of piano experience to leadership role, inspiring fellow musicians and promoting musical culture on campus.
               </div>
               <div class="extracurricular-images">
-                <img src="NTU_PIANO.JPG" alt="NTU Piano Club performance" class="extracurricular-img">
-                <img src="NTU_PIANO_2.JPG" alt="NTU Piano Club event" class="extracurricular-img">
+                <div class="carousel">
+                  <input type="radio" name="piano" id="piano-1" checked>
+                  <input type="radio" name="piano" id="piano-2">
+                  <div class="slides">
+                    <figure class="slide s1"><img src="NTU_PIANO.JPG" alt="NTU Piano Club performance" class="extracurricular-img"></figure>
+                    <figure class="slide s2"><img src="NTU_PIANO_2.JPG" alt="NTU Piano Club event" class="extracurricular-img"></figure>
+                  </div>
+                  <label class="nav prev state-1" for="piano-2">‹</label>
+                  <label class="nav next state-1" for="piano-2">›</label>
+                  <label class="nav prev state-2" for="piano-1">‹</label>
+                  <label class="nav next state-2" for="piano-1">›</label>
+                </div>
               </div>
             </div>
           </li>
@@ -797,7 +864,10 @@
                 <strong>NTU x Kyushu Institute of Technology International Study Group</strong> — Active participant in international academic exchange program (2022). Contributed to cross-cultural research collaboration and authored comprehensive interview paper exceeding 10,000 words. Developed global perspective on engineering challenges and solutions through diverse cultural interactions.
               </div>
               <div class="extracurricular-images">
-                <img src="Japan.JPG" alt="International Study Group" class="extracurricular-img">
+                <div class="carousel">
+                  <input type="radio" name="study" id="study-1" checked>
+                  <figure><img src="Japan.JPG" alt="International Study Group" class="extracurricular-img"></figure>
+                </div>
               </div>
             </div>
           </li>
@@ -807,8 +877,18 @@
                 <strong>Travel and Photography</strong> — Enjoying traveling and taking photos of the beautiful scenery and architecture around the world. Imerging in the nature and culture of different countries, such as Egypt, Israel, Jordan, Italy, Indonesia and Inner Mongolia.
               </div>
               <div class="extracurricular-images">
-                <img src="Travel_1.JPG" alt="Travel photography" class="extracurricular-img">
-                <img src="Travel_2.jpeg" alt="Travel photography" class="extracurricular-img">
+                <div class="carousel">
+                  <input type="radio" name="travel" id="travel-1" checked>
+                  <input type="radio" name="travel" id="travel-2">
+                  <div class="slides">
+                    <figure class="slide t1"><img src="Travel_1.JPG" alt="Travel photography" class="extracurricular-img"></figure>
+                    <figure class="slide t2"><img src="Travel_2.jpeg" alt="Travel photography" class="extracurricular-img"></figure>
+                  </div>
+                  <label class="nav prev state-a" for="travel-2">‹</label>
+                  <label class="nav next state-a" for="travel-2">›</label>
+                  <label class="nav prev state-b" for="travel-1">‹</label>
+                  <label class="nav next state-b" for="travel-1">›</label>
+                </div>
               </div>
             </div>
           </li>
