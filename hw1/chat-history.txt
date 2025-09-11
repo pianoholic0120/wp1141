@@ -1,0 +1,57 @@
+Note: 我並非全部使用cursor，而是cursor, claude, chatgpt混合使用
+
+1. 如圖”HW1 Layout.jpg”，幫我用 HTML, CSS, TypeScript (不可使用JavaScript) 做一個純前端的個人網頁, 
+
+首先一進入網頁會先看到以”HI, I’M ARTHUR”, “Student, Engineer”字樣為中心且背景圖為“background.jpg”的網頁封面，此封面需佔據一開始整個使用版面。且這個版面最下方要有一個圓圈包住箭頭的符號，點擊這個符號或是滑動頁面往下會進入後續頁面。  後續頁面分成兩邊，這邊的背景不再使用“background.jpg”，而是參考”風格.png”的風格來決定背景的細部顏色排版字體等等，但請注意不要將兩邊用線條隔開，左半邊不隨頁面滑動而改變，由上而下依序為字樣“YU-CHUN LIN”, “Student, Engineer”、大頭照（Profile.jpg）、按鈕“Download Resume”（按下後要下載Reseme.pdf）、六個條目（”About”, ”Education”, ”Skills”, ’Work Experience”, ”Projects”, ”My Extracurriculars”），點擊特定條目時右半部分應移動到對應區域，且選定之條目需字體加粗或是強調、最下方則是Github, Linkedin, Facebook, gmail的按鈕，每個分別對應到我的外部連結或信箱複製，其圖標樣式可從github_icon.png, linkedin_icon.png, facebook_icon.png, mail_icon.png中獲得，且連結內容分別為“https://github.com/pianoholic0120”, “https://www.linkedin.com/in/yu-chun-lin-23b0512b0/”, “https://www.facebook.com/arthur.lin.5815”, “arthurlin0120@gmail.com”。  至於右半部分是可以上下滑動的，分別有六個條目（”About”, ”Education”, ”Skills”, ’Work Experience”, ”Projects”, ”My Extracurriculars”）的細部內容，同時在滑動時若滑動到特定條目則左半部分其對應的條目要加粗或是強調。每個段落要撰寫的內容請參考“Resume.pdf內的詳細內容”。About 部分的排版風格可參考附圖，及resume中的profile部分、Education部分也請參考附圖和resume中的education部分、Skills部分也請參考附圖，可以看到每個能力排列整齊並以icon表示，滑鼠置於該能力圖飄上時會由原先黑白轉為彩色，請也用同樣方法呈現，並且有python_icon_gray, python_icon_color, C++_icon_gray, C++_icon_color, git_icon_gray, git_icon_color, matlab_icon_gray, matlab_icon_color, pytorch_icon_gray, pytorch_icon_color, rpi_icon_gray, rpi_icon_color 這些能力和圖標需要實作出來、Work Experience部分則參照附圖以及resume中提到NTU Robot Learning Lab以及ITRI兩個工作經驗為主，Projects部分呈現格式也請參照附圖，內容我想要有以下幾項”Presentations & Proposals”(https://github.com/pianoholic0120/Presentations-Proposals)、“National Taiwan University EEE5053 Computer Vision - Final Project : [Microsoft] 3D Reconstruction (2025 Spring)”（https://github.com/pianoholic0120/CV-Final）、“Audio Signal Processing – Mid Project (Spring 2025)”（https://github.com/pianoholic0120/Audio-Signal-Processing）、“IoT”(https://github.com/pianoholic0120/IoT/tree/main)、“Fish Classification with data augmentation in data scarcity scenario”（https://github.com/pianoholic0120/463084_face）、“dlcv-fall-2024-final-project-challenge Self-Driving Car” (https://github.com/DLCV-Fall-2024/DLCV-Fall-2024-Final-1-frank)，且滑鼠放到對應的項目時要能夠有顏色或其他變化讓使用者可以知道現在位於哪個項目，最後My Extracurriculars也請參考附圖，並且我想要提到resume中的“NTU Piano Club”, “International Study Group”經驗。最後請配置一個回到頂端的按鈕在最後以利使用者移動
+
+
+2.  但是目前箭頭沒有效果，且個子項目內容太短，Skills部分的toggle沒有做到，且各個icon也出現很多問題，例如大小不對，沒有去背效果等等，請修正
+
+
+3. 目前我已經完成大致架構，仍有以下幾個錯誤，請在不要修改到其他目前架構的情況下解決以下幾個問題。
+
+       1. 檔案中我的大頭像（Profile.jpg），上半部分（HI, I'M Arthur部分）的背景（Bakground.jpg）無法正確顯示
+
+       2. 下方左側四個按紐處的github icon和背景顏色一致導致無法分辨且沒有滑鼠移動到該按鈕上的回饋反應。而目前該處FB及Linkedin按鈕功能正常不
+           要更動，但是mail icon無法正確顯示
+
+       3. 按下"Download Resume"無法正確下載我的Resume.pdf，且要確保點擊後下載的檔案名稱也是“Resume.pdf”
+
+      請繼續幫我(不可使用JavaScript) 修改目前這個純前端的個人網頁。
+
+
+4. 目前已經完成大致架構，仍有以下幾個錯誤，請在不要修改到其他目前架構的情況下解決以下幾個問題。
+
+       1. 檔案中上半部分（HI, I'M Arthur部分）的箭頭按鈕按下去後無法移動到下半部分，且下半部分的右側下滑後沒有原先可以回到上方的橘色按鈕功能
+
+       2. 下方左側四個按紐處的mail icon按下去後沒有成功複製信箱網址（arthurlin0120@gmail.com），且若複製成功請也跳出複製成功的提示
+       
+      3. 下方左側六個條目（”About”, ”Education”, ”Skills”, ’Work Experience”, ”Projects”, ”My Extracurriculars”）點擊後雖然右側會跳轉到對應項目但是左側需要跟著亮起。例如原先在“About”，現在點擊"Projects"後除了右側要移動到"Projects"的敘述那邊，左側欄位要從“About”改為"Projects"亮起
+
+      4. 與第三點相似，假如我滑動右側敘述至"Projects"，則左側的欄位要隨之改為"Projects"亮起，若右側又滑到“About”，則改為“About”亮起，左右兩邊要進行對應
+
+     請幫我(不可使用JavaScript) 修改目前這個純前端的個人網頁，務必不要更動到我沒有要求更改的部分
+
+
+5.  目前已經完成大致架構，但仍有以下幾個錯誤，請在不要修改到其他目前架構的情況下解決以下幾個問題。
+       
+       檔案中上半部分（HI, I'M Arthur部分）的箭頭按鈕按下去後現在可以正確移動到下半部分，但請不要讓頁面瞬間跳轉，稍微smooth的移動過去。另外現在回到上方的橘色按鈕功能已經有正確實作，但是這個按鈕是一開始就出現且永遠都在，我想要的是下半部分的右側經下滑後再出現，若回到上方後就請暫時消失，直到再次到達下方
+
+      下方左側六個條目（”About”, ”Education”, ”Skills”, ’Work Experience”, ”Projects”, ”My Extracurriculars”）點擊後雖然右側會跳轉到對應項目但是左側需要跟著亮起( 例如要讓這個選項保持有橘色線條的標誌，直到移動到另外的項目在改變亮起的選項)。例如原先在“About”，則按鈕能夠讓使用者一眼分辨現在是在"About"，而若接著點擊"Projects"後除了右側要移動到"Projects"的敘述那邊，左側欄位要從“About”改為"Projects"亮起，且持續有橘色線條的標誌，直到移動到另外的項目在改變亮起的選項
+
+      與第二點相似，假如我滑動右側敘述至"Projects"，則左側的欄位要隨之改為"Projects"亮起，若右側又滑到“About”，則改為“About”亮起，左右兩邊要進行對應。請幫我(不可使用JavaScript，但可以使用TypeScript) 修改目前這個純前端的個人網頁，務必不要更動到我沒有要求更改的部分
+
+
+6. 請幫我在"My Extracurriculars"的"NTU Piano Club"中加入圖片“NTU_PIANO.JPG”和“NTU_PIANO_2.JPG”，並在“NTU x Kyushu Institute of Technology International Study Group”中加入“Japan.JPG”，以及在“Travel and Photography”中加入“Travel_1.JPG”和“Travel_2.jpeg”，並讓風格保持一致。
+
+
+7. 請排版讓圖片和文字這樣的組合不會產生太多空白處，現在這樣做圖片會全部擠在一邊看得很不清楚，是否可以仿照另外一張的做法，讓文字和圖片個佔有適當的空間，增加每一個block的高寬是沒有關係的
+
+
+8. 右下部分的“My Extracurriculars”圖片，我想改為"NTU Piano Club - 36th Director", "NTU x Kyushu Institute of Technology International Study Group", "Travel and Photography"都只個別同時顯示一張圖片，也就是一次三個項目各顯示一張圖，但是可以藉由圖片旁邊的左右箭頭圖示來切換瀏覽，類似附圖的效果。
+
+
+9. 現在左右箭頭的按鈕會被裁切到且圖片也有被裁切到，請盡量讓圖片佔有更大的範圍，且讓按鈕可以不要被裁切到
+
+
+10. 我想請你幫我加入一些超連結，在“Work Experience”中我希望加入NTU Robot Learning Lab的網址（@https://nturll.xyz/about ）以及Industrial Technology Research Institute (ITRI)的網址（@https://www.itri.org.tw/ ），最後就是“My Extracurriculars”的NTU Piano Club - 36th Director 加入NTU PIANO的網址超連結（@https://www.facebook.com/NTUpiano/ ）。以上都要讓使用者有辦法看出來點按可以到達該連結頁面
