@@ -5,9 +5,14 @@ export interface Position {
   col: number;
 }
 
+export interface Block {
+  id: number;
+  position: Position;
+}
+
 export interface Level {
   id: string;
-  difficulty: 'Easy' | 'Normal' | 'Normal+' | 'Hard' | 'Hard+' | 'Expert';
+  difficulty: 'Easy' | 'Normal' | 'Hard' | 'Expert';
   gridSize: [number, number]; // [rows, cols]
   obstacles: Position[];
   blocks: Position[];
@@ -19,12 +24,13 @@ export interface Level {
 
 export interface GameState {
   currentLevel: Level;
-  blockPositions: Position[];
+  blocks: Block[];
   coveredCells: Set<string>; // 使用 "row,col" 格式作為 key
   currentTurn: number;
   isGameWon: boolean;
   isGameLost: boolean;
-  moveHistory: Position[][]; // 每回合的方塊位置歷史
+  moveHistory: Block[][]; // 每回合的方塊歷史
+  coverageHistory: Set<string>[]; // 每回合的覆蓋歷史
 }
 
 export type Direction = 'up' | 'down' | 'left' | 'right';

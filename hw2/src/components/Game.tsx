@@ -117,7 +117,7 @@ const Game: React.FC<GameProps> = ({ level, onLevelComplete, onLevelFailed }) =>
     } else if (gameState.isGameLost && onLevelFailed) {
       onLevelFailed(gameState);
     }
-  }, [gameState.isGameWon, gameState.isGameLost, onLevelComplete, onLevelFailed, gameState]);
+  }, [gameState.isGameWon, gameState.isGameLost, gameState, onLevelComplete, onLevelFailed]);
 
   // 當關卡改變時重置遊戲
   useEffect(() => {

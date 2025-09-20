@@ -18,7 +18,7 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'id' | 'difficulty'>('id');
 
-  const difficulties = ['All', 'Easy', 'Normal', 'Normal+', 'Hard', 'Hard+', 'Expert'];
+  const difficulties = ['All', 'Easy', 'Normal', 'Hard', 'Expert'];
 
   const filteredLevels = levels
     .filter(level => selectedDifficulty === 'All' || level.difficulty === selectedDifficulty)
@@ -27,10 +27,8 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({
         const difficultyOrder: Record<string, number> = { 
           Easy: 1, 
           Normal: 2, 
-          'Normal+': 3, 
-          Hard: 4, 
-          'Hard+': 5, 
-          Expert: 6 
+          Hard: 3, 
+          Expert: 4 
         };
         return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
       }
@@ -41,9 +39,7 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({
     switch (difficulty) {
       case 'Easy': return '#4caf50';
       case 'Normal': return '#ff9800';
-      case 'Normal+': return '#ff7043';
       case 'Hard': return '#f44336';
-      case 'Hard+': return '#e53935';
       case 'Expert': return '#9c27b0';
       default: return '#666';
     }

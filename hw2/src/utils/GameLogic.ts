@@ -1,4 +1,4 @@
-import { Position, Direction, GameState, Level } from '../types/GameTypes';
+import { Position, Direction, GameState, Level, Block } from '../types/GameTypes';
 
 // 方向向量
 const DIRECTION_VECTORS: Record<Direction, Position> = {
@@ -29,23 +29,23 @@ export function isObstacle(pos: Position, obstacles: Position[]): boolean {
   return obstacles.some(obs => obs.row === pos.row && obs.col === pos.col);
 }
 
-// 根據方向排序方塊位置（用於確定移動順序）
-export function sortPositionsByDirection(positions: Position[], direction: Direction): Position[] {
-  const sorted = [...positions];
+// 根據方向排序方塊（用於確定移動順序）
+export function sortBlocksByDirection(blocks: Block[], direction: Direction): Block[] {
+  const sorted = [...blocks];
   
   switch (direction) {
     case 'left':
       // 從左到右（欄位座標由小到大）
-      return sorted.sort((a, b) => a.col - b.col);
+      return sorted.sort((a, b) => a.position.col - b.position.col);
     case 'right':
       // 從右到左（欄位座標由大到小）
-      return sorted.sort((a, b) => b.col - a.col);
+      return sorted.sort((a, b) => b.position.col - a.position.col);
     case 'up':
       // 從上到下（行座標由小到大）
-      return sorted.sort((a, b) => a.row - b.row);
+      return sorted.sort((a, b) => a.position.row - b.position.row);
     case 'down':
       // 從下到上（行座標由大到小）
-      return sorted.sort((a, b) => b.row - a.row);
+      return sorted.sort((a, b) => b.position.row - a.position.row);
     default:
       return sorted;
   }
@@ -99,32 +99,35 @@ export function executeMove(
   gameState: GameState,
   direction: Direction
 ): GameState {
-  const { currentLevel, blockPositions, coveredCells, currentTurn } = gameState;
+  const { currentLevel, blocks, coveredCells, currentTurn } = gameState;
   const { gridSize, obstacles } = currentLevel;
   
   // 建立固定障礙物集合
   const staticObstacles = obstacles;
   
   // 根據方向排序方塊
-  const sortedPositions = sortPositionsByDirection(blockPositions, direction);
+  const sortedBlocks = sortBlocksByDirection(blocks, direction);
   
   // 追蹤已停下的方塊位置
   const stoppedPositions = new Set<string>();
-  const newPositions: Position[] = [];
+  const newBlocks: Block[] = [];
   const allPathCells = new Set<string>(); // 收集所有經過的格子
   
   // 按順序處理每個方塊
-  for (const originalPos of sortedPositions) {
+  for (const block of sortedBlocks) {
     const movement = calculateBlockMovement(
-      originalPos,
+      block.position,
       direction,
       gridSize,
       staticObstacles,
       stoppedPositions
     );
     
-    // 記錄最終位置
-    newPositions.push(movement.finalPosition);
+    // 記錄最終位置，保持原有的 ID
+    newBlocks.push({
+      id: block.id,
+      position: movement.finalPosition
+    });
     stoppedPositions.add(positionToKey(movement.finalPosition));
     
     // 記錄所有經過的格子
@@ -148,17 +151,19 @@ export function executeMove(
   // 檢查是否失敗
   const isGameLost = !isGameWon && currentTurn >= currentLevel.turnLimit;
   
-  // 更新移動歷史
-  const newMoveHistory = [...gameState.moveHistory, newPositions];
+  // 更新移動歷史和覆蓋歷史
+  const newMoveHistory = [...gameState.moveHistory, newBlocks];
+  const newCoverageHistory = [...gameState.coverageHistory, new Set(newCoveredCells)];
   
   return {
     ...gameState,
-    blockPositions: newPositions,
+    blocks: newBlocks,
     coveredCells: newCoveredCells,
     currentTurn: currentTurn + 1,
     isGameWon,
     isGameLost,
-    moveHistory: newMoveHistory
+    moveHistory: newMoveHistory,
+    coverageHistory: newCoverageHistory
   };
 }
 
@@ -194,44 +199,48 @@ export function calculateStarRating(gameState: GameState): { stars: 1 | 2 | 3; d
 export function initializeGameState(level: Level): GameState {
   const initialCoveredCells = new Set<string>();
   
+  // 創建帶有固定 ID 的方塊
+  const initialBlocks: Block[] = level.blocks.map((position, index) => ({
+    id: index + 1,
+    position
+  }));
+  
   // 初始方塊位置視為已覆蓋
-  level.blocks.forEach(block => {
-    initialCoveredCells.add(positionToKey(block));
+  initialBlocks.forEach(block => {
+    initialCoveredCells.add(positionToKey(block.position));
   });
   
   return {
     currentLevel: level,
-    blockPositions: [...level.blocks],
+    blocks: initialBlocks,
     coveredCells: initialCoveredCells,
     currentTurn: 1,
     isGameWon: false,
     isGameLost: false,
-    moveHistory: [level.blocks]
+    moveHistory: [initialBlocks],
+    coverageHistory: [new Set(initialCoveredCells)]
   };
 }
 
 // 撤銷移動
 export function undoMove(gameState: GameState): GameState {
-  if (gameState.moveHistory.length <= 1) {
+  if (gameState.moveHistory.length <= 1 || gameState.coverageHistory.length <= 1) {
     return gameState; // 無法撤銷
   }
   
   const newMoveHistory = gameState.moveHistory.slice(0, -1);
-  const previousPositions = newMoveHistory[newMoveHistory.length - 1];
-  
-  // 重新計算覆蓋的格子
-  const newCoveredCells = new Set<string>();
-  previousPositions.forEach(pos => {
-    newCoveredCells.add(positionToKey(pos));
-  });
+  const newCoverageHistory = gameState.coverageHistory.slice(0, -1);
+  const previousBlocks = newMoveHistory[newMoveHistory.length - 1];
+  const previousCoverage = newCoverageHistory[newCoverageHistory.length - 1];
   
   return {
     ...gameState,
-    blockPositions: previousPositions,
-    coveredCells: newCoveredCells,
+    blocks: previousBlocks,
+    coveredCells: new Set(previousCoverage), // 恢復之前的覆蓋狀態
     currentTurn: gameState.currentTurn - 1,
     isGameWon: false,
     isGameLost: false,
-    moveHistory: newMoveHistory
+    moveHistory: newMoveHistory,
+    coverageHistory: newCoverageHistory
   };
 }

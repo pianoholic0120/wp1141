@@ -2,111 +2,101 @@
   {
     "id": "Level-1",
     "difficulty": "Easy",
-    "gridSize": [4, 4],
-    "obstacles": [],
-    "blocks": [[1, 1]],
+    "gridSize": [3, 3],
+    "obstacles": [[1, 1]],
+    "blocks": [[0, 0]],
     "goal": "cover_all_cells",
-    "minSteps": 6,
-    "turnLimit": 10,
-    "solution": ["U", "L", "D", "R", "U", "R"]
+    "minSteps": 4,
+    "turnLimit": 8,
+    "solution": ["R", "D", "L", "U"]
   },
   {
     "id": "Level-2",
     "difficulty": "Easy",
-    "gridSize": [5, 5],
-    "obstacles": [],
-    "blocks": [[2, 2]],
+    "gridSize": [4, 4],
+    "obstacles": [[0, 1], [1, 1], [2, 1]],
+    "blocks": [[3, 3]],
     "goal": "cover_all_cells",
-    "minSteps": 6,
+    "minSteps": 5,
     "turnLimit": 10,
-    "solution": ["U", "L", "D", "R", "U", "R"]
+    "solution": ["U", "L", "D", "L", "U"]
   },
   {
     "id": "Level-3",
-    "difficulty": "Normal",
+    "difficulty": "Easy",
     "gridSize": [5, 5],
     "obstacles": [[0, 0], [0, 4], [4, 0], [4, 4]],
-    "blocks": [[2, 2]],
+    "blocks": [[3, 4], [0, 2]],
     "goal": "cover_all_cells",
-    "minSteps": 8,
-    "turnLimit": 12,
-    "solution": ["U", "L", "D", "R", "U", "R", "D", "L"]
+    "minSteps": 5,
+    "turnLimit": 10,
+    "solution": ["D", "L", "U", "R", "D"]
   },
   {
     "id": "Level-4",
     "difficulty": "Normal",
-    "gridSize": [5, 5],
-    "obstacles": [[2, 0], [2, 4]],
-    "blocks": [[2, 2]],
+    "gridSize": [6, 6],
+    "obstacles": [
+      [1, 0], [1, 1], [1, 2], [1, 3], [1, 4],
+      [2, 0], [2, 1], [2, 2], [2, 3], [2, 4],
+      [4, 1], [4, 2], [4, 3], [4, 4]
+    ],
+    "blocks": [[0, 0], [5, 5]],
     "goal": "cover_all_cells",
-    "minSteps": 9,
-    "turnLimit": 14,
-    "solution": ["U", "L", "D", "R", "U", "R", "D", "L", "U"]
+    "minSteps": 4,
+    "turnLimit": 8,
+    "solution": ["L", "U", "R", "D"]
   },
   {
     "id": "Level-5",
-    "difficulty": "Normal+",
+    "difficulty": "Normal",
     "gridSize": [5, 5],
-    "obstacles": [[1, 1], [3, 3]],
-    "blocks": [[2, 2]],
+    "obstacles": [[1, 2], [2, 0], [2, 2], [3, 2]],
+    "blocks": [[3, 0], [0, 4]],
     "goal": "cover_all_cells",
-    "minSteps": 10,
-    "turnLimit": 15,
-    "solution": ["U", "L", "D", "R", "U", "R", "D", "L", "U", "R"]
+    "minSteps": 5,
+    "turnLimit": 10,
+    "solution": ["D", "R", "U", "L", "D"]
   },
   {
     "id": "Level-6",
-    "difficulty": "Hard",
-    "gridSize": [6, 6],
-    "obstacles": [],
-    "blocks": [[1, 1], [4, 4]],
+    "difficulty": "Normal",
+    "gridSize": [6, 5],
+    "obstacles": [
+      [1, 0], [1, 1], [1, 3], [1, 4],
+      [4, 0], [4, 1], [4, 3], [4, 4]
+    ],
+    "blocks": [[0, 2], [2, 2], [5, 2]],
     "goal": "cover_all_cells",
-    "minSteps": 10,
-    "turnLimit": 16,
-    "solution": ["U", "L", "D", "R", "U", "R", "D", "L", "U", "R"]
+    "minSteps": 6,
+    "turnLimit": 12,
+    "solution": ["D", "L", "U", "R", "D", "L"]
   },
   {
     "id": "Level-7",
     "difficulty": "Hard",
     "gridSize": [6, 6],
-    "obstacles": [[2, 2], [3, 3]],
-    "blocks": [[1, 4], [4, 1]],
+    "obstacles": [
+      [1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [2, 0],
+      [3, 2], [3, 3], [3, 5]
+    ],
+    "blocks": [[0, 0], [5, 2]],
     "goal": "cover_all_cells",
-    "minSteps": 11,
-    "turnLimit": 17,
-    "solution": ["U", "L", "D", "R", "U", "R", "D", "L", "U", "R", "D"]
+    "minSteps": 8,
+    "turnLimit": 16,
+    "solution": ["R", "D", "L", "D", "R", "U", "L", "U"]
   },
   {
     "id": "Level-8",
-    "difficulty": "Hard+",
-    "gridSize": [6, 6],
-    "obstacles": [[0, 3], [3, 0], [5, 2]],
-    "blocks": [[2, 2], [3, 4]],
+    "difficulty": "Hard",
+    "gridSize": [5, 5],
+    "obstacles": [
+      [2, 0], [2, 1], [2, 3]
+    ],
+    "blocks": [[0, 2], [3, 4], [4, 1]],
     "goal": "cover_all_cells",
-    "minSteps": 12,
-    "turnLimit": 18,
-    "solution": ["U", "L", "D", "R", "U", "R", "D", "L", "U", "R", "D", "L"]
-  },
-  {
-    "id": "Level-9",
-    "difficulty": "Expert",
-    "gridSize": [7, 7],
-    "obstacles": [[1, 1], [1, 5], [5, 1], [5, 5]],
-    "blocks": [[3, 3], [2, 4]],
-    "goal": "cover_all_cells",
-    "minSteps": 14,
-    "turnLimit": 20,
-    "solution": ["U", "L", "D", "R", "U", "R", "D", "L", "U", "R", "D", "L", "U", "R"]
-  },
-  {
-    "id": "Level-10",
-    "difficulty": "Expert",
-    "gridSize": [7, 7],
-    "obstacles": [[0, 0], [0, 6], [6, 0], [6, 6], [3, 3]],
-    "blocks": [[2, 2], [4, 4], [3, 5]],
-    "goal": "cover_all_cells",
-    "minSteps": 16,
-    "turnLimit": 22,
-    "solution": ["U", "L", "D", "R", "U", "R", "D", "L", "U", "R", "D", "L", "U", "R", "D", "L"]
+    "minSteps": 6,
+    "turnLimit": 12,
+    "solution": ["D", "L", "U", "R", "U", "L"]
   }
 ]

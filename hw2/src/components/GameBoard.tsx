@@ -8,7 +8,7 @@ interface GameBoardProps {
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({ gameState, onCellClick }) => {
-  const { currentLevel, blockPositions, coveredCells } = gameState;
+  const { currentLevel, blocks, coveredCells } = gameState;
   const { gridSize, obstacles } = currentLevel;
   const [rows, cols] = gridSize;
 
@@ -21,8 +21,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onCellClick }) => {
     const isObstacle = obstacles.some(obs => obs.row === row && obs.col === col);
     
     // 檢查是否有方塊
-    const blockIndex = blockPositions.findIndex(block => 
-      block.row === row && block.col === col
+    const block = blocks.find(block => 
+      block.position.row === row && block.position.col === col
     );
     
     // 檢查是否已覆蓋
@@ -31,8 +31,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onCellClick }) => {
     let cellClass = 'game-cell';
     if (isObstacle) {
       cellClass += ' obstacle';
-    } else if (blockIndex !== -1) {
-      cellClass += ` block block-${blockIndex}`;
+    } else if (block) {
+      cellClass += ` block block-${block.id - 1}`;
     } else if (isCovered) {
       cellClass += ' covered';
     } else {
@@ -47,8 +47,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ gameState, onCellClick }) => {
         data-row={row}
         data-col={col}
       >
-        {blockIndex !== -1 && (
-          <span className="block-number">{blockIndex + 1}</span>
+        {block && (
+          <span className="block-number">{block.id}</span>
         )}
       </div>
     );

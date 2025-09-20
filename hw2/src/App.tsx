@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Level, GameState } from './types/GameTypes';
 import { calculateStarRating } from './utils/GameLogic';
 import Game from './components/Game';
@@ -56,7 +56,7 @@ const App: React.FC = () => {
     setShowLevelSelector(false);
   };
 
-  const handleLevelComplete = (gameState: GameState) => {
+  const handleLevelComplete = useCallback((gameState: GameState) => {
     const levelId = gameState.currentLevel.id;
     const movesUsed = gameState.currentTurn - 1;
     const starRating = calculateStarRating(gameState);
@@ -80,21 +80,23 @@ const App: React.FC = () => {
       return prev;
     });
 
-    // 顯示完成訊息
+    // 顯示完成訊息並返回關卡選擇
     setTimeout(() => {
       alert(`🎉 關卡完成！\n評分: ${starRating.stars}★ ${starRating.description}\n使用步數: ${movesUsed}`);
+      setCurrentLevel(null);
       setShowLevelSelector(true);
     }, 1000);
-  };
+  }, []);
 
-  const handleLevelFailed = (gameState: GameState) => {
+  const handleLevelFailed = useCallback((gameState: GameState) => {
     const coverage = Math.round((gameState.coveredCells.size / (gameState.currentLevel.gridSize[0] * gameState.currentLevel.gridSize[1] - gameState.currentLevel.obstacles.length)) * 100);
     
     setTimeout(() => {
       alert(`😔 遊戲失敗！\n覆蓋率: ${coverage}%\n再試一次吧！`);
+      setCurrentLevel(null);
       setShowLevelSelector(true);
     }, 1000);
-  };
+  }, []);
 
   const handleBackToLevels = () => {
     setShowLevelSelector(true);
