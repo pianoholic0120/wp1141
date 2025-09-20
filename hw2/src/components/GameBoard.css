@@ -1,0 +1,216 @@
+.game-board {
+  display: grid;
+  gap: 8px;
+  background-color: #bbada0;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  max-height: 500px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.game-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  min-width: 60px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.game-cell:hover {
+  transform: scale(1.05);
+  z-index: 1;
+}
+
+/* 空格子 */
+.game-cell.empty {
+  background-color: #cdc1b4 !important;
+  border: none;
+  color: transparent;
+}
+
+/* 已覆蓋的格子 */
+.game-cell.covered {
+  background-color: #eee4da !important;
+  border: none;
+  color: #776e65 !important;
+}
+
+.game-cell.covered::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #8f7a66;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+/* 障礙物 */
+.game-cell.obstacle {
+  background-color: #776e65 !important;
+  border: none;
+  color: #f9f6f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-cell.obstacle::before {
+  content: '■';
+  color: #f9f6f2;
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+/* 方塊 */
+.game-cell.block {
+  border: none;
+  color: #f9f6f2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-cell.block-0 {
+  background-color: #eee4da !important;
+  color: #776e65 !important;
+}
+
+.game-cell.block-1 {
+  background-color: #ede0c8 !important;
+  color: #776e65 !important;
+}
+
+.game-cell.block-2 {
+  background-color: #f2b179 !important;
+  color: #f9f6f2 !important;
+}
+
+.game-cell.block-3 {
+  background-color: #f59563 !important;
+  color: #f9f6f2 !important;
+}
+
+.game-cell.block-4 {
+  background-color: #f67c5f !important;
+  color: #f9f6f2 !important;
+}
+
+.game-cell.block-5 {
+  background-color: #f65e3b !important;
+  color: #f9f6f2 !important;
+}
+
+.game-cell.block-6 {
+  background-color: #edcf72 !important;
+  color: #f9f6f2 !important;
+  box-shadow: 0 2px 8px rgba(237, 207, 114, 0.4);
+}
+
+.game-cell.block-7 {
+  background-color: #edcc61 !important;
+  color: #f9f6f2 !important;
+  box-shadow: 0 2px 8px rgba(237, 204, 97, 0.4);
+}
+
+.block-number {
+  font-weight: bold;
+  font-size: 1.4em;
+}
+
+/* 動畫效果 */
+@keyframes blockPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes slideAnimation {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--slide-distance));
+  }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .game-board {
+    gap: 1px;
+    padding: 5px;
+  }
+  
+  .game-cell {
+    min-height: 30px;
+    min-width: 30px;
+  }
+  
+  .block-number {
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-cell {
+    min-height: 25px;
+    min-width: 25px;
+  }
+  
+  .block-number {
+    font-size: 0.8em;
+  }
+  
+  .covered-indicator {
+    font-size: 1em;
+  }
+}
+
+/* 色盲模式 */
+.colorblind .game-cell.block-0 {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+}
+
+.colorblind .game-cell.block-1 {
+  background: linear-gradient(135deg, #4ecdc4, #7ed6cc);
+}
+
+.colorblind .game-cell.block-2 {
+  background: linear-gradient(135deg, #45b7d1, #6bc5d8);
+}
+
+.colorblind .game-cell.block-3 {
+  background: linear-gradient(135deg, #96ceb4, #a8d5ba);
+}
+
+.colorblind .game-cell.block-4 {
+  background: linear-gradient(135deg, #feca57, #fed976);
+}
+
+.colorblind .game-cell.block-5 {
+  background: linear-gradient(135deg, #ff9ff3, #ffb3f3);
+}
+
+.colorblind .game-cell.block-6 {
+  background: linear-gradient(135deg, #a8e6cf, #b8e6d3);
+}
+
+.colorblind .game-cell.block-7 {
+  background: linear-gradient(135deg, #ffd3a5, #ffe0b3);
+}

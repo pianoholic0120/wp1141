@@ -1,0 +1,216 @@
+.game-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background-color: #faf8ef;
+  border-radius: 6px;
+  outline: none;
+}
+
+.game-controls:focus {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(33, 150, 243, 0.3);
+}
+
+.control-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.control-btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  min-width: 100px;
+  background-color: #8f7a66;
+  color: #f9f6f2;
+}
+
+.control-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.control-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.hint-btn {
+  background: linear-gradient(135deg, #ffd54f, #ffecb3);
+  color: #e65100;
+  border: 2px solid #ffb300;
+}
+
+.hint-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ffb300, #ffd54f);
+}
+
+.undo-btn {
+  background: linear-gradient(135deg, #81c784, #a5d6a7);
+  color: #2e7d32;
+  border: 2px solid #66bb6a;
+}
+
+.undo-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #66bb6a, #81c784);
+}
+
+.reset-btn {
+  background: linear-gradient(135deg, #f48fb1, #f8bbd9);
+  color: #ad1457;
+  border: 2px solid #ec407a;
+}
+
+.reset-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ec407a, #f48fb1);
+}
+
+.direction-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.direction-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.center-space {
+  width: 60px;
+  height: 60px;
+}
+
+.direction-btn {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 6px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #bbada0;
+  color: #f9f6f2;
+}
+
+.direction-btn:hover:not(:disabled) {
+  background-color: #8f7a66;
+}
+
+.direction-btn:active:not(:disabled) {
+  background-color: #776e65;
+}
+
+.direction-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  background-color: #cdc1b4;
+  color: #8f7a66;
+}
+
+.control-instructions {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.control-instructions p {
+  margin: 4px 0;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .game-controls {
+    padding: 15px;
+    gap: 15px;
+  }
+  
+  .control-buttons {
+    gap: 8px;
+  }
+  
+  .control-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-width: 80px;
+  }
+  
+  .direction-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .center-space {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .control-instructions {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .control-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .control-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .direction-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+  
+  .center-space {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+/* 觸控設備優化 */
+@media (hover: none) and (pointer: coarse) {
+  .direction-btn {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+  
+  .center-space {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .control-btn {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+}

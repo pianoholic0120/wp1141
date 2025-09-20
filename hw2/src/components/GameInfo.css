@@ -1,0 +1,240 @@
+.game-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  background-color: #faf8ef;
+  border-radius: 6px;
+  color: #776e65;
+  box-shadow: none;
+}
+
+.level-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.level-title {
+  margin: 0;
+  font-size: 1.5em;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.difficulty-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.progress-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.progress-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.progress-label {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.progress-value {
+  font-weight: bold;
+  font-size: 1.1em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.coverage-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coverage-label {
+  font-weight: 600;
+  font-size: 1.1em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.coverage-track {
+  position: relative;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.coverage-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  border-radius: 10px;
+  transition: width 0.5s ease;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  position: relative;
+}
+
+.coverage-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.coverage-percentage {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.level-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-label {
+  font-size: 0.9em;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-weight: bold;
+  font-size: 1.2em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.status-message {
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.5s ease;
+}
+
+.status-message.success {
+  background: rgba(76, 175, 80, 0.2);
+  border: 2px solid rgba(76, 175, 80, 0.5);
+}
+
+.status-message.failure {
+  background: rgba(244, 67, 54, 0.2);
+  border: 2px solid rgba(244, 67, 54, 0.5);
+}
+
+.status-message.playing {
+  background: rgba(33, 150, 243, 0.2);
+  border: 2px solid rgba(33, 150, 243, 0.5);
+}
+
+.status-message h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.3em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.status-message p {
+  margin: 5px 0;
+  opacity: 0.9;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .game-info {
+    padding: 15px;
+    gap: 15px;
+  }
+  
+  .level-title {
+    font-size: 1.3em;
+  }
+  
+  .progress-info {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .level-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .progress-item {
+    padding: 8px;
+  }
+  
+  .stat-item {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .level-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .level-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .coverage-track {
+    height: 16px;
+  }
+  
+  .status-message {
+    padding: 12px;
+  }
+  
+  .status-message h3 {
+    font-size: 1.1em;
+  }
+}

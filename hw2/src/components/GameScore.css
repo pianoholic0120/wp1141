@@ -1,0 +1,182 @@
+.game-score-container {
+  margin-bottom: 20px;
+}
+
+.score-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.game-title {
+  font-size: 2.8em;
+  font-weight: bold;
+  color: #776e65;
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.game-subtitle {
+  font-size: 1em;
+  color: #776e65;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.score-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.score-box {
+  flex: 1;
+  background-color: #bbada0;
+  border-radius: 6px;
+  padding: 15px;
+  text-align: center;
+  position: relative;
+}
+
+.score-label {
+  font-size: 0.8em;
+  color: #eee4da;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-bottom: 5px;
+  letter-spacing: 0.1em;
+}
+
+.score-value {
+  font-size: 1.8em;
+  color: white;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.level-info-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.level-box {
+  background-color: #bbada0;
+  border-radius: 6px;
+  padding: 15px;
+  text-align: center;
+  min-width: 120px;
+}
+
+.level-name {
+  font-size: 1.2em;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.level-difficulty {
+  font-size: 0.8em;
+  color: #eee4da;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.stats-box {
+  flex: 1;
+  background-color: #bbada0;
+  border-radius: 6px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.85em;
+  color: #eee4da;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 0.9em;
+  color: white;
+  font-weight: bold;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .game-title {
+    font-size: 2.2em;
+  }
+  
+  .score-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .level-info-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .score-box {
+    padding: 12px;
+  }
+  
+  .level-box {
+    min-width: auto;
+    padding: 12px;
+  }
+  
+  .stats-box {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-title {
+    font-size: 1.8em;
+  }
+  
+  .game-subtitle {
+    font-size: 0.9em;
+  }
+  
+  .score-value {
+    font-size: 1.5em;
+  }
+  
+  .level-name {
+    font-size: 1em;
+  }
+}
+
+.how-to-play {
+  background-color: #bbada0;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.instructions-title {
+  color: #eee4da;
+  font-size: 0.8em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.instructions-text {
+  color: white;
+  font-size: 0.9em;
+  line-height: 1.4;
+}

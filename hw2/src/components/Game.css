@@ -1,0 +1,147 @@
+.game-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #faf8ef;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.game-header {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #776e65;
+}
+
+.game-header h1 {
+  font-size: 2.5em;
+  margin: 0 0 10px 0;
+  font-weight: bold;
+  color: #776e65;
+}
+
+.game-header p {
+  font-size: 1.2em;
+  margin: 0;
+  color: #776e65;
+  opacity: 0.8;
+}
+
+.game-content-2048 {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.game-info-compact {
+  width: 100%;
+  max-width: 500px;
+}
+
+.animation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+  animation: pulse 0.3s ease;
+}
+
+@keyframes pulse {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 響應式設計 */
+@media (max-width: 1200px) {
+  .game-content {
+    grid-template-columns: 1fr 280px;
+    gap: 25px;
+  }
+}
+
+@media (max-width: 992px) {
+  .game-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .game-sidebar {
+    order: -1;
+  }
+  
+  .game-header h1 {
+    font-size: 2.2em;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-container {
+    padding: 15px;
+  }
+  
+  .game-header {
+    margin-bottom: 20px;
+  }
+  
+  .game-header h1 {
+    font-size: 2em;
+  }
+  
+  .game-header p {
+    font-size: 1.1em;
+  }
+  
+  .game-content {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-container {
+    padding: 10px;
+  }
+  
+  .game-header h1 {
+    font-size: 1.8em;
+  }
+  
+  .game-header p {
+    font-size: 1em;
+  }
+  
+  .game-content {
+    gap: 10px;
+  }
+}
+
+/* 高對比模式 */
+@media (prefers-contrast: high) {
+  .game-container {
+    background: linear-gradient(135deg, #000 0%, #333 100%);
+  }
+  
+  .game-header {
+    color: #fff;
+  }
+}
+
+/* 減少動畫模式 */
+@media (prefers-reduced-motion: reduce) {
+  .animation-overlay {
+    display: none;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
