@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Level, GameState, GamePage } from './types/GameTypes';
 import { calculateStarRating } from './utils/GameLogic';
+import AudioManager from './utils/AudioManager';
 import MainMenu from './components/MainMenu';
 import RulesPage from './components/RulesPage';
 import NewLevelSelector from './components/NewLevelSelector';
 import NewGame from './components/NewGame';
+import VictoryEffect from './components/VictoryEffect';
 import './App.css';
 
 // 導入關卡資料
@@ -15,6 +17,16 @@ const App: React.FC = () => {
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [completedLevels, setCompletedLevels] = useState<Set<string>>(new Set());
   const [levelScores, setLevelScores] = useState<Record<string, { stars: number; moves: number }>>({});
+  
+  // 音效和特效狀態
+  const [audioManager] = useState(() => AudioManager.getInstance());
+  const [showVictoryEffect, setShowVictoryEffect] = useState(false);
+  const [victoryData, setVictoryData] = useState<{
+    stars: number;
+    isAllComplete: boolean;
+    totalStars: number;
+    onComplete: () => void;
+  } | null>(null);
 
   // 從 localStorage 載入遊戲進度
   useEffect(() => {
@@ -47,11 +59,27 @@ const App: React.FC = () => {
     localStorage.setItem('levelScores', JSON.stringify(levelScores));
   }, [levelScores]);
 
+  // 初始化音頻系統
+  useEffect(() => {
+    console.log('Audio manager initialized:', audioManager.isAudioEnabled());
+    // 嘗試立即啟動背景音樂（如果用戶已經有互動）
+    setTimeout(() => {
+      if (audioManager.isAudioEnabled()) {
+        audioManager.playBackgroundMusic();
+      }
+    }, 1000);
+  }, [audioManager]);
+
   const handleStartGame = () => {
+    // 暫時移除音效
+    // audioManager.playSound('click');
+    // audioManager.playBackgroundMusic();
     setCurrentPage('level-selector');
   };
 
   const handleShowRules = () => {
+    // 暫時移除音效
+    // audioManager.playSound('click');
     setCurrentPage('rules');
   };
 
@@ -83,66 +111,130 @@ const App: React.FC = () => {
     localStorage.removeItem('levelScores');
   };
 
-  const handleLevelComplete = useCallback((gameState: GameState) => {
+  const handleLevelComplete = (gameState: GameState) => {
+    console.log('=== handleLevelComplete 被調用 ===');
+    
     const levelId = gameState.currentLevel.id;
+    
+    // 防止重複處理同一關卡
+    if (showVictoryEffect || victoryData) {
+      console.log('App: 已經在處理通關，忽略重複調用');
+      return;
+    }
+    
+    console.log('gameState:', gameState);
+    
     const movesUsed = gameState.currentTurn - 1;
     const starRating = calculateStarRating(gameState);
     
+    console.log('關卡ID:', levelId);
+    console.log('使用步數:', movesUsed);
+    console.log('星級評分:', starRating);
+    
+    // 暫時移除音效
+    // audioManager.playSound(`star${starRating.stars}`);
+    
     // 更新完成的關卡
-    setCompletedLevels(prev => new Set([...prev, levelId]));
+    const newCompletedLevels = new Set([...completedLevels, levelId]);
+    setCompletedLevels(newCompletedLevels);
     
     // 更新分數（只保存更好的分數）
+    let updatedScores = levelScores;
     setLevelScores(prev => {
       const currentScore = prev[levelId];
       if (!currentScore || starRating.stars > currentScore.stars || 
           (starRating.stars === currentScore.stars && movesUsed < currentScore.moves)) {
-        return {
+        updatedScores = {
           ...prev,
           [levelId]: {
             stars: starRating.stars,
             moves: movesUsed
           }
         };
+        return updatedScores;
       }
       return prev;
     });
 
-    // 找到下一關
+    // 檢查是否完成所有關卡
     const levels = levelsData as unknown as Level[];
+    const isAllComplete = newCompletedLevels.size === levels.length;
+    const totalStars = Object.values(updatedScores).reduce((sum, score) => sum + score.stars, 0);
+    
+    // 找到下一關
     const currentIndex = levels.findIndex(level => level.id === levelId);
     const hasNextLevel = currentIndex < levels.length - 1;
     const nextLevel = hasNextLevel ? levels[currentIndex + 1] : null;
 
-    // 顯示完成訊息並提供選項
-    setTimeout(() => {
-      let message = `🎉 恭喜通關！\n\n關卡: ${levelId}\n評分: ${starRating.stars}★ ${starRating.description}\n使用步數: ${movesUsed}`;
+    console.log('App: 準備顯示通關特效');
+    console.log('App: isAllComplete =', isAllComplete);
+    console.log('App: hasNextLevel =', hasNextLevel);
+    console.log('App: nextLevel =', nextLevel);
+    
+    // 創建穩定的回調函數
+    const victoryCallback = () => {
+      console.log('App: ===== 收到 VictoryEffect 完成回調 =====');
       
-      if (hasNextLevel) {
-        const userChoice = window.confirm(`${message}\n\n點擊「確定」進入下一關 (${nextLevel!.id})\n點擊「取消」返回關卡選擇`);
-        if (userChoice && nextLevel) {
-          // 進入下一關
-          const convertedLevel: Level = {
-            ...nextLevel,
-            obstacles: nextLevel.obstacles.map((obs: any) => ({ row: obs[0], col: obs[1] })),
-            blocks: nextLevel.blocks.map((block: any) => ({ row: block[0], col: block[1] }))
-          };
-          setCurrentLevel(convertedLevel);
-        } else {
-          // 返回關卡選擇，停留在當前關卡
-          setCurrentPage('level-selector');
-          setCurrentLevel(null);
-        }
-      } else {
-        // 最後一關
-        alert(`${message}\n\n🏆 恭喜您完成了所有關卡！`);
-        setCurrentPage('level-selector');
-        setCurrentLevel(null);
+      try {
+        // 清理特效狀態
+        console.log('App: 清理特效狀態');
+        setShowVictoryEffect(false);
+        setVictoryData(null);
+        
+        console.log('App: 準備顯示對話框，設定100ms延遲');
+        
+        // 使用setTimeout確保狀態更新完成
+        setTimeout(() => {
+          console.log('App: setTimeout 觸發，開始顯示對話框');
+          
+          if (isAllComplete) {
+            console.log('App: 條件判斷 - 全完成');
+            alert(`🏆 恭喜您完成了所有關卡！\n總共獲得 ${totalStars} 顆星星！`);
+            setCurrentPage('level-selector');
+            setCurrentLevel(null);
+          } else if (hasNextLevel) {
+            console.log('App: 條件判斷 - 有下一關');
+            const userChoice = window.confirm(`🎉 恭喜通關！\n\n關卡: ${levelId}\n評分: ${starRating.stars}★ ${starRating.description}\n使用步數: ${movesUsed}\n\n點擊「確定」進入下一關 (${nextLevel!.id})\n點擊「取消」返回關卡選擇`);
+            if (userChoice && nextLevel) {
+              console.log('App: 用戶選擇進入下一關');
+              const convertedLevel: Level = {
+                ...nextLevel,
+                obstacles: nextLevel.obstacles.map((obs: any) => ({ row: obs[0], col: obs[1] })),
+                blocks: nextLevel.blocks.map((block: any) => ({ row: block[0], col: block[1] }))
+              };
+              setCurrentLevel(convertedLevel);
+            } else {
+              console.log('App: 用戶選擇返回關卡選擇');
+              setCurrentPage('level-selector');
+              setCurrentLevel(null);
+            }
+          } else {
+            console.log('App: 條件判斷 - 最後一關');
+            alert(`🎉 恭喜通關！\n\n關卡: ${levelId}\n評分: ${starRating.stars}★ ${starRating.description}\n使用步數: ${movesUsed}`);
+            setCurrentPage('level-selector');
+            setCurrentLevel(null);
+          }
+        }, 100); // 100ms延遲確保狀態更新
+      } catch (error) {
+        console.error('App: 回調函數執行錯誤！', error);
       }
-    }, 1000);
-  }, []);
+    };
+    
+    setVictoryData({
+      stars: starRating.stars,
+      isAllComplete,
+      totalStars,
+      onComplete: victoryCallback
+    });
+    setShowVictoryEffect(true);
+    console.log('App: 通關特效已啟動');
+  };
 
   const handleLevelFailed = useCallback((gameState: GameState) => {
     const coverage = Math.round((gameState.coveredCells.size / (gameState.currentLevel.gridSize[0] * gameState.currentLevel.gridSize[1] - gameState.currentLevel.obstacles.length)) * 100);
+    
+    // 暫時移除音效
+    // audioManager.playSound('error');
     
     setTimeout(() => {
       alert(`😔 遊戲失敗！\n覆蓋率: ${coverage}%\n再試一次吧！`);
@@ -205,6 +297,16 @@ const App: React.FC = () => {
   return (
     <div className="app">
       {renderCurrentPage()}
+      
+      {/* 通關特效 */}
+      {showVictoryEffect && victoryData && (
+        <VictoryEffect
+          stars={victoryData.stars}
+          isAllComplete={victoryData.isAllComplete}
+          totalStars={victoryData.totalStars}
+          onComplete={victoryData.onComplete}
+        />
+      )}
     </div>
   );
 };

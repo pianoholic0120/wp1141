@@ -75,6 +75,47 @@
   text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.audio-toggle-button {
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #4ECDC4, #44A08D);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audio-toggle-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+}
+
+.audio-toggle-button.enabled {
+  background: linear-gradient(135deg, #4ECDC4, #44A08D);
+}
+
+.audio-toggle-button.disabled {
+  background: linear-gradient(135deg, #95A5A6, #7F8C8D);
+  box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+}
+
+.audio-toggle-button.disabled:hover {
+  box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4);
+}
+
 .reset-button {
   padding: 12px 24px;
   font-size: 16px;

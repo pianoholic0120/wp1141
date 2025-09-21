@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Level, GameState, Direction } from '../types/GameTypes';
 import { initializeGameState, executeMove, undoMove, calculateCoverage } from '../utils/GameLogic';
 import { getLevelChineseName } from '../utils/LevelNames';
+import AudioManager from '../utils/AudioManager';
 import GameBoard from './GameBoard';
 import './NewGame.css';
 
@@ -20,43 +21,52 @@ const NewGame: React.FC<NewGameProps> = ({
 }) => {
   const [gameState, setGameState] = useState<GameState>(() => initializeGameState(level));
   const [isAnimating, setIsAnimating] = useState(false);
+  const [audioManager] = useState(() => AudioManager.getInstance());
   const [showHint, setShowHint] = useState(false);
   const [hintIndex, setHintIndex] = useState(0);
+  const [hasCalledComplete, setHasCalledComplete] = useState(false); // 防止重複調用
 
   const resetGame = useCallback(() => {
+    audioManager.playSound('click');
     setGameState(initializeGameState(level));
     setIsAnimating(false);
     setShowHint(false);
     setHintIndex(0);
-  }, [level]);
+    setHasCalledComplete(false); // 重置完成標記
+  }, [level, audioManager]);
 
   const handleMove = useCallback((direction: Direction) => {
     if (isAnimating || gameState.isGameWon || gameState.isGameLost) return;
 
+    audioManager.playSound('move');
     setIsAnimating(true);
     setTimeout(() => {
       setGameState(prevState => executeMove(prevState, direction));
       setIsAnimating(false);
     }, 200);
-  }, [isAnimating, gameState.isGameWon, gameState.isGameLost]);
+  }, [isAnimating, gameState.isGameWon, gameState.isGameLost, audioManager]);
 
   const handleUndo = useCallback(() => {
     if (isAnimating || gameState.moveHistory.length <= 1) return;
     
+    audioManager.playSound('click');
     setGameState(prevState => undoMove(prevState));
-  }, [isAnimating, gameState.moveHistory.length]);
+  }, [isAnimating, gameState.moveHistory.length, audioManager]);
 
   const handleHint = useCallback(() => {
     if (!level.solution || level.solution.length === 0) {
+      audioManager.playSound('error');
       alert('此關卡沒有提示可用');
       return;
     }
     
     if (hintIndex >= level.solution.length) {
+      audioManager.playSound('error');
       alert('已顯示所有提示步驟');
       return;
     }
     
+    audioManager.playSound('success');
     const nextMove = level.solution[hintIndex];
     const directionMap: Record<string, string> = {
       'U': '上',
@@ -68,7 +78,7 @@ const NewGame: React.FC<NewGameProps> = ({
     alert(`提示 ${hintIndex + 1}/${level.solution.length}: 向${directionMap[nextMove]}移動`);
     setHintIndex(prev => prev + 1);
     setShowHint(true);
-  }, [level.solution, hintIndex]);
+  }, [level.solution, hintIndex, audioManager]);
 
   // 鍵盤控制
   useEffect(() => {
@@ -114,14 +124,17 @@ const NewGame: React.FC<NewGameProps> = ({
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleMove, handleUndo, resetGame, handleHint, isAnimating, gameState.isGameWon, gameState.isGameLost]);
 
-  // 遊戲狀態變化處理
+  // 遊戲狀態變化處理 - 防止重複調用
   useEffect(() => {
-    if (gameState.isGameWon && onLevelComplete) {
+    if (gameState.isGameWon && onLevelComplete && !hasCalledComplete) {
+      console.log('NewGame: 檢測到通關，調用 onLevelComplete');
+      setHasCalledComplete(true); // 標記已調用
       onLevelComplete(gameState);
     } else if (gameState.isGameLost && onLevelFailed) {
+      console.log('NewGame: 檢測到失敗，調用 onLevelFailed');
       onLevelFailed(gameState);
     }
-  }, [gameState.isGameWon, gameState.isGameLost, gameState, onLevelComplete, onLevelFailed]);
+  }, [gameState.isGameWon, gameState.isGameLost, hasCalledComplete]); // 添加標記依賴
 
   // 當關卡改變時重置遊戲
   useEffect(() => {

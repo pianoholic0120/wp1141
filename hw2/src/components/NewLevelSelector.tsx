@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Level } from '../types/GameTypes';
 import { getLevelChineseName } from '../utils/LevelNames';
+import AudioManager from '../utils/AudioManager';
 import './NewLevelSelector.css';
 
 interface NewLevelSelectorProps {
@@ -22,6 +23,8 @@ const NewLevelSelector: React.FC<NewLevelSelectorProps> = ({
 }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [audioManager] = useState(() => AudioManager.getInstance());
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
 
   const difficulties = ['All', 'Easy', 'Normal', 'Hard', 'Expert'];
 
@@ -35,6 +38,11 @@ const NewLevelSelector: React.FC<NewLevelSelectorProps> = ({
       setCurrentIndex(0);
     }
   }, [selectedDifficulty, filteredLevels.length]);
+
+  // 音效初始化
+  useEffect(() => {
+    setIsAudioEnabled(audioManager.isAudioEnabled());
+  }, [audioManager]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -67,8 +75,21 @@ const NewLevelSelector: React.FC<NewLevelSelectorProps> = ({
   };
 
   const handleResetConfirm = () => {
+    audioManager.playSound('click');
     if (window.confirm('確定要重置所有進度嗎？此操作無法復原。')) {
       onResetProgress();
+    }
+  };
+
+  const toggleAudio = () => {
+    const newState = !isAudioEnabled;
+    setIsAudioEnabled(newState);
+    audioManager.setEnabled(newState);
+    audioManager.playSound('click');
+    if (newState) {
+      audioManager.playBackgroundMusic();
+    } else {
+      audioManager.stopBackgroundMusic();
     }
   };
 
@@ -101,15 +122,27 @@ const NewLevelSelector: React.FC<NewLevelSelectorProps> = ({
     <div className="new-level-selector-container">
       {/* 頂部控制欄 */}
       <div className="new-level-selector-header">
-        <button className="back-button-selector" onClick={onBack}>
+        <button className="back-button-selector" onClick={() => {
+          audioManager.playSound('click');
+          onBack();
+        }}>
           ← 返回主選單
         </button>
         
         <h1 className="new-selector-title">選擇關卡</h1>
         
-        <button className="reset-button" onClick={handleResetConfirm}>
-          重置進度
-        </button>
+        <div className="header-controls">
+          <button 
+            className={`audio-toggle-button ${isAudioEnabled ? 'enabled' : 'disabled'}`}
+            onClick={toggleAudio}
+            title={isAudioEnabled ? '關閉音效' : '開啟音效'}
+          >
+            {isAudioEnabled ? '🔊' : '🔇'}
+          </button>
+          <button className="reset-button" onClick={handleResetConfirm}>
+            重置進度
+          </button>
+        </div>
       </div>
 
       {/* 難度篩選 */}
@@ -119,6 +152,7 @@ const NewLevelSelector: React.FC<NewLevelSelectorProps> = ({
             key={difficulty}
             className={`difficulty-tab ${selectedDifficulty === difficulty ? 'active' : ''}`}
             onClick={() => {
+              audioManager.playSound('click');
               setCurrentIndex(0);
               setSelectedDifficulty(difficulty);
             }}
@@ -192,7 +226,10 @@ const NewLevelSelector: React.FC<NewLevelSelectorProps> = ({
 
             <button 
               className="play-button"
-              onClick={() => onLevelSelect(currentLevel)}
+              onClick={() => {
+                audioManager.playSound('success');
+                onLevelSelect(currentLevel);
+              }}
             >
               開始遊戲
             </button>

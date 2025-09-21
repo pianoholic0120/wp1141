@@ -1,0 +1,397 @@
+/* 通關特效主容器 */
+.victory-effect {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: victoryFadeIn 0.5s ease-out;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
+}
+
+.victory-effect.fade-out {
+  opacity: 0;
+}
+
+@keyframes victoryFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 背景遮罩 */
+.victory-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 215, 0, 0.3) 0%,
+    rgba(255, 107, 53, 0.2) 50%,
+    rgba(106, 76, 147, 0.4) 100%
+  );
+  backdrop-filter: blur(10px);
+  animation: backdropPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes backdropPulse {
+  from { opacity: 0.8; }
+  to { opacity: 1; }
+}
+
+/* 粒子效果 */
+.particles-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: particleFloat 3s ease-out forwards;
+  box-shadow: 0 0 10px currentColor;
+}
+
+@keyframes particleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(100vh) scale(0);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(80vh) scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(-20vh) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40vh) scale(0);
+  }
+}
+
+/* 主要內容 */
+.victory-content {
+  position: relative;
+  text-align: center;
+  z-index: 10;
+  animation: contentBounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes contentBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(50px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 星星顯示 */
+.stars-display {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.star {
+  font-size: 80px;
+  color: #FFD700;
+  text-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.8),
+    0 0 40px rgba(255, 215, 0, 0.6),
+    3px 3px 0px rgba(255, 140, 0, 0.8);
+  animation: starPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  transform: scale(0);
+}
+
+.star.filled {
+  animation: starPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards,
+             starGlow 2s ease-in-out infinite alternate 0.6s;
+}
+
+.star.empty {
+  color: rgba(255, 215, 0, 0.3);
+  text-shadow: none;
+}
+
+@keyframes starPop {
+  0% {
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.3) rotate(180deg);
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+@keyframes starGlow {
+  from {
+    text-shadow: 
+      0 0 20px rgba(255, 215, 0, 0.8),
+      0 0 40px rgba(255, 215, 0, 0.6),
+      3px 3px 0px rgba(255, 140, 0, 0.8);
+  }
+  to {
+    text-shadow: 
+      0 0 30px rgba(255, 215, 0, 1),
+      0 0 60px rgba(255, 215, 0, 0.8),
+      3px 3px 0px rgba(255, 140, 0, 1);
+  }
+}
+
+/* 獎盃圖標（全關卡完成） */
+.trophy-icon {
+  font-size: 120px;
+  animation: trophySparkle 1s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+}
+
+@keyframes trophySparkle {
+  from {
+    transform: scale(1) rotate(-5deg);
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)) hue-rotate(0deg);
+  }
+  to {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1)) hue-rotate(10deg);
+  }
+}
+
+/* 文字內容 */
+.victory-text {
+  margin-bottom: 30px;
+}
+
+.victory-title {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+  background: linear-gradient(45deg, #FF6B35, #F7931E, #FFD23F, #FF6B35);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleShimmer 2s ease-in-out infinite;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes titleShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.victory-subtitle {
+  font-size: 24px;
+  color: #FFFFFF;
+  margin: 0;
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 255, 255, 0.3);
+  animation: subtitleFloat 3s ease-in-out infinite;
+}
+
+@keyframes subtitleFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* 光環效果 */
+.victory-rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.ring {
+  position: absolute;
+  border: 3px solid rgba(255, 215, 0, 0.3);
+  border-radius: 50%;
+  animation: ringExpand 2s ease-out infinite;
+}
+
+.ring-1 {
+  width: 200px;
+  height: 200px;
+  margin: -100px 0 0 -100px;
+  animation-delay: 0s;
+}
+
+.ring-2 {
+  width: 300px;
+  height: 300px;
+  margin: -150px 0 0 -150px;
+  animation-delay: 0.5s;
+}
+
+.ring-3 {
+  width: 400px;
+  height: 400px;
+  margin: -200px 0 0 -200px;
+  animation-delay: 1s;
+}
+
+@keyframes ringExpand {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* 彩帶效果（全關卡完成） */
+.confetti-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 20px;
+  animation: confettiFall 3s linear infinite;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* 不同星級的特效變化 */
+.victory-effect.stars-1 .victory-backdrop {
+  background: radial-gradient(
+    circle at center,
+    rgba(50, 205, 50, 0.3) 0%,
+    rgba(144, 238, 144, 0.2) 50%,
+    rgba(34, 139, 34, 0.4) 100%
+  );
+}
+
+.victory-effect.stars-2 .victory-backdrop {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 215, 0, 0.3) 0%,
+    rgba(255, 228, 181, 0.2) 50%,
+    rgba(218, 165, 32, 0.4) 100%
+  );
+}
+
+.victory-effect.stars-3 .victory-backdrop {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 107, 107, 0.3) 0%,
+    rgba(255, 182, 193, 0.2) 50%,
+    rgba(220, 20, 60, 0.4) 100%
+  );
+}
+
+.victory-effect.all-complete .victory-backdrop {
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 215, 0, 0.4) 0%,
+    rgba(255, 107, 53, 0.3) 25%,
+    rgba(106, 76, 147, 0.3) 50%,
+    rgba(78, 205, 196, 0.3) 75%,
+    rgba(255, 107, 107, 0.4) 100%
+  );
+  animation: rainbowPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes rainbowPulse {
+  from { 
+    opacity: 0.8; 
+    filter: hue-rotate(0deg);
+  }
+  to { 
+    opacity: 1; 
+    filter: hue-rotate(20deg);
+  }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .victory-title {
+    font-size: 36px;
+  }
+  
+  .victory-subtitle {
+    font-size: 20px;
+  }
+  
+  .star {
+    font-size: 60px;
+  }
+  
+  .trophy-icon {
+    font-size: 90px;
+  }
+  
+  .stars-display {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .victory-title {
+    font-size: 28px;
+  }
+  
+  .victory-subtitle {
+    font-size: 18px;
+  }
+  
+  .star {
+    font-size: 50px;
+  }
+  
+  .trophy-icon {
+    font-size: 70px;
+  }
+  
+  .stars-display {
+    gap: 10px;
+  }
+}
