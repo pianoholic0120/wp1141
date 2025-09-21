@@ -138,20 +138,24 @@ const App: React.FC = () => {
     const newCompletedLevels = new Set([...completedLevels, levelId]);
     setCompletedLevels(newCompletedLevels);
     
+    // 先計算包含當前關卡分數的完整分數對象
+    const currentLevelScore = {
+      stars: starRating.stars,
+      moves: movesUsed
+    };
+    
+    // 創建包含當前關卡分數的完整分數對象
+    const scoresWithCurrent = {
+      ...levelScores,
+      [levelId]: currentLevelScore
+    };
+    
     // 更新分數（只保存更好的分數）
-    let updatedScores = levelScores;
     setLevelScores(prev => {
       const currentScore = prev[levelId];
       if (!currentScore || starRating.stars > currentScore.stars || 
           (starRating.stars === currentScore.stars && movesUsed < currentScore.moves)) {
-        updatedScores = {
-          ...prev,
-          [levelId]: {
-            stars: starRating.stars,
-            moves: movesUsed
-          }
-        };
-        return updatedScores;
+        return scoresWithCurrent;
       }
       return prev;
     });
@@ -159,7 +163,14 @@ const App: React.FC = () => {
     // 檢查是否完成所有關卡
     const levels = levelsData as unknown as Level[];
     const isAllComplete = newCompletedLevels.size === levels.length;
-    const totalStars = Object.values(updatedScores).reduce((sum, score) => sum + score.stars, 0);
+    
+    // 計算總星數 - 使用包含當前關卡分數的完整分數對象
+    const totalStars = Object.values(scoresWithCurrent).reduce((sum, score) => sum + score.stars, 0);
+    
+    console.log('App: 當前關卡分數:', currentLevelScore);
+    console.log('App: 所有關卡分數:', scoresWithCurrent);
+    console.log('App: 總星數計算:', totalStars);
+    console.log('App: 已完成關卡數:', newCompletedLevels.size, '/', levels.length);
     
     // 找到下一關
     const currentIndex = levels.findIndex(level => level.id === levelId);
