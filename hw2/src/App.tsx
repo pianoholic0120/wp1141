@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Level, GameState } from './types/GameTypes';
+import { Level, GameState, GamePage } from './types/GameTypes';
 import { calculateStarRating } from './utils/GameLogic';
-import Game from './components/Game';
-import LevelSelector from './components/LevelSelector';
+import MainMenu from './components/MainMenu';
+import RulesPage from './components/RulesPage';
+import NewLevelSelector from './components/NewLevelSelector';
+import NewGame from './components/NewGame';
 import './App.css';
 
 // 導入關卡資料
 import levelsData from './data/levels.json';
 
 const App: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState<GamePage>('main-menu');
   const [currentLevel, setCurrentLevel] = useState<Level | null>(null);
   const [completedLevels, setCompletedLevels] = useState<Set<string>>(new Set());
   const [levelScores, setLevelScores] = useState<Record<string, { stars: number; moves: number }>>({});
-  const [showLevelSelector, setShowLevelSelector] = useState(true);
 
   // 從 localStorage 載入遊戲進度
   useEffect(() => {
@@ -45,6 +47,19 @@ const App: React.FC = () => {
     localStorage.setItem('levelScores', JSON.stringify(levelScores));
   }, [levelScores]);
 
+  const handleStartGame = () => {
+    setCurrentPage('level-selector');
+  };
+
+  const handleShowRules = () => {
+    setCurrentPage('rules');
+  };
+
+  const handleBackToMainMenu = () => {
+    setCurrentPage('main-menu');
+    setCurrentLevel(null);
+  };
+
   const handleLevelSelect = (level: Level) => {
     // 轉換數組格式到對象格式
     const convertedLevel: Level = {
@@ -53,7 +68,19 @@ const App: React.FC = () => {
       blocks: level.blocks.map((block: any) => ({ row: block[0], col: block[1] }))
     };
     setCurrentLevel(convertedLevel);
-    setShowLevelSelector(false);
+    setCurrentPage('game');
+  };
+
+  const handleBackToLevelSelector = () => {
+    setCurrentPage('level-selector');
+    setCurrentLevel(null);
+  };
+
+  const handleResetProgress = () => {
+    setCompletedLevels(new Set());
+    setLevelScores({});
+    localStorage.removeItem('completedLevels');
+    localStorage.removeItem('levelScores');
   };
 
   const handleLevelComplete = useCallback((gameState: GameState) => {
@@ -80,11 +107,37 @@ const App: React.FC = () => {
       return prev;
     });
 
-    // 顯示完成訊息並返回關卡選擇
+    // 找到下一關
+    const levels = levelsData as unknown as Level[];
+    const currentIndex = levels.findIndex(level => level.id === levelId);
+    const hasNextLevel = currentIndex < levels.length - 1;
+    const nextLevel = hasNextLevel ? levels[currentIndex + 1] : null;
+
+    // 顯示完成訊息並提供選項
     setTimeout(() => {
-      alert(`🎉 關卡完成！\n評分: ${starRating.stars}★ ${starRating.description}\n使用步數: ${movesUsed}`);
-      setCurrentLevel(null);
-      setShowLevelSelector(true);
+      let message = `🎉 恭喜通關！\n\n關卡: ${levelId}\n評分: ${starRating.stars}★ ${starRating.description}\n使用步數: ${movesUsed}`;
+      
+      if (hasNextLevel) {
+        const userChoice = window.confirm(`${message}\n\n點擊「確定」進入下一關 (${nextLevel!.id})\n點擊「取消」返回關卡選擇`);
+        if (userChoice && nextLevel) {
+          // 進入下一關
+          const convertedLevel: Level = {
+            ...nextLevel,
+            obstacles: nextLevel.obstacles.map((obs: any) => ({ row: obs[0], col: obs[1] })),
+            blocks: nextLevel.blocks.map((block: any) => ({ row: block[0], col: block[1] }))
+          };
+          setCurrentLevel(convertedLevel);
+        } else {
+          // 返回關卡選擇，停留在當前關卡
+          setCurrentPage('level-selector');
+          setCurrentLevel(null);
+        }
+      } else {
+        // 最後一關
+        alert(`${message}\n\n🏆 恭喜您完成了所有關卡！`);
+        setCurrentPage('level-selector');
+        setCurrentLevel(null);
+      }
     }, 1000);
   }, []);
 
@@ -93,75 +146,67 @@ const App: React.FC = () => {
     
     setTimeout(() => {
       alert(`😔 遊戲失敗！\n覆蓋率: ${coverage}%\n再試一次吧！`);
+      setCurrentPage('level-selector');
       setCurrentLevel(null);
-      setShowLevelSelector(true);
     }, 1000);
   }, []);
 
-  const handleBackToLevels = () => {
-    setShowLevelSelector(true);
-    setCurrentLevel(null);
-  };
-
-  const handleResetProgress = () => {
-    if (window.confirm('確定要重置所有遊戲進度嗎？此操作無法復原。')) {
-      setCompletedLevels(new Set());
-      setLevelScores({});
-      localStorage.removeItem('completedLevels');
-      localStorage.removeItem('levelScores');
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'main-menu':
+        return (
+          <MainMenu
+            onStartGame={handleStartGame}
+            onShowRules={handleShowRules}
+          />
+        );
+      
+      case 'rules':
+        return (
+          <RulesPage
+            onBack={handleBackToMainMenu}
+          />
+        );
+      
+      case 'level-selector':
+        return (
+          <NewLevelSelector
+            levels={levelsData as unknown as Level[]}
+            completedLevels={completedLevels}
+            levelScores={levelScores}
+            onLevelSelect={handleLevelSelect}
+            onResetProgress={handleResetProgress}
+            onBack={handleBackToMainMenu}
+          />
+        );
+      
+      case 'game':
+        return currentLevel ? (
+          <NewGame
+            level={currentLevel}
+            onLevelComplete={handleLevelComplete}
+            onLevelFailed={handleLevelFailed}
+            onBack={handleBackToLevelSelector}
+          />
+        ) : (
+          <div className="loading">載入中...</div>
+        );
+      
+      default:
+        return (
+          <MainMenu
+            onStartGame={handleStartGame}
+            onShowRules={handleShowRules}
+          />
+        );
     }
   };
 
-  if (showLevelSelector) {
-    return (
-      <div className="app">
-        <div className="app-header">
-          <h1>滑動方塊覆蓋遊戲</h1>
-          <p>在限定回合內讓所有方塊覆蓋地圖的每一格</p>
-          <div className="app-actions">
-            <button 
-              className="reset-btn"
-              onClick={handleResetProgress}
-              title="重置所有進度"
-            >
-              🔄 重置進度
-            </button>
-          </div>
-        </div>
-        
-        <LevelSelector
-          levels={levelsData as unknown as Level[]}
-          onLevelSelect={handleLevelSelect}
-          completedLevels={completedLevels}
-          levelScores={levelScores}
-        />
-      </div>
-    );
-  }
-
-  if (currentLevel) {
-    return (
-      <div className="app">
-        <div className="game-header-actions">
-          <button 
-            className="back-btn"
-            onClick={handleBackToLevels}
-            title="返回關卡選擇"
-          >
-            ← 返回關卡選擇
-          </button>
-        </div>
-        
-        <Game
-          level={currentLevel}
-          onLevelComplete={handleLevelComplete}
-          onLevelFailed={handleLevelFailed}
-        />
-      </div>
-    );
-  }
-
-  return null;
+  return (
+    <div className="app">
+      {renderCurrentPage()}
+    </div>
+  );
 };
 
 export default App;

@@ -1,0 +1,674 @@
+.new-game-container {
+  width: 100vw;
+  height: 100vh;
+  background-image: url('../../playground.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 為超寬螢幕優化背景 */
+@media (min-aspect-ratio: 16/9) {
+  .new-game-container {
+    background-size: 100% auto;
+    background-position: center top;
+  }
+}
+
+/* 為超高螢幕優化背景 */
+@media (max-aspect-ratio: 4/3) {
+  .new-game-container {
+    background-size: auto 100%;
+    background-position: center center;
+  }
+}
+
+.new-game-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 69, 19, 0.25) 0%,
+    rgba(160, 82, 45, 0.3) 25%,
+    rgba(205, 133, 63, 0.25) 50%,
+    rgba(222, 184, 135, 0.3) 75%,
+    rgba(245, 222, 179, 0.25) 100%
+  );
+  backdrop-filter: blur(1px);
+  z-index: -1;
+}
+
+.new-game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 248, 220, 0.7) 0%,
+    rgba(250, 235, 215, 0.65) 50%,
+    rgba(245, 222, 179, 0.7) 100%
+  );
+  backdrop-filter: blur(3px);
+  border-bottom: 3px solid rgba(139, 69, 19, 0.4);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+}
+
+.back-button-game {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #6c7ae0, #5a67d8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.back-button-game:hover {
+  background: linear-gradient(135deg, #5a67d8, #4c51bf);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.level-info-header {
+  text-align: center;
+}
+
+.level-name-header {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2c3e50;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  margin-bottom: 5px;
+}
+
+.level-id-header {
+  font-size: 16px;
+  color: #666;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.game-status {
+  display: flex;
+  gap: 20px;
+}
+
+.status-item {
+  text-align: center;
+  background: rgba(248, 249, 250, 0.9);
+  padding: 10px 15px;
+  border-radius: 10px;
+  border-left: 4px solid #4CAF50;
+}
+
+.status-label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  margin-bottom: 5px;
+}
+
+.status-value {
+  display: block;
+  font-size: 20px;
+  font-weight: bold;
+  color: #2c3e50;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.new-game-main {
+  flex: 1;
+  display: flex;
+  padding: 20px;
+  gap: 20px;
+  overflow: hidden;
+}
+
+.game-controls-panel {
+  width: 280px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 248, 220, 0.7) 0%,
+    rgba(250, 235, 215, 0.65) 50%,
+    rgba(245, 222, 179, 0.7) 100%
+  );
+  border-radius: 20px;
+  padding: 25px;
+  backdrop-filter: blur(5px);
+  box-shadow: 
+    0 8px 24px rgba(139, 69, 19, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(139, 69, 19, 0.1);
+  border: 2px solid rgba(139, 69, 19, 0.4);
+  overflow-y: auto;
+}
+
+.control-section {
+  margin-bottom: 25px;
+}
+
+.control-section h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #8B4513;
+  margin: 0 0 15px 0;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  border-bottom: 3px solid #CD853F;
+  padding-bottom: 10px;
+  position: relative;
+}
+
+.control-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 30%;
+  height: 3px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-radius: 2px;
+}
+
+.control-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.control-btn {
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  border: 2px solid rgba(139, 69, 19, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  box-shadow: 
+    0 4px 8px rgba(139, 69, 19, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.undo-btn {
+  background: linear-gradient(135deg, #D2691E, #CD853F, #DEB887);
+  color: #FFF8DC;
+  border-color: #8B4513;
+}
+
+.undo-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #B8860B, #D2691E, #CD853F);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 12px rgba(139, 69, 19, 0.3);
+}
+
+.reset-btn {
+  background: linear-gradient(135deg, #DC143C, #B22222, #CD5C5C);
+  color: #FFF8DC;
+  border-color: #8B0000;
+}
+
+.reset-btn:hover {
+  background: linear-gradient(135deg, #B22222, #8B0000, #DC143C);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 12px rgba(139, 0, 0, 0.3);
+}
+
+.hint-btn {
+  background: linear-gradient(135deg, #9370DB, #8A2BE2, #DDA0DD);
+  color: #FFF8DC;
+  border-color: #4B0082;
+}
+
+.hint-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8A2BE2, #4B0082, #9370DB);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 12px rgba(75, 0, 130, 0.3);
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.direction-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.direction-row {
+  display: flex;
+  gap: 8px;
+}
+
+.direction-btn {
+  width: 55px;
+  height: 55px;
+  font-size: 22px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #4682B4, #87CEEB, #B0E0E6);
+  color: #FFF8DC;
+  border: 3px solid #2F4F4F;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 8px rgba(47, 79, 79, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.direction-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2F4F4F, #4682B4, #87CEEB);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 6px 12px rgba(47, 79, 79, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.direction-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.level-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(248, 249, 250, 0.8);
+  border-radius: 6px;
+  border-left: 3px solid #4CAF50;
+}
+
+.detail-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: bold;
+  color: #2c3e50;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.game-board-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 248, 220, 0.75) 0%,
+    rgba(250, 235, 215, 0.7) 50%,
+    rgba(245, 222, 179, 0.75) 100%
+  );
+  border-radius: 20px;
+  padding: 25px;
+  backdrop-filter: blur(4px);
+  box-shadow: 
+    0 8px 24px rgba(139, 69, 19, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(139, 69, 19, 0.1);
+  border: 2px solid rgba(139, 69, 19, 0.4);
+}
+
+.game-info-panel {
+  width: 280px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 248, 220, 0.7) 0%,
+    rgba(250, 235, 215, 0.65) 50%,
+    rgba(245, 222, 179, 0.7) 100%
+  );
+  border-radius: 20px;
+  padding: 25px;
+  backdrop-filter: blur(5px);
+  box-shadow: 
+    0 8px 24px rgba(139, 69, 19, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(139, 69, 19, 0.1);
+  border: 2px solid rgba(139, 69, 19, 0.4);
+  overflow-y: auto;
+}
+
+.info-section {
+  margin-bottom: 25px;
+}
+
+.info-section h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #8B4513;
+  margin: 0 0 15px 0;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  border-bottom: 3px solid #CD853F;
+  padding-bottom: 10px;
+  position: relative;
+}
+
+.info-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 30%;
+  height: 3px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-radius: 2px;
+}
+
+.game-instructions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-instructions p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #5D4037;
+  margin: 0;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  padding: 10px 15px;
+  background: linear-gradient(135deg, rgba(255, 248, 220, 0.9), rgba(250, 235, 215, 0.8));
+  border-radius: 8px;
+  border-left: 4px solid #8B4513;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(139, 69, 19, 0.2);
+}
+
+.instruction-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.instruction-icon.target {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  box-shadow: 0 2px 6px rgba(255, 165, 0, 0.3);
+}
+
+.instruction-icon.control {
+  background: linear-gradient(135deg, #4682B4, #87CEEB);
+  box-shadow: 0 2px 6px rgba(70, 130, 180, 0.3);
+}
+
+.instruction-icon.rules {
+  background: linear-gradient(135deg, #8B4513, #CD853F);
+  box-shadow: 0 2px 6px rgba(139, 69, 19, 0.3);
+}
+
+.instruction-icon.scoring {
+  background: linear-gradient(135deg, #9370DB, #BA55D3);
+  box-shadow: 0 2px 6px rgba(147, 112, 219, 0.3);
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(248, 249, 250, 0.8);
+  border-radius: 6px;
+}
+
+.legend-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.block-example {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.obstacle-example {
+  background: linear-gradient(135deg, #666, #555);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.covered-example {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+  border: 2px dashed #4CAF50;
+}
+
+.empty-example {
+  background: #f5f5f5;
+  border: 2px solid #ddd;
+}
+
+.legend-item span {
+  font-size: 14px;
+  color: #2c3e50;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.hint-section {
+  background: rgba(156, 39, 176, 0.1);
+  border: 2px solid #9C27B0;
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.hint-display p {
+  font-size: 14px;
+  color: #2c3e50;
+  margin: 0 0 10px 0;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.solution-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.step {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #999;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.step.revealed {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+  color: white;
+  border-color: #9C27B0;
+}
+
+/* 響應式設計 */
+@media (max-width: 1200px) {
+  .new-game-main {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .game-controls-panel,
+  .game-info-panel {
+    width: 100%;
+    max-height: 200px;
+  }
+  
+  .game-board-container {
+    flex: 1;
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .new-game-header {
+    padding: 10px 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .game-status {
+    gap: 10px;
+  }
+  
+  .level-name-header {
+    font-size: 20px;
+  }
+  
+  .new-game-main {
+    padding: 10px;
+  }
+  
+  .game-controls-panel,
+  .game-info-panel {
+    padding: 15px;
+  }
+  
+  .direction-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+/* 覆蓋率進度條樣式 */
+.coverage-progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+  background: rgba(248, 249, 250, 0.9);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border-left: 4px solid #32CD32;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.coverage-label {
+  font-size: 14px;
+  color: #2F4F4F;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.progress-bar-wrapper {
+  width: 100%;
+}
+
+.progress-bar {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  background: linear-gradient(135deg, #DEB887, #F5DEB3);
+  border-radius: 12px;
+  border: 2px solid #8B4513;
+  box-shadow: 
+    inset 0 2px 4px rgba(139, 69, 19, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(135deg, #32CD32, #90EE90, #98FB98);
+  border-radius: 10px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 10px rgba(50, 205, 50, 0.4);
+  animation: progressGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes progressGlow {
+  0% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 10px rgba(50, 205, 50, 0.4); }
+  100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 15px rgba(50, 205, 50, 0.6); }
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: bold;
+  color: #2F4F4F;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+  z-index: 2;
+  font-family: 'Microsoft JhengHei', sans-serif;
+}
+
+.status-item.moves-counter {
+  border-left: 4px solid #FF6B6B;
+}
+
+.status-value.remaining-moves {
+  font-size: 22px;
+  color: #FF6B6B;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}

@@ -35,6 +35,8 @@ export interface GameState {
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
 
+export type GamePage = 'main-menu' | 'rules' | 'level-selector' | 'game';
+
 export interface GameConfig {
   animationDuration: number;
   showHints: boolean;
