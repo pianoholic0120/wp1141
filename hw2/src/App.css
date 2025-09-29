@@ -1,10 +1,17 @@
 .app {
-  width: 100%;
+  width: 100vw;
   height: 100vh;
   margin: 0;
   padding: 0;
   overflow: hidden;
   font-family: 'Microsoft JhengHei', sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
 }
 
 .loading {
@@ -27,6 +34,15 @@
 /* 全局樣式重置 */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-size: 16px;
 }
 
 body {
@@ -34,6 +50,60 @@ body {
   padding: 0;
   overflow: hidden;
   font-family: 'Microsoft JhengHei', sans-serif;
+  height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #f5f5f5;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* 確保所有容器都能正確顯示 */
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+/* 響應式字體大小 */
+html {
+  font-size: 16px;
+}
+
+@media screen and (max-width: 1440px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media screen and (max-width: 1200px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  html {
+    font-size: 13px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  html {
+    font-size: 11px;
+  }
 }
 
 /* 響應式設計 */
@@ -46,6 +116,52 @@ body {
 @media (max-width: 480px) {
   .loading {
     font-size: 18px;
+  }
+}
+
+/* 跨瀏覽器兼容性 */
+@supports not (height: 100vh) {
+  html, body, .app {
+    height: 100%;
+  }
+}
+
+/* 確保內容自動適應瀏覽器視窗 */
+.app > * {
+  width: 100%;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+/* 確保在舊版瀏覽器中也能正常顯示 */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .app {
+    min-height: 100vh;
+    min-width: 100vw;
+  }
+}
+
+/* Firefox 特定修正 */
+@-moz-document url-prefix() {
+  .app {
+    height: 100vh;
+    width: 100vw;
+  }
+}
+
+/* Safari 特定修正 */
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-color-index: 0) {
+  .app {
+    height: 100vh;
+    width: 100vw;
+  }
+}
+
+/* Edge 特定修正 */
+@supports (-ms-ime-align: auto) {
+  .app {
+    height: 100vh;
+    width: 100vw;
   }
 }
 
