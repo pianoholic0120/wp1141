@@ -61,20 +61,25 @@ src/
 ```
 
 ### 核心技術
-- **React 18**: 使用最新的React特性
-- **TypeScript**: 完整的類型安全
+- **React 18**: 使用React特性
+- **TypeScript**: 類型安全
 - **CSS Modules**: 組件化樣式管理
-- **Web Audio API**: 程序化音效生成
+- **Web Audio API**: 程式化音效生成
 - **Local Storage**: 進度持久化
 
 ## 安裝與運行
 
 ### 環境要求
 - Node.js 16.0 或更高版本
-- npm 或 yarn 包管理器
+- npm 包管理器
+
+    **若有安裝npm之困難，可以參考：**
+    1. [Windows 教學](https://hackmd.io/@kenny88881234/Hyz69OXJB)
+    2. [Mac 教學](https://medium.com/@1chooo/%E5%A6%82%E4%BD%95%E5%9C%A8-mac-%E5%AE%89%E8%A3%9D-node-js-npm-3d7101d998f4)
 
 ### 安裝依賴
 ```bash
+# 到這份作業的資料夾位置
 cd hw2
 npm install
 ```
@@ -84,6 +89,16 @@ npm install
 npm start
 ```
 遊戲將在 http://localhost:3000 啟動
+
+- 注意： 因市面上有多種瀏覽器，可能會出現遊戲畫面和瀏覽顯示配置不相符的狀況，這時請調整視窗縮放比例以找尋適合自己遊玩的大小
+    - Windows 使用者可用Ctrl 鍵加 + (放大) 或 - (縮小) 
+    - Mac 使用者可用 ⌘ 鍵加 + 或 - 快捷鍵
+
+```
+    放大倍率
+    Brave: 建議67%
+    Dia: 建議75%
+```
 
 ### 生產構建
 ```bash
