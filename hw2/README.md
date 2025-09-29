@@ -109,6 +109,14 @@ npm start
     - Mac 使用者可用 ⌘ 鍵加 + 或 - 快捷鍵
     - 建議縮放比例：75%-100% 以獲得最佳體驗
 
+```
+    放大倍率
+    Brave: 建議67%
+    Dia: 建議75%
+    Microsoft Edge: 建議50%
+    Google Chrome: 建議50% ~ 67%
+```
+
 ### 生產構建
 ```bash
 npm run build
