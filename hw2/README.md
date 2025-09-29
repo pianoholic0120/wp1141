@@ -114,6 +114,7 @@ npm start
     Dia: 建議75%
     Microsoft Edge: 建議50%
     Google Chrome: 建議50% ~ 67%
+    Safari: 需自行調整
 ```
 
 ### 生產構建
