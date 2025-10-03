@@ -176,10 +176,10 @@ export function SubmittedStage({
               Modify Registration
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-white shadow-2xl">
             <DialogHeader>
-              <DialogTitle>Modify Registration</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-2xl text-gray-900">Modify Registration</DialogTitle>
+              <DialogDescription className="text-lg text-gray-700">
                 Are you sure you want to modify your submitted registration? This will open the modification interface.
               </DialogDescription>
             </DialogHeader>
@@ -201,10 +201,10 @@ export function SubmittedStage({
               Start New Registration
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="bg-white shadow-2xl">
             <DialogHeader>
-              <DialogTitle>Start New Registration</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-2xl text-gray-900">Start New Registration</DialogTitle>
+              <DialogDescription className="text-lg text-gray-700">
                 This will clear your current registration and start a new course selection process. Are you sure?
               </DialogDescription>
             </DialogHeader>

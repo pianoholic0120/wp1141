@@ -122,45 +122,45 @@ export function PlanningStage({
                 Submit Registration
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl bg-white shadow-2xl">
               <DialogHeader>
-                <DialogTitle>Submit Course Registration</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-2xl text-gray-900">Submit Course Registration</DialogTitle>
+                <DialogDescription className="text-lg text-gray-700">
                   Review your course selection before submitting your registration.
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4">
                 {/* Course Summary */}
-                <div className="space-y-2">
-                  <h4 className="font-medium">Selected Courses ({activeSchedule?.courses.length || 0})</h4>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900">Selected Courses ({activeSchedule?.courses.length || 0})</h4>
+                  <div className="space-y-3 max-h-60 overflow-y-auto bg-gray-50 p-4 rounded-lg">
                     {activeSchedule?.courses.map((course) => (
-                      <div key={course.id} className="flex items-center justify-between p-2 border rounded">
+                      <div key={course.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
                         <div>
-                          <div className="font-medium">{course.cou_cname}</div>
-                          <div className="text-sm text-gray-600">{course.cou_code} • {course.credits} credits</div>
+                          <div className="font-semibold text-gray-900">{course.cou_cname}</div>
+                          <div className="text-base text-gray-600">{course.cou_code} • {course.credits} credits</div>
                         </div>
-                        <Badge variant="outline">{course.credits} credits</Badge>
+                        <Badge variant="outline" className="text-base">{course.credits} credits</Badge>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Total Credits */}
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <span className="font-medium">Total Credits:</span>
-                  <span className="font-bold">{activeSchedule?.totalCredits || 0}</span>
+                <div className="flex justify-between items-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <span className="text-lg font-semibold text-gray-900">Total Credits:</span>
+                  <span className="text-xl font-bold text-blue-600">{activeSchedule?.totalCredits || 0}</span>
                 </div>
 
                 {/* Conflicts Warning */}
                 {conflicts.length > 0 && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded">
-                    <div className="flex items-center space-x-2 text-red-600">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span className="font-medium">Time Conflicts Detected</span>
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center space-x-3 text-red-700">
+                      <AlertTriangle className="h-5 w-5" />
+                      <span className="font-semibold text-lg">Time Conflicts Detected</span>
                     </div>
-                    <p className="text-sm text-red-600 mt-1">
+                    <p className="text-base text-red-600 mt-2">
                       Please resolve {conflicts.length} time conflict{conflicts.length > 1 ? 's' : ''} before submitting.
                     </p>
                   </div>

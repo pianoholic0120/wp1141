@@ -129,10 +129,10 @@ export function BrowseStage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Course Catalog</h2>
-                  <p className="text-gray-600">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Course Catalog</h2>
+                  <p className="text-lg text-gray-600">
                     Explore {courses.length} available courses
                     {totalPages > 1 && (
                       <span className="ml-2">
@@ -198,12 +198,12 @@ export function BrowseStage({
       <div className="space-y-4">
                 {/* Search Bar */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     placeholder="Search courses, instructors, or course codes..."
                     value={pendingFilters.search}
                     onChange={handleSearchChange}
-                    className="pl-10"
+                    className="pl-12 text-base h-12"
                   />
                 </div>
 
@@ -211,13 +211,13 @@ export function BrowseStage({
                 {showFilters && (
                   <Card className="relative z-[9999] shadow-2xl">
                     <CardHeader>
-                      <CardTitle className="text-lg">Filters</CardTitle>
+                      <CardTitle className="text-xl">Filters</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Department Filter */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Department</label>
+                        <div className="space-y-3">
+                          <label className="text-base font-medium">Department</label>
                           <Select
                             value={pendingFilters.department[0] || 'all'}
                             onValueChange={(value) => handleFilterChange('department', value !== 'all' ? [value] : [])}
@@ -237,8 +237,8 @@ export function BrowseStage({
                         </div>
 
                         {/* Year Filter */}
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Year</label>
+                        <div className="space-y-3">
+                          <label className="text-base font-medium">Year</label>
                           <Select
                             value={pendingFilters.year[0] || 'all'}
                             onValueChange={(value) => handleFilterChange('year', value !== 'all' ? [value] : [])}
@@ -258,8 +258,8 @@ export function BrowseStage({
                         </div>
 
                 {/* Credits Filter */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Credits</label>
+                <div className="space-y-3">
+                  <label className="text-base font-medium">Credits</label>
                   <Select
                     value={pendingFilters.credits[0]?.toString() || 'all'}
                     onValueChange={(value) => handleFilterChange('credits', value !== 'all' ? [parseInt(value)] : [])}
@@ -338,8 +338,8 @@ export function BrowseStage({
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">每頁顯示</span>
+          <div className="flex items-center space-x-3">
+            <span className="text-base text-gray-600">每頁顯示</span>
             <Select
               value={pageSize.toString()}
               onValueChange={(value) => {
@@ -347,7 +347,7 @@ export function BrowseStage({
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="w-20">
+              <SelectTrigger className="w-24 h-11">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -356,7 +356,7 @@ export function BrowseStage({
                 <SelectItem value="1000">1000</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-sm text-gray-600">筆課程</span>
+            <span className="text-base text-gray-600">筆課程</span>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -377,7 +377,7 @@ export function BrowseStage({
               </TooltipContent>
             </Tooltip>
 
-            <span className="text-sm text-gray-600">
+            <span className="text-base text-gray-600">
               第 {currentPage} 頁，共 {totalPages} 頁
             </span>
 
@@ -464,25 +464,25 @@ const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: {
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg">{course.cou_cname}</CardTitle>
-            <CardDescription>
+          <div className="space-y-2">
+            <CardTitle className="text-xl">{course.cou_cname}</CardTitle>
+            <CardDescription className="text-base">
               {course.cou_ename} • {course.cou_code}
             </CardDescription>
           </div>
-          <Badge variant="secondary">{course.credits} credits</Badge>
+          <Badge variant="secondary" className="text-base">{course.credits} credits</Badge>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-center text-sm text-gray-600">
-            <Users className="h-4 w-4 mr-1" />
+      <CardContent className="space-y-6">
+        <div className="space-y-3">
+          <div className="flex items-center text-base text-gray-600">
+            <Users className="h-5 w-5 mr-2" />
             {course.instructor}
           </div>
           
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Clock className="h-4 w-4 mr-1" />
+                  <div className="flex items-center text-base text-gray-600">
+                    <Clock className="h-5 w-5 mr-2" />
                     {course.timeSlots.length > 0 ? (
                       course.timeSlots.map((slot, index) => (
                         <span key={index}>
@@ -495,17 +495,17 @@ const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: {
                     )}
                   </div>
           
-          <div className="flex items-center text-sm text-gray-600">
-            <Users className="h-4 w-4 mr-1" />
+          <div className="flex items-center text-base text-gray-600">
+            <Users className="h-5 w-5 mr-2" />
             {course.enrolled}/{course.capacity} students
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1">
-          <Badge variant="outline" className="text-xs">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className="text-sm">
             {course.department}
           </Badge>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-sm">
             Year {course.year}
           </Badge>
         </div>
@@ -514,10 +514,10 @@ const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: {
                   <TooltipTrigger asChild>
                     <Button 
                       onClick={handleAddToPlanning}
-                      className="w-full"
-                      size="sm"
+                      className="w-full text-base"
+                      size="default"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="h-5 w-5 mr-2" />
                       Add to Planning
                     </Button>
                   </TooltipTrigger>
@@ -548,19 +548,19 @@ const CourseListItem = React.memo(function CourseListItem({ course, onAddToPlann
 
   return (
     <Card>
-      <CardContent className="p-4">
+      <CardContent className="p-6">
         <div className="flex items-center justify-between">
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center space-x-2">
-              <h3 className="font-semibold">{course.cou_cname}</h3>
-              <Badge variant="secondary">{course.credits} credits</Badge>
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center space-x-3">
+              <h3 className="font-semibold text-lg">{course.cou_cname}</h3>
+              <Badge variant="secondary" className="text-base">{course.credits} credits</Badge>
             </div>
             
-            <p className="text-sm text-gray-600">
+            <p className="text-base text-gray-600">
               {course.cou_ename} • {course.cou_code} • {course.instructor}
             </p>
             
-            <div className="flex items-center space-x-4 text-xs text-gray-500">
+            <div className="flex items-center space-x-6 text-sm text-gray-500">
                       <span>
                         {course.timeSlots.length > 0 ? (
                           course.timeSlots.map((slot, index) => (
@@ -577,20 +577,20 @@ const CourseListItem = React.memo(function CourseListItem({ course, onAddToPlann
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <div className="flex flex-wrap gap-1">
-              <Badge variant="outline" className="text-xs">
+          <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="text-sm">
                 {course.department}
               </Badge>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-sm">
                 Year {course.year}
               </Badge>
             </div>
             
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button onClick={handleAddToPlanning} size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
+                        <Button onClick={handleAddToPlanning} size="default" className="text-base">
+                          <Plus className="h-5 w-5 mr-2" />
                           Add
                         </Button>
                       </TooltipTrigger>

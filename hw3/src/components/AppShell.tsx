@@ -55,25 +55,25 @@ export function AppShell({ currentStage, onStageChange, submittedRegistration, p
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+          <div className="flex items-center justify-between h-20">
             {/* Logo and Title */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="h-8 w-8 text-blue-600" />
-                <h1 className="text-xl font-bold text-gray-900">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-3">
+                <BookOpen className="h-10 w-10 text-blue-600" />
+                <h1 className="text-2xl font-bold text-gray-900">
                   NTU Course Registration
                 </h1>
               </div>
               {submittedRegistration && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <Badge variant="secondary" className="bg-green-100 text-green-800 text-base px-4 py-2">
                   Registration Complete
                 </Badge>
               )}
             </div>
 
             {/* Stage Navigation */}
-            <nav className="flex items-center space-x-1">
+            <nav className="flex items-center space-x-2">
               {stages.map((stage) => {
                 const Icon = stage.icon;
                 const isActive = stage.id === currentStage;
@@ -83,10 +83,10 @@ export function AppShell({ currentStage, onStageChange, submittedRegistration, p
                   <Button
                     key={stage.id}
                     variant={isActive ? "default" : "ghost"}
-                    size="sm"
+                    size="default"
                     onClick={() => isAccessible && onStageChange(stage.id as AppState['currentStage'])}
                     disabled={!isAccessible}
-                    className={`flex items-center space-x-1 ${
+                    className={`flex items-center space-x-2 text-base ${
                       isActive 
                         ? stage.color 
                         : isAccessible 
@@ -94,7 +94,7 @@ export function AppShell({ currentStage, onStageChange, submittedRegistration, p
                           : 'text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-5 w-5" />
                     <span className="hidden sm:inline">{stage.name}</span>
                   </Button>
                 );
@@ -106,15 +106,15 @@ export function AppShell({ currentStage, onStageChange, submittedRegistration, p
 
       {/* Progress Bar */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-4 py-2">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+          <div className="flex items-center space-x-6 py-4">
+            <div className="flex-1 bg-gray-200 rounded-full h-3">
               <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-blue-600 h-3 rounded-full transition-all duration-300"
                 style={{ width: `${((currentStageIndex + 1) / stages.length) * 100}%` }}
               />
             </div>
-            <span className="text-sm text-gray-600">
+            <span className="text-base text-gray-600 font-medium">
               Step {currentStageIndex + 1} of {stages.length}
             </span>
           </div>
@@ -122,22 +122,22 @@ export function AppShell({ currentStage, onStageChange, submittedRegistration, p
       </div>
 
               {/* Main Content */}
-              <main className="w-full px-4 sm:px-6 lg:px-8 py-8">
+              <main className="w-full px-6 sm:px-8 lg:px-10 py-10">
                 <div className="max-w-7xl mx-auto">
                   {children}
                 </div>
               </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <footer className="bg-white border-t border-gray-200 mt-16">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 py-8">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">
+            <div className="text-base text-gray-500">
               © 2025 National Taiwan University Course Registration System
             </div>
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
+            <div className="flex items-center space-x-4 text-base text-gray-500">
               <span>Data updates automatically</span>
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-5 w-5" />
             </div>
           </div>
         </div>

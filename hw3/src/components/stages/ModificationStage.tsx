@@ -252,41 +252,41 @@ export function ModificationStage({
             <Save className="h-4 w-4 mr-2" />
             Complete Modification
           </Button>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl bg-white shadow-2xl">
             <DialogHeader>
-              <DialogTitle>Confirm Modification</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-2xl text-gray-900">Confirm Modification</DialogTitle>
+              <DialogDescription className="text-lg text-gray-700">
                 Review your changes before updating your registration.
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
               {/* Change Summary */}
-              <div className="space-y-2">
-                <h4 className="font-medium">Changes Summary:</h4>
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">Changes Summary:</h4>
                 <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="p-3 bg-green-100 rounded">
-                    <div className="text-2xl font-bold text-green-800">+{changes.added.length}</div>
-                    <div className="text-sm text-green-600">Added</div>
+                  <div className="p-4 bg-green-100 border border-green-200 rounded-lg">
+                    <div className="text-3xl font-bold text-green-800">+{changes.added.length}</div>
+                    <div className="text-base text-green-600 font-medium">Added</div>
                   </div>
-                  <div className="p-3 bg-red-100 rounded">
-                    <div className="text-2xl font-bold text-red-800">-{changes.removed.length}</div>
-                    <div className="text-sm text-red-600">Removed</div>
+                  <div className="p-4 bg-red-100 border border-red-200 rounded-lg">
+                    <div className="text-3xl font-bold text-red-800">-{changes.removed.length}</div>
+                    <div className="text-base text-red-600 font-medium">Removed</div>
                   </div>
-                  <div className="p-3 bg-blue-100 rounded">
-                    <div className="text-2xl font-bold text-blue-800">{totalCredits}</div>
-                    <div className="text-sm text-blue-600">Total Credits</div>
+                  <div className="p-4 bg-blue-100 border border-blue-200 rounded-lg">
+                    <div className="text-3xl font-bold text-blue-800">{totalCredits}</div>
+                    <div className="text-base text-blue-600 font-medium">Total Credits</div>
                   </div>
                 </div>
               </div>
 
               {/* Original vs Current */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-medium mb-2">Original Registration</h4>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Original Registration</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-lg">
                     {originalRegistration?.courses.map((course) => (
-                      <div key={course.id} className="text-sm p-2 bg-gray-50 rounded">
+                      <div key={course.id} className="text-base p-3 bg-white border border-gray-200 rounded-lg">
                         {course.cou_cname} ({course.credits} credits)
                       </div>
                     ))}
@@ -294,10 +294,10 @@ export function ModificationStage({
                 </div>
                 
                 <div>
-                  <h4 className="font-medium mb-2">Updated Registration</h4>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Updated Registration</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto bg-gray-50 p-3 rounded-lg">
                     {currentCourses.map((course) => (
-                      <div key={course.id} className="text-sm p-2 bg-gray-50 rounded">
+                      <div key={course.id} className="text-base p-3 bg-white border border-gray-200 rounded-lg">
                         {course.cou_cname} ({course.credits} credits)
                       </div>
                     ))}
@@ -306,9 +306,9 @@ export function ModificationStage({
               </div>
 
               {/* Confirmation Checkbox */}
-              <div className="flex items-center space-x-2 p-3 bg-orange-50 border border-orange-200 rounded">
-                <CheckCircle className="h-5 w-5 text-orange-600" />
-                <span className="text-sm text-orange-800">
+              <div className="flex items-center space-x-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-orange-600" />
+                <span className="text-base text-orange-800 font-medium">
                   I understand these changes will update my official registration
                 </span>
               </div>
@@ -332,10 +332,10 @@ export function ModificationStage({
 
       {/* Browse Dialog for Adding Courses */}
       <Dialog open={showBrowseDialog} onOpenChange={setShowBrowseDialog}>
-        <DialogContent className="max-w-6xl max-h-[80vh] overflow-hidden">
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-hidden bg-white shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Add Course to Modified Schedule</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-2xl text-gray-900">Add Course to Modified Schedule</DialogTitle>
+            <DialogDescription className="text-lg text-gray-700">
               Browse and add courses to your modified registration.
             </DialogDescription>
           </DialogHeader>
