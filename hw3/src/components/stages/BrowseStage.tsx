@@ -209,23 +209,23 @@ export function BrowseStage({
 
                 {/* Filter Panel */}
                 {showFilters && (
-                  <Card className="relative z-[9999] shadow-2xl">
+                  <Card className="relative z-[9999] shadow-2xl bg-white border border-gray-200">
                     <CardHeader>
-                      <CardTitle className="text-xl">Filters</CardTitle>
+                      <CardTitle className="text-xl text-gray-900">Filters</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Department Filter */}
                         <div className="space-y-3">
-                          <label className="text-base font-medium">Department</label>
+                          <label className="text-base font-medium text-gray-900">Department</label>
                           <Select
                             value={pendingFilters.department[0] || 'all'}
                             onValueChange={(value) => handleFilterChange('department', value !== 'all' ? [value] : [])}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-white border-gray-300">
                               <SelectValue placeholder="All departments" />
                             </SelectTrigger>
-                            <SelectContent className="z-[9999] max-h-[200px]">
+                            <SelectContent className="z-[10000]">
                               <SelectItem value="all">All departments</SelectItem>
                               {filterOptions.departments.map((dept) => (
                                 <SelectItem key={dept} value={dept}>
@@ -238,15 +238,15 @@ export function BrowseStage({
 
                         {/* Year Filter */}
                         <div className="space-y-3">
-                          <label className="text-base font-medium">Year</label>
+                          <label className="text-base font-medium text-gray-900">Year</label>
                           <Select
                             value={pendingFilters.year[0] || 'all'}
                             onValueChange={(value) => handleFilterChange('year', value !== 'all' ? [value] : [])}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-white border-gray-300">
                               <SelectValue placeholder="All years" />
                             </SelectTrigger>
-                            <SelectContent className="z-[9999] max-h-[200px]">
+                            <SelectContent className="z-[10000]">
                               <SelectItem value="all">All years</SelectItem>
                               {filterOptions.years.map((year) => (
                                 <SelectItem key={year} value={year}>
@@ -259,15 +259,15 @@ export function BrowseStage({
 
                 {/* Credits Filter */}
                 <div className="space-y-3">
-                  <label className="text-base font-medium">Credits</label>
+                  <label className="text-base font-medium text-gray-900">Credits</label>
                   <Select
                     value={pendingFilters.credits[0]?.toString() || 'all'}
                     onValueChange={(value) => handleFilterChange('credits', value !== 'all' ? [parseInt(value)] : [])}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white border-gray-300">
                       <SelectValue placeholder="All credits" />
                     </SelectTrigger>
-                    <SelectContent className="z-[9999] max-h-[200px]">
+                    <SelectContent className="z-[10000]">
                       <SelectItem value="all">All credits</SelectItem>
                       {filterOptions.credits.map((credit) => (
                         <SelectItem key={credit} value={credit}>
@@ -280,10 +280,10 @@ export function BrowseStage({
               </div>
               
               {/* Filter Action Buttons */}
-              <div className="flex justify-end space-x-2 mt-4">
+              <div className="flex justify-end space-x-3 mt-6">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" onClick={handleResetFilters}>
+                    <Button variant="outline" onClick={handleResetFilters} className="text-base">
                       Reset
                     </Button>
                   </TooltipTrigger>
@@ -293,8 +293,8 @@ export function BrowseStage({
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button onClick={handleApplyFilters}>
-                      <Check className="h-4 w-4 mr-2" />
+                    <Button onClick={handleApplyFilters} className="text-base">
+                      <Check className="h-5 w-5 mr-2" />
                       Apply Filters
                     </Button>
                   </TooltipTrigger>

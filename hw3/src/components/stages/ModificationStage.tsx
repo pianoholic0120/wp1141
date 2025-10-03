@@ -93,13 +93,13 @@ export function ModificationStage({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Modification Type</label>
+            <div className="space-y-3">
+              <label className="text-base font-medium text-gray-900">Modification Type</label>
               <Select value={reason} onValueChange={setReason}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-gray-300">
                   <SelectValue placeholder="Select reason" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[10000]">
                   <SelectItem value="add">Add Course</SelectItem>
                   <SelectItem value="drop">Drop Course</SelectItem>
                   <SelectItem value="swap">Swap Course</SelectItem>
@@ -108,9 +108,9 @@ export function ModificationStage({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Additional Notes (Optional)</label>
-              <Input placeholder="Enter additional notes..." />
+            <div className="space-y-3">
+              <label className="text-base font-medium text-gray-900">Additional Notes (Optional)</label>
+              <Input placeholder="Enter additional notes..." className="bg-white border-gray-300" />
             </div>
           </div>
         </CardContent>
