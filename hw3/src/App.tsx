@@ -146,6 +146,7 @@ function AppContent() {
           onUpdateFilters={(filters) => dispatch(appActions.updateFilters(filters))}
           onAddToPlanning={(course) => dispatch(appActions.addToPlanning(course))}
           onRefreshData={refreshData}
+          onNavigateToPlanning={() => dispatch(appActions.setCurrentStage('planning'))}
         />;
     }
   };
@@ -168,7 +169,20 @@ function App() {
     <ErrorBoundary>
       <AppProvider>
         <AppContent />
-        <Toaster />
+        <Toaster 
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: 'var(--background)',
+              color: 'var(--foreground)',
+              border: '1px solid var(--border)',
+              fontSize: '16px',
+              padding: '16px 20px',
+              minWidth: '320px',
+              maxWidth: '400px',
+            },
+          }}
+        />
       </AppProvider>
     </ErrorBoundary>
   );

@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { Input } from '../ui/input';
 import { Calendar, Plus, Trash2, BookOpen, CheckCircle, AlertTriangle } from 'lucide-react';
 import { PlanningSchedule, ParsedCourse } from '@/types/course';
@@ -30,6 +31,7 @@ export function PlanningStage({
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newPlanName, setNewPlanName] = useState('');
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [courseToRemove, setCourseToRemove] = useState<ParsedCourse | null>(null);
 
   const activeSchedule = schedules[activePlan];
   const scheduleValues = Object.values(schedules);
@@ -66,6 +68,17 @@ export function PlanningStage({
     if (conflicts.length === 0) {
       onSubmitRegistration();
       setShowSubmitDialog(false);
+    }
+  };
+
+  const handleRemoveCourse = (course: ParsedCourse) => {
+    setCourseToRemove(course);
+  };
+
+  const confirmRemoveCourse = () => {
+    if (courseToRemove) {
+      onRemoveCourse(courseToRemove.id);
+      setCourseToRemove(null);
     }
   };
 
@@ -296,13 +309,34 @@ export function PlanningStage({
                         </div>
                         <div className="flex items-center space-x-2">
                           <Badge variant="outline">{course.credits} credits</Badge>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onRemoveCourse(course.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRemoveCourse(course)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>確認移除課程</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  您確定要從計劃中移除「{course.cou_cname}」嗎？此操作無法復原。
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>取消</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={confirmRemoveCourse}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  確認移除
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     ))}

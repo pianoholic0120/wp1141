@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { AppState, ParsedCourse, PlanningSchedule } from '@/types/course';
+import { hasTimeConflict } from '@/data/courseLoader';
+import { toast } from 'sonner';
 import { calculateTotalCredits } from '@/data/courseLoader';
 
 // Action types
@@ -67,15 +69,52 @@ function appReducer(state: AppState, action: AppAction): AppState {
               if (plan) {
                 // Check if course already exists in the plan
                 const existingCourse = plan.courses.find(c => c.id === action.payload.course.id);
-                if (!existingCourse) {
-                  plan.courses.push(action.payload.course);
-                  plan.totalCredits = calculateTotalCredits(plan.courses);
-                  console.log('Course added successfully. Total courses in plan:', plan.courses.length);
-                } else {
+                
+                if (existingCourse) {
                   console.log('Course already exists in plan');
+                  toast.info("課程已在計劃中", {
+                    description: `${action.payload.course.cou_cname} 已經在您的計劃中了`,
+                  });
+                  return state; // Early return to prevent further processing
                 }
+                
+                // Check for time conflicts before adding
+                const conflictingCourse = plan.courses.find(existingCourse => 
+                  hasTimeConflict(action.payload.course, existingCourse)
+                );
+                
+                if (conflictingCourse) {
+                  console.log('Time conflict detected:', action.payload.course.cou_cname, 'vs', conflictingCourse.cou_cname);
+                  toast.error("衝堂衝突", {
+                    description: `${action.payload.course.cou_cname} 與 ${conflictingCourse.cou_cname} 時間衝突。請到 Planning 階段進行修改。`,
+                  });
+                  return state;
+                }
+                
+                // Add course to existing plan
+                plan.courses.push(action.payload.course);
+                plan.totalCredits = calculateTotalCredits(plan.courses);
+                console.log('Course added successfully. Total courses in plan:', plan.courses.length);
+                
+                // Show success toast
+                toast.success("課程已加入計劃", {
+                  description: `${action.payload.course.cou_cname} 已成功加入您的計劃中`,
+                });
               } else {
                 console.log('Plan not found:', targetPlan);
+                // Create new plan if it doesn't exist
+                planningSchedules[targetPlan] = {
+                  id: targetPlan,
+                  name: `Plan ${Object.keys(planningSchedules).length + 1}`,
+                  courses: [action.payload.course],
+                  totalCredits: calculateTotalCredits([action.payload.course])
+                };
+                console.log('Created new plan:', targetPlan);
+                
+                // Only show success toast for new plan creation
+                toast.success("課程已加入計劃", {
+                  description: `${action.payload.course.cou_cname} 已成功加入您的計劃中`,
+                });
               }
               
               return { ...state, planningSchedules };

@@ -84,6 +84,25 @@ export function BrowseStage({
   const endIndex = startIndex + pageSize;
   const paginatedCourses = courses.slice(startIndex, endIndex);
 
+  // Calculate page numbers for pagination
+  const pageNumbers = useMemo(() => {
+    const maxVisiblePages = 5;
+    const halfVisible = Math.floor(maxVisiblePages / 2);
+    let startPage = Math.max(1, currentPage - halfVisible);
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust start if we're near the end
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }, [currentPage, totalPages]);
+
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
@@ -95,10 +114,19 @@ export function BrowseStage({
     setFiltersApplied(true); // 標記為已套用
   }, [filters]);
 
-  // Reset to first page when courses change
+  // Reset to first page when courses change and validate current page
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [courses]);
+    const newTotalPages = Math.ceil(courses.length / pageSize);
+    console.log('Courses changed. Current page:', currentPage, 'New total pages:', newTotalPages, 'Courses length:', courses.length);
+    
+    if (currentPage > newTotalPages && newTotalPages > 0) {
+      console.log('Adjusting current page from', currentPage, 'to', newTotalPages);
+      setCurrentPage(newTotalPages);
+    } else if (courses.length === 0) {
+      console.log('No courses, setting page to 1');
+      setCurrentPage(1);
+    }
+  }, [courses, pageSize]); // Remove currentPage from dependencies to prevent infinite loop
 
   const handleFilterChange = (key: keyof AppState['filters'], value: any) => {
     console.log('BrowseStage: Filter change', key, value);
@@ -410,7 +438,7 @@ export function BrowseStage({
 
       {/* Course List */}
       <div className="relative z-10">
-        <ScrollArea className="h-[500px]">
+        <ScrollArea className="h-[700px]">
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedCourses.map((course) => (
@@ -465,8 +493,11 @@ export function BrowseStage({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => {
+                    const newPage = Math.max(currentPage - 1, 1);
+                    setCurrentPage(newPage);
+                  }}
+                  disabled={currentPage === 1 || totalPages === 0}
                 >
                   <ChevronLeft className="h-4 w-4" />
                   上一頁
@@ -477,6 +508,27 @@ export function BrowseStage({
               </TooltipContent>
             </Tooltip>
 
+            {/* Page Numbers */}
+            <div className="flex items-center space-x-1">
+              {pageNumbers.map((pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    console.log('Clicking page:', pageNum, 'totalPages:', totalPages);
+                    if (pageNum >= 1 && pageNum <= totalPages) {
+                      setCurrentPage(pageNum);
+                    }
+                  }}
+                  disabled={pageNum < 1 || pageNum > totalPages}
+                  className="w-8 h-8 p-0"
+                >
+                  {pageNum}
+                </Button>
+              ))}
+            </div>
+
             <span className="text-base text-gray-600">
               第 {currentPage} 頁，共 {totalPages} 頁
             </span>
@@ -486,8 +538,11 @@ export function BrowseStage({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => {
+                    const newPage = Math.min(currentPage + 1, totalPages);
+                    setCurrentPage(newPage);
+                  }}
+                  disabled={currentPage === totalPages || totalPages === 0}
                 >
                   下一頁
                   <ChevronRight className="h-4 w-4" />
@@ -517,7 +572,7 @@ export function BrowseStage({
 
         {/* Next Step Button */}
         {onNavigateToPlanning && (
-          <div className="flex justify-center mt-12 mb-8">
+          <div className="flex justify-center mt-16 mb-12">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -551,9 +606,7 @@ const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: {
     console.log('Adding course to planning:', course.cou_cname);
     try {
       onAddToPlanning(course);
-      toast.success("課程已加入計劃", {
-        description: `${course.cou_cname} 已成功加入您的計劃中`,
-      });
+      // Toast will be handled by AppContext
     } catch (error) {
       console.error('Error adding course to planning:', error);
       toast.error("加入失敗", {
@@ -630,9 +683,7 @@ const CourseListItem = React.memo(function CourseListItem({ course, onAddToPlann
   const handleAddToPlanning = () => {
     try {
       onAddToPlanning(course);
-      toast.success("課程已加入計劃", {
-        description: `${course.cou_cname} 已成功加入您的計劃中`,
-      });
+      // Toast will be handled by AppContext
     } catch (error) {
       console.error('Error adding course to planning:', error);
       toast.error("加入失敗", {
