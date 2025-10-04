@@ -96,6 +96,8 @@ export interface AppState {
     year: string[];
     credits: number[];
     search: string;
+    days: string[];
+    timeSlots: string[];
   };
   selectedCourse: ParsedCourse | null;
 }

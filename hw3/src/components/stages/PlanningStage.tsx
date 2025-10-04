@@ -101,26 +101,31 @@ export function PlanningStage({
                 New Plan
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>Create New Schedule Plan</DialogTitle>
-                <DialogDescription>
-                  Create a new planning schedule to experiment with different course combinations.
+                <DialogTitle className="text-xl">
+                  建立新的計劃表 / Create New Schedule Plan
+                </DialogTitle>
+                <DialogDescription className="text-base">
+                  <div className="space-y-1">
+                    <p>建立新的計劃表以嘗試不同的課程組合。</p>
+                    <p className="text-sm text-gray-600">Create a new planning schedule to experiment with different course combinations.</p>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <Input
-                  placeholder="Plan name (e.g., Plan B)"
+                  placeholder="計劃表名稱 (例如: 計劃B) / Plan name (e.g., Plan B)"
                   value={newPlanName}
                   onChange={(e) => setNewPlanName(e.target.value)}
                 />
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                  Cancel
+                  取消 / Cancel
                 </Button>
                 <Button onClick={handleCreatePlan} disabled={!newPlanName.trim()}>
-                  Create Plan
+                  建立計劃 / Create Plan
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -135,11 +140,16 @@ export function PlanningStage({
                 Submit Registration
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl bg-white shadow-2xl">
+            <DialogContent className="max-w-3xl bg-white shadow-2xl">
               <DialogHeader>
-                <DialogTitle className="text-2xl text-gray-900">Submit Course Registration</DialogTitle>
-                <DialogDescription className="text-lg text-gray-700">
-                  Review your course selection before submitting your registration.
+                <DialogTitle className="text-2xl text-gray-900">
+                  提交課程註冊 / Submit Course Registration
+                </DialogTitle>
+                <DialogDescription className="text-base text-gray-700 leading-relaxed">
+                  <div className="space-y-1">
+                    <p>在提交註冊之前，請檢視您的課程選擇。</p>
+                    <p className="text-sm text-gray-600">Review your course selection before submitting your registration.</p>
+                  </div>
                 </DialogDescription>
               </DialogHeader>
               
@@ -182,7 +192,7 @@ export function PlanningStage({
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
-                  Cancel
+                  取消 / Cancel
                 </Button>
                 <Button 
                   onClick={handleSubmit} 
@@ -190,7 +200,7 @@ export function PlanningStage({
                   className={conflicts.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirm & Submit
+                  確認並提交 / Confirm & Submit
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -321,18 +331,23 @@ export function PlanningStage({
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>確認移除課程</AlertDialogTitle>
+                                <AlertDialogTitle>
+                                  確認移除課程 / Confirm Remove Course
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  您確定要從計劃中移除「{course.cou_cname}」嗎？此操作無法復原。
+                                  <div className="space-y-2">
+                                    <p>您確定要從計劃中移除「{course.cou_cname}」嗎？此操作無法復原。</p>
+                                    <p className="text-sm text-gray-600">Are you sure you want to remove "{course.cou_cname}" from your plan? This action cannot be undone.</p>
+                                  </div>
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>取消</AlertDialogCancel>
+                                <AlertDialogCancel>取消 / Cancel</AlertDialogCancel>
                                 <AlertDialogAction 
                                   onClick={confirmRemoveCourse}
                                   className="bg-red-600 hover:bg-red-700"
                                 >
-                                  確認移除
+                                  確認移除 / Confirm Remove
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

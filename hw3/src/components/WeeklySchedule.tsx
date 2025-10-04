@@ -3,10 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Trash2, Clock } from 'lucide-react';
 import { ParsedCourse } from '@/types/course';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './ui/alert-dialog';
 
 interface WeeklyScheduleProps {
   courses: ParsedCourse[];
   onRemoveCourse: (courseId: string) => void;
+  showDeleteButton?: boolean;
 }
 
 const TIME_SLOTS = [
@@ -31,7 +43,7 @@ const COLORS = [
   'bg-red-100 border-red-300 text-red-800',
 ];
 
-export function WeeklySchedule({ courses, onRemoveCourse }: WeeklyScheduleProps) {
+export function WeeklySchedule({ courses, onRemoveCourse, showDeleteButton = true }: WeeklyScheduleProps) {
   // Create a grid of time slots and days
   const scheduleGrid = React.useMemo(() => {
     const grid: { [key: string]: { [key: string]: ParsedCourse[] } } = {};
@@ -115,14 +127,41 @@ export function WeeklySchedule({ courses, onRemoveCourse }: WeeklyScheduleProps)
                         <div className="font-medium truncate">{course.cou_cname}</div>
                         <div className="text-xs opacity-75 truncate">{course.cou_code}</div>
                         <div className="text-xs opacity-75">{course.instructor}</div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="absolute top-0 right-0 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => onRemoveCourse(course.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        {showDeleteButton && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="absolute top-0 right-0 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  確認刪除課程 / Confirm Delete Course
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  <div className="space-y-2">
+                                    <p>您確定要從計劃中移除「{course.cou_cname}」嗎？此操作無法復原。</p>
+                                    <p className="text-sm text-gray-600">Are you sure you want to remove "{course.cou_cname}" from your plan? This action cannot be undone.</p>
+                                  </div>
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>取消 / Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => onRemoveCourse(course.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  刪除 / Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </div>
                     );
                   }

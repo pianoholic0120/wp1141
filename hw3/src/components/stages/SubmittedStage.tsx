@@ -102,6 +102,7 @@ export function SubmittedStage({
       <WeeklySchedule 
         courses={registration.courses} 
         onRemoveCourse={() => {}} // Read-only in submitted state
+        showDeleteButton={false}
       />
 
       {/* Course List */}
@@ -176,19 +177,25 @@ export function SubmittedStage({
               Modify Registration
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl text-gray-900">Modify Registration</DialogTitle>
-              <DialogDescription className="text-lg text-gray-700">
-                Are you sure you want to modify your submitted registration? This will open the modification interface.
+          <DialogContent className="bg-white shadow-2xl w-[90vw] max-w-4xl p-6">
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="text-lg text-gray-900 leading-tight break-words">
+                修改註冊 / Modify Registration
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-700 leading-relaxed">
+                <div className="space-y-2">
+                  <p className="break-words overflow-wrap-anywhere">您確定要修改已提交的註冊嗎？這將開啟修改介面。</p>
+                  <p className="text-xs text-gray-600 break-words overflow-wrap-anywhere">Are you sure you want to modify your submitted registration? This will open the modification interface.</p>
+                </div>
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowModifyDialog(false)}>
-                Cancel
+            <DialogFooter className="flex-col sm:flex-row gap-3 mt-4">
+              <Button variant="outline" onClick={() => setShowModifyDialog(false)} className="w-full sm:w-auto text-sm">
+                取消 / Cancel
               </Button>
-              <Button onClick={handleModify} className="bg-orange-600 hover:bg-orange-700">
-                Proceed to Modification
+              <Button onClick={handleModify} className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto text-sm">
+                <span className="hidden sm:inline">繼續修改 / Proceed to Modification</span>
+                <span className="sm:hidden">繼續修改 / Proceed</span>
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -201,20 +208,29 @@ export function SubmittedStage({
               Start New Registration
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl text-gray-900">Start New Registration</DialogTitle>
-              <DialogDescription className="text-lg text-gray-700">
-                This will clear your current registration and start a new course selection process. Are you sure?
+          <DialogContent className="bg-white shadow-2xl w-[95vw] max-w-7xl sm:max-w-7xl p-10">
+            <DialogHeader className="space-y-6">
+              <DialogTitle className="text-xl text-gray-900 leading-tight break-words">
+                <span className="hidden sm:inline">開始新的註冊 / Start New Registration</span>
+                <span className="sm:hidden">開始新的註冊</span>
+              </DialogTitle>
+              <DialogDescription className="text-lg text-gray-700 leading-relaxed">
+                <div className="space-y-4">
+                  <p className="break-words overflow-wrap-anywhere">這將清除您目前的註冊並開始新的課程選擇流程。您確定嗎？</p>
+                  <p className="text-base text-gray-600 break-words overflow-wrap-anywhere">This will clear your current registration and start a new course selection process. Are you sure?</p>
+                </div>
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowResetDialog(false)}>
-                Cancel
+            <DialogFooter className="flex-col sm:flex-row gap-6 mt-8">
+              <Button variant="outline" onClick={() => setShowResetDialog(false)} className="w-full sm:w-auto text-base">
+                取消 / Cancel
               </Button>
-              <Button onClick={handleReset} variant="destructive">
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Confirm & Start New Registration
+              <Button onClick={handleReset} className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto text-base">
+                <RotateCcw className="h-5 w-5 mr-2" />
+                <span className="hidden xl:inline">確認並開始新註冊 / Confirm & Start New Registration</span>
+                <span className="hidden lg:inline xl:hidden">確認並開始新註冊 / Confirm & Start New</span>
+                <span className="hidden sm:inline lg:hidden">開始新註冊 / Start New</span>
+                <span className="sm:hidden">開始新註冊</span>
               </Button>
             </DialogFooter>
           </DialogContent>

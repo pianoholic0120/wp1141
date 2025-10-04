@@ -188,6 +188,8 @@ export function filterCourses(
     year?: string[];
     credits?: number[];
     search?: string;
+    days?: string[];
+    timeSlots?: string[];
   }
 ): ParsedCourse[] {
   console.log('Filtering courses with:', filters);
@@ -235,6 +237,32 @@ export function filterCourses(
       if (!matchesSearch) {
         console.log(`Course ${course.cou_cname} filtered out by search: "${searchLower}" not found`);
         console.log(`Course details: cou_cname="${course.cou_cname}", cou_ename="${course.cou_ename}", department="${course.department}"`);
+        return false;
+      }
+    }
+    
+    // Days filter
+    if (filters.days && filters.days.length > 0) {
+      const courseDays = course.timeSlots.map(slot => slot.day);
+      const hasMatchingDay = filters.days.some(day => courseDays.includes(day as any));
+      if (!hasMatchingDay) {
+        console.log(`Course ${course.cou_cname} filtered out by days: ${courseDays.join(',')} not in ${filters.days.join(',')}`);
+        return false;
+      }
+    }
+    
+    // Time slots filter
+    if (filters.timeSlots && filters.timeSlots.length > 0) {
+      // Convert time slot numbers back to codes for comparison
+      const timeSlotToCode: { [key: number]: string } = {
+        7: '0', 8: '1', 9: '2', 10: '3', 11: '4', 12: '5', 
+        13: '6', 14: '7', 15: '8', 16: '9', 18: 'A', 19: 'B', 20: 'C', 21: 'D'
+      };
+      
+      const courseTimeCodes = course.timeSlots.map(slot => timeSlotToCode[slot.start]).filter(Boolean);
+      const hasMatchingTimeSlot = filters.timeSlots.some(timeSlot => courseTimeCodes.includes(timeSlot));
+      if (!hasMatchingTimeSlot) {
+        console.log(`Course ${course.cou_cname} filtered out by time slots: ${courseTimeCodes.join(',')} not in ${filters.timeSlots.join(',')}`);
         return false;
       }
     }

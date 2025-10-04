@@ -31,10 +31,9 @@ export function AppShell({ currentStage, onStageChange, submittedRegistration, p
             // Always allow navigation to browse stage
             if (stageId === 'browse') return true;
             
-            // Allow navigation to planning if user has added courses
+            // Always allow navigation to planning stage
             if (stageId === 'planning') {
-              const plan = planningSchedules[activePlan];
-              return plan && plan.courses.length > 0;
+              return true;
             }
             
             // Allow navigation to submitted if registration is complete

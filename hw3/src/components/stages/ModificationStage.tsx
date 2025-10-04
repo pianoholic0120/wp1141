@@ -348,7 +348,7 @@ export function ModificationStage({
               courses={filteredCourses}
               loading={loading}
               error={error}
-              filters={{ department: [], year: [], credits: [], search: '' }}
+              filters={{ department: [], year: [], credits: [], search: '', days: [], timeSlots: [] }}
               onUpdateFilters={() => {}}
               onAddToPlanning={handleAddCourse}
               onRefreshData={refreshData}

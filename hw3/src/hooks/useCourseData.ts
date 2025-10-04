@@ -8,7 +8,7 @@ export function useCourseData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<number>(0);
-  const [currentFilters, setCurrentFilters] = useState<AppState['filters']>({ department: [], year: [], credits: [], search: '' });
+  const [currentFilters, setCurrentFilters] = useState<AppState['filters']>({ department: [], year: [], credits: [], search: '', days: [], timeSlots: [] });
 
   // Load course data with hot reload capability
   const loadData = useCallback(async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -61,13 +61,14 @@ export function BrowseStage({
   const [showFilters, setShowFilters] = useState(false);
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(500);
+  const [pageSize, setPageSize] = useState(200); // 減少預設頁面大小以提升效能
   const [filtersApplied, setFiltersApplied] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Extract unique filter options
   const filterOptions = useMemo(() => {
     const departments = [...new Set(courses.map(c => c.department))].filter(Boolean);
-    const years = [...new Set(courses.map(c => c.year))].filter(Boolean);
+    const years = [...new Set(courses.map(c => c.year))].filter(Boolean).sort((a, b) => parseInt(a) - parseInt(b));
     // Filter credits to only show reasonable values (0-6 credits typically)
     const allCredits = [...new Set(courses.map(c => c.credit))].filter(Boolean);
     const credits = allCredits.filter(credit => {
@@ -75,14 +76,40 @@ export function BrowseStage({
       return !isNaN(creditNum) && creditNum >= 0 && creditNum <= 6;
     }).sort((a, b) => parseInt(a) - parseInt(b));
     
-    return { departments, years, credits };
+    // Extract unique days and time slots
+    const allDays = [...new Set(courses.flatMap(c => c.timeSlots.map(slot => slot.day)))].filter(Boolean);
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].filter(day => allDays.includes(day as any));
+    
+    // Time slot options with display names
+    const timeSlots = [
+      { code: '0', name: '第0節 (07:10-08:00)' },
+      { code: '1', name: '第1節 (08:10-09:00)' },
+      { code: '2', name: '第2節 (09:10-10:00)' },
+      { code: '3', name: '第3節 (10:20-11:10)' },
+      { code: '4', name: '第4節 (11:20-12:10)' },
+      { code: '5', name: '第5節 (12:20-13:10)' },
+      { code: '6', name: '第6節 (13:20-14:10)' },
+      { code: '7', name: '第7節 (14:20-15:10)' },
+      { code: '8', name: '第8節 (15:30-16:20)' },
+      { code: '9', name: '第9節 (16:30-17:20)' },
+      { code: 'A', name: '第A節 (18:25-19:15)' },
+      { code: 'B', name: '第B節 (19:20-20:10)' },
+      { code: 'C', name: '第C節 (20:15-21:05)' },
+      { code: 'D', name: '第D節 (21:10-22:00)' }
+    ];
+    
+    return { departments, years, credits, days, timeSlots };
   }, [courses]);
 
-  // Calculate pagination
+  // Calculate pagination with performance optimization
   const totalPages = Math.ceil(courses.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCourses = courses.slice(startIndex, endIndex);
+  
+  // 使用 useMemo 來優化分頁數據的計算
+  const paginatedCourses = useMemo(() => {
+    return courses.slice(startIndex, endIndex);
+  }, [courses, startIndex, endIndex]);
 
   // Calculate page numbers for pagination
   const pageNumbers = useMemo(() => {
@@ -163,7 +190,7 @@ export function BrowseStage({
 
 
   const handleResetFilters = () => {
-    const resetFilters = { department: [], year: [], credits: [], search: '' };
+    const resetFilters = { department: [], year: [], credits: [], search: '', days: [], timeSlots: [] };
     setPendingFilters(resetFilters);
     onUpdateFilters(resetFilters);
     setFiltersApplied(true);
@@ -336,7 +363,7 @@ export function BrowseStage({
                       <CardTitle className="text-xl text-gray-900">Filters</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                         {/* Department Filter */}
                         <div className="space-y-3">
                           <label className="text-base font-medium text-gray-900">Department</label>
@@ -399,6 +426,53 @@ export function BrowseStage({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Days Filter */}
+                <div className="space-y-3">
+                  <label className="text-base font-medium text-gray-900">上課日期</label>
+                  <Select
+                    value={pendingFilters.days.length > 0 ? pendingFilters.days[0] : 'all'}
+                    onValueChange={(value) => handleFilterChange('days', value !== 'all' ? [value] : [])}
+                  >
+                    <SelectTrigger className="bg-white border-gray-300">
+                      <SelectValue placeholder="All days" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[10000]">
+                      <SelectItem value="all">All days</SelectItem>
+                      {filterOptions.days.map((day) => (
+                        <SelectItem key={day} value={day}>
+                          {day === 'Mon' ? '星期一' : 
+                           day === 'Tue' ? '星期二' : 
+                           day === 'Wed' ? '星期三' : 
+                           day === 'Thu' ? '星期四' : 
+                           day === 'Fri' ? '星期五' : 
+                           day === 'Sat' ? '星期六' : '星期日'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Time Slots Filter */}
+                <div className="space-y-3">
+                  <label className="text-base font-medium text-gray-900">上課節數</label>
+                  <Select
+                    value={pendingFilters.timeSlots.length > 0 ? pendingFilters.timeSlots[0] : 'all'}
+                    onValueChange={(value) => handleFilterChange('timeSlots', value !== 'all' ? [value] : [])}
+                  >
+                    <SelectTrigger className="bg-white border-gray-300">
+                      <SelectValue placeholder="All time slots" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[10000] max-h-[300px]">
+                      <SelectItem value="all">All time slots</SelectItem>
+                      {filterOptions.timeSlots.map((timeSlot) => (
+                        <SelectItem key={timeSlot.code} value={timeSlot.code}>
+                          {timeSlot.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
               {/* Filter Action Buttons */}
@@ -438,29 +512,38 @@ export function BrowseStage({
 
       {/* Course List */}
       <div className="relative z-10">
-        <ScrollArea className="h-[700px]">
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedCourses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  onAddToPlanning={onAddToPlanning}
-                />
-              ))}
+        {isNavigating ? (
+          <div className="flex items-center justify-center h-[700px]">
+            <div className="text-center">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+              <p className="text-gray-600">載入課程中...</p>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {paginatedCourses.map((course) => (
-                <CourseListItem
-                  key={course.id}
-                  course={course}
-                  onAddToPlanning={onAddToPlanning}
-                />
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+          </div>
+        ) : (
+          <ScrollArea className="h-[700px]">
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedCourses.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    onAddToPlanning={onAddToPlanning}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {paginatedCourses.map((course) => (
+                  <CourseListItem
+                    key={course.id}
+                    course={course}
+                    onAddToPlanning={onAddToPlanning}
+                  />
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        )}
       </div>
 
       {/* Pagination Controls */}
@@ -479,9 +562,10 @@ export function BrowseStage({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="100">100</SelectItem>
                 <SelectItem value="200">200</SelectItem>
+                <SelectItem value="300">300</SelectItem>
                 <SelectItem value="500">500</SelectItem>
-                <SelectItem value="1000">1000</SelectItem>
               </SelectContent>
             </Select>
             <span className="text-base text-gray-600">筆課程</span>
@@ -494,8 +578,11 @@ export function BrowseStage({
                   variant="outline"
                   size="sm"
                   onClick={() => {
+                    setIsNavigating(true);
                     const newPage = Math.max(currentPage - 1, 1);
                     setCurrentPage(newPage);
+                    // 使用 setTimeout 來避免阻塞 UI
+                    setTimeout(() => setIsNavigating(false), 100);
                   }}
                   disabled={currentPage === 1 || totalPages === 0}
                 >
@@ -515,12 +602,15 @@ export function BrowseStage({
                   key={pageNum}
                   variant={currentPage === pageNum ? "default" : "outline"}
                   size="sm"
-                  onClick={() => {
-                    console.log('Clicking page:', pageNum, 'totalPages:', totalPages);
-                    if (pageNum >= 1 && pageNum <= totalPages) {
-                      setCurrentPage(pageNum);
-                    }
-                  }}
+                      onClick={() => {
+                        console.log('Clicking page:', pageNum, 'totalPages:', totalPages);
+                        if (pageNum >= 1 && pageNum <= totalPages) {
+                          setIsNavigating(true);
+                          setCurrentPage(pageNum);
+                          // 使用 setTimeout 來避免阻塞 UI
+                          setTimeout(() => setIsNavigating(false), 100);
+                        }
+                      }}
                   disabled={pageNum < 1 || pageNum > totalPages}
                   className="w-8 h-8 p-0"
                 >
@@ -539,8 +629,11 @@ export function BrowseStage({
                   variant="outline"
                   size="sm"
                   onClick={() => {
+                    setIsNavigating(true);
                     const newPage = Math.min(currentPage + 1, totalPages);
                     setCurrentPage(newPage);
+                    // 使用 setTimeout 來避免阻塞 UI
+                    setTimeout(() => setIsNavigating(false), 100);
                   }}
                   disabled={currentPage === totalPages || totalPages === 0}
                 >
@@ -602,7 +695,7 @@ export function BrowseStage({
 
 // Course Card Component for Grid View
 const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: { course: ParsedCourse, onAddToPlanning: (course: ParsedCourse) => void }) {
-  const handleAddToPlanning = () => {
+  const handleAddToPlanning = useCallback(() => {
     console.log('Adding course to planning:', course.cou_cname);
     try {
       onAddToPlanning(course);
@@ -613,7 +706,7 @@ const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: {
         description: "無法將課程加入計劃，請稍後再試",
       });
     }
-  };
+  }, [course, onAddToPlanning]);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -680,7 +773,7 @@ const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: {
 
 // Course List Item Component for List View
 const CourseListItem = React.memo(function CourseListItem({ course, onAddToPlanning }: { course: ParsedCourse, onAddToPlanning: (course: ParsedCourse) => void }) {
-  const handleAddToPlanning = () => {
+  const handleAddToPlanning = useCallback(() => {
     try {
       onAddToPlanning(course);
       // Toast will be handled by AppContext
@@ -690,7 +783,7 @@ const CourseListItem = React.memo(function CourseListItem({ course, onAddToPlann
         description: "無法將課程加入計劃，請稍後再試",
       });
     }
-  };
+  }, [course, onAddToPlanning]);
 
   return (
     <Card>

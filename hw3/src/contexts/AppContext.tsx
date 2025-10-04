@@ -36,7 +36,9 @@ const initialState: AppState = {
     department: [],
     year: [],
     credits: [],
-    search: ''
+    search: '',
+    days: [],
+    timeSlots: []
   },
   selectedCourse: null
 };
@@ -177,7 +179,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
 
     case 'RESET_APP':
-      return initialState;
+      return {
+        ...initialState,
+        planningSchedules: {
+          'plan-a': {
+            id: 'plan-a',
+            name: 'Plan A',
+            courses: [],
+            totalCredits: 0
+          }
+        },
+        activePlan: 'plan-a'
+      };
 
     default:
       return state;
