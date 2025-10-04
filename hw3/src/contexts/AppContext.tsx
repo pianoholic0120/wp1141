@@ -49,9 +49,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, courses: action.payload };
 
     case 'UPDATE_FILTERS':
+      console.log('AppContext: Updating filters with', action.payload);
+      const newFilters = { ...state.filters, ...action.payload };
+      console.log('AppContext: New filters state:', newFilters);
       return {
         ...state,
-        filters: { ...state.filters, ...action.payload }
+        filters: newFilters
       };
 
             case 'ADD_TO_PLANNING':

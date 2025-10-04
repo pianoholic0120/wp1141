@@ -14,12 +14,14 @@ interface ModificationStageProps {
   originalRegistration: AppState['submittedRegistration'];
   onCompleteModification: (courses: ParsedCourse[]) => void;
   onCancel: () => void;
+  onNavigateToBrowse?: () => void;
 }
 
 export function ModificationStage({
   originalRegistration,
   onCompleteModification,
-  onCancel
+  onCancel,
+  onNavigateToBrowse
 }: ModificationStageProps) {
   const [currentCourses, setCurrentCourses] = useState<ParsedCourse[]>(originalRegistration?.courses || []);
   const [reason, setReason] = useState('');
@@ -179,12 +181,13 @@ export function ModificationStage({
           <div className="flex items-center justify-between">
             <CardTitle>Current Schedule</CardTitle>
             <Button
-              onClick={() => setShowBrowseDialog(true)}
+              onClick={() => onNavigateToBrowse?.()}
               variant="outline"
               size="sm"
+              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Course
+              Browse & Add Course
             </Button>
           </div>
         </CardHeader>
@@ -200,7 +203,7 @@ export function ModificationStage({
                   <div className="text-xs text-gray-500">
                     {course.timeSlots.map((slot, index) => (
                       <span key={index}>
-                        {slot.day} {slot.start}-{slot.end}
+                        {slot.day} {slot.start.toString().padStart(2, '0')}:10-{slot.end.toString().padStart(2, '0')}:00
                         {index < course.timeSlots.length - 1 && ', '}
                       </span>
                     ))}

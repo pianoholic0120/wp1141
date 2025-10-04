@@ -288,7 +288,7 @@ export function PlanningStage({
                           <div className="text-xs text-gray-500">
                             {course.timeSlots.map((slot, index) => (
                               <span key={index}>
-                                {slot.day} {slot.start}-{slot.end}
+                                {slot.day} {slot.start.toString().padStart(2, '0')}:10-{slot.end.toString().padStart(2, '0')}:00
                                 {index < course.timeSlots.length - 1 && ', '}
                               </span>
                             ))}

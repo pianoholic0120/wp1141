@@ -133,6 +133,7 @@ function AppContent() {
             originalRegistration={state.submittedRegistration!}
             onCompleteModification={(courses) => dispatch(appActions.completeModification(courses))}
             onCancel={() => dispatch(appActions.setCurrentStage('submitted'))}
+            onNavigateToBrowse={() => dispatch(appActions.setCurrentStage('browse'))}
           />
         );
       

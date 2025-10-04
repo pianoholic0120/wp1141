@@ -6,9 +6,35 @@ import { Badge } from '../ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { ScrollArea } from '../ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Search, Filter, Grid, List, Plus, Clock, Users, BookOpen, RefreshCw, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Grid, List, Plus, Clock, Users, BookOpen, RefreshCw, Check, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { ParsedCourse, AppState } from '@/types/course';
 import { toast } from 'sonner';
+
+// Helper function to format time slots display
+const formatTimeSlotsDisplay = (timeSlots: ParsedCourse['timeSlots']): string => {
+  if (timeSlots.length === 0) return 'TBA';
+  
+  // Group by day and collect time codes
+  const dayGroups: { [key: string]: string[] } = {};
+  timeSlots.forEach(slot => {
+    if (!dayGroups[slot.day]) {
+      dayGroups[slot.day] = [];
+    }
+    // Map start hour back to time code
+    const timeCodeMap: { [key: number]: string } = {
+      7: '0', 8: '1', 9: '2', 10: '3', 11: '4', 12: '5', 
+      13: '6', 14: '7', 15: '8', 16: '9', 18: 'A', 19: 'B', 20: 'C', 21: 'D'
+    };
+    const timeCode = timeCodeMap[slot.start];
+    if (timeCode && !dayGroups[slot.day].includes(timeCode)) {
+      dayGroups[slot.day].push(timeCode);
+    }
+  });
+  
+  return Object.entries(dayGroups)
+    .map(([day, codes]) => `${day} ${codes.sort().join('')}`)
+    .join(', ');
+};
 
 interface BrowseStageProps {
   courses: ParsedCourse[];
@@ -36,6 +62,7 @@ export function BrowseStage({
   const [pendingFilters, setPendingFilters] = useState(filters);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(500);
+  const [filtersApplied, setFiltersApplied] = useState(false);
 
   // Extract unique filter options
   const filterOptions = useMemo(() => {
@@ -62,6 +89,12 @@ export function BrowseStage({
     setCurrentPage(1);
   }, [filters]);
 
+  // Sync pending filters with actual filters when filters change
+  React.useEffect(() => {
+    setPendingFilters(filters);
+    setFiltersApplied(true); // 標記為已套用
+  }, [filters]);
+
   // Reset to first page when courses change
   React.useEffect(() => {
     setCurrentPage(1);
@@ -69,32 +102,44 @@ export function BrowseStage({
 
   const handleFilterChange = (key: keyof AppState['filters'], value: any) => {
     console.log('BrowseStage: Filter change', key, value);
-    setPendingFilters(prev => ({ ...prev, [key]: value }));
+    const updatedFilters = { ...pendingFilters, [key]: value };
+    setPendingFilters(updatedFilters);
+    setFiltersApplied(false);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = e.target.value;
     console.log('BrowseStage: Search change', searchValue);
-    setPendingFilters(prev => ({ ...prev, search: searchValue }));
-    // Apply search immediately for better UX
-    onUpdateFilters({ ...pendingFilters, search: searchValue });
-    // Reset to first page when searching
-    setCurrentPage(1);
+    const updatedFilters = { ...pendingFilters, search: searchValue };
+    setPendingFilters(updatedFilters);
+    setFiltersApplied(false);
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      console.log('BrowseStage: Search submitted via Enter key');
+      handleApplyFilters();
+    }
   };
 
   const handleApplyFilters = () => {
     console.log('BrowseStage: Applying filters', pendingFilters);
     onUpdateFilters(pendingFilters);
-    setShowFilters(false);
+    setFiltersApplied(true);
+    setCurrentPage(1);
+    setShowFilters(false); // 自動收回篩選介面
     toast.success("篩選條件已套用", {
-      description: "課程列表已根據您的篩選條件更新",
+      description: "已根據您設定的條件篩選課程",
     });
   };
+
 
   const handleResetFilters = () => {
     const resetFilters = { department: [], year: [], credits: [], search: '' };
     setPendingFilters(resetFilters);
     onUpdateFilters(resetFilters);
+    setFiltersApplied(true);
+    setCurrentPage(1);
     setShowFilters(false);
     toast.info("篩選條件已重置", {
       description: "所有篩選條件已清除",
@@ -127,9 +172,57 @@ export function BrowseStage({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+    <div className="flex gap-6 w-full">
+      {/* Time Reference Table - Left Side */}
+      <div className="w-80 flex-shrink-0">
+        <Card className="sticky top-6">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Clock className="h-5 w-5" />
+              <span>節次時間對照表</span>
+            </CardTitle>
+            <CardDescription>
+              課程節次與時間對照
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div className="font-medium text-center bg-gray-100 p-2 rounded">節次</div>
+                <div className="font-medium text-center bg-gray-100 p-2 rounded">開始時間</div>
+                <div className="font-medium text-center bg-gray-100 p-2 rounded">結束時間</div>
+              </div>
+              {[
+                { code: '0', start: '07:10', end: '08:00' },
+                { code: '1', start: '08:10', end: '09:00' },
+                { code: '2', start: '09:10', end: '10:00' },
+                { code: '3', start: '10:20', end: '11:10' },
+                { code: '4', start: '11:20', end: '12:10' },
+                { code: '5', start: '12:20', end: '13:10' },
+                { code: '6', start: '13:20', end: '14:10' },
+                { code: '7', start: '14:20', end: '15:10' },
+                { code: '8', start: '15:30', end: '16:20' },
+                { code: '9', start: '16:30', end: '17:20' },
+                { code: 'A', start: '18:25', end: '19:15' },
+                { code: 'B', start: '19:20', end: '20:10' },
+                { code: 'C', start: '20:15', end: '21:05' },
+                { code: 'D', start: '21:10', end: '22:00' },
+              ].map(({ code, start, end }) => (
+                <div key={code} className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="font-medium text-center bg-blue-50 p-2 rounded border">{code}</div>
+                  <div className="text-center p-2 border">{start}</div>
+                  <div className="text-center p-2 border">{end}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">Course Catalog</h2>
                   <p className="text-lg text-gray-600">
@@ -203,6 +296,7 @@ export function BrowseStage({
                     placeholder="Search courses, instructors, or course codes..."
                     value={pendingFilters.search}
                     onChange={handleSearchChange}
+                    onKeyPress={handleSearchKeyPress}
                     className="pl-12 text-base h-12"
                   />
                 </div>
@@ -284,22 +378,28 @@ export function BrowseStage({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" onClick={handleResetFilters} className="text-base">
-                      Reset
+                      Reset All Filters
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>清除所有篩選條件</p>
                   </TooltipContent>
                 </Tooltip>
+                
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button onClick={handleApplyFilters} className="text-base">
-                      <Check className="h-5 w-5 mr-2" />
-                      Apply Filters
+                    <Button 
+                      onClick={handleApplyFilters} 
+                      disabled={filtersApplied}
+                      className="text-base"
+                      variant={filtersApplied ? "secondary" : "default"}
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      {filtersApplied ? "已套用" : "套用篩選"}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>套用篩選條件</p>
+                    <p>{filtersApplied ? "篩選條件已套用" : "套用篩選條件"}</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -310,7 +410,7 @@ export function BrowseStage({
 
       {/* Course List */}
       <div className="relative z-10">
-        <ScrollArea className="h-[600px]">
+        <ScrollArea className="h-[500px]">
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedCourses.map((course) => (
@@ -415,33 +515,35 @@ export function BrowseStage({
         </div>
       )}
 
-              {/* Next Step Button */}
-              {onNavigateToPlanning && (
-                <div className="flex justify-center mt-8">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        onClick={() => {
-                          onNavigateToPlanning();
-                          toast.success("進入計劃階段", {
-                            description: "您已成功進入課程計劃階段",
-                          });
-                        }}
-                        size="lg"
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        Go to Planning
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>進入課程計劃階段</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              )}
-            </div>
-          );
-        }
+        {/* Next Step Button */}
+        {onNavigateToPlanning && (
+          <div className="flex justify-center mt-12 mb-8">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={() => {
+                    onNavigateToPlanning();
+                    toast.success("進入計劃階段", {
+                      description: "您已成功進入課程計劃階段",
+                    });
+                  }}
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Calendar className="h-5 w-5 mr-2" />
+                  進入課程計劃
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>進入課程計劃階段</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // Course Card Component for Grid View
 const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: { course: ParsedCourse, onAddToPlanning: (course: ParsedCourse) => void }) {
@@ -483,16 +585,9 @@ const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: {
           
                   <div className="flex items-center text-base text-gray-600">
                     <Clock className="h-5 w-5 mr-2" />
-                    {course.timeSlots.length > 0 ? (
-                      course.timeSlots.map((slot, index) => (
-                        <span key={index}>
-                          {slot.day} {slot.start}:10-{slot.end}:00
-                          {index < course.timeSlots.length - 1 && ', '}
-                        </span>
-                      ))
-                    ) : (
-                      <span>TBA</span>
-                    )}
+                    <span className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">
+                      {formatTimeSlotsDisplay(course.timeSlots)}
+                    </span>
                   </div>
           
           <div className="flex items-center text-base text-gray-600">
@@ -561,18 +656,9 @@ const CourseListItem = React.memo(function CourseListItem({ course, onAddToPlann
             </p>
             
             <div className="flex items-center space-x-6 text-sm text-gray-500">
-                      <span>
-                        {course.timeSlots.length > 0 ? (
-                          course.timeSlots.map((slot, index) => (
-                            <span key={index}>
-                              {slot.day} {slot.start}:10-{slot.end}:00
-                              {index < course.timeSlots.length - 1 && ', '}
-                            </span>
-                          ))
-                        ) : (
-                          <span>TBA</span>
-                        )}
-                      </span>
+              <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+                {formatTimeSlotsDisplay(course.timeSlots)}
+              </span>
               <span>{course.enrolled}/{course.capacity} students</span>
             </div>
           </div>

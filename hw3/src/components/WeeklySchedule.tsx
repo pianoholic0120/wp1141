@@ -10,8 +10,13 @@ interface WeeklyScheduleProps {
 }
 
 const TIME_SLOTS = [
-  '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
+  '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'
 ];
+
+// Helper function to get time string from hour number
+const getTimeString = (hour: number): string => {
+  return `${hour.toString().padStart(2, '0')}:00`;
+};
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -31,6 +36,11 @@ export function WeeklySchedule({ courses, onRemoveCourse }: WeeklyScheduleProps)
   const scheduleGrid = React.useMemo(() => {
     const grid: { [key: string]: { [key: string]: ParsedCourse[] } } = {};
     
+    console.log('WeeklySchedule: Processing courses:', courses.length);
+    courses.forEach(course => {
+      console.log(`Course: ${course.cou_cname}, timeSlots:`, course.timeSlots);
+    });
+    
     // Initialize grid
     DAYS.forEach(day => {
       grid[day] = {};
@@ -43,12 +53,15 @@ export function WeeklySchedule({ courses, onRemoveCourse }: WeeklyScheduleProps)
     courses.forEach((course, index) => {
       const colorClass = COLORS[index % COLORS.length];
       course.timeSlots.forEach(slot => {
-        if (grid[slot.day] && grid[slot.day][slot.start]) {
-          grid[slot.day][slot.start].push({ ...course, colorClass });
+        const timeString = getTimeString(slot.start);
+        console.log(`Adding course ${course.cou_cname} to grid: ${slot.day} at ${timeString}`);
+        if (grid[slot.day] && grid[slot.day][timeString]) {
+          grid[slot.day][timeString].push({ ...course, colorClass });
         }
       });
     });
 
+    console.log('Final grid:', grid);
     return grid;
   }, [courses]);
 
@@ -83,13 +96,14 @@ export function WeeklySchedule({ courses, onRemoveCourse }: WeeklyScheduleProps)
                 {DAYS.map(day => {
                   const coursesAtTime = scheduleGrid[day][timeSlot];
                   const isFirstTimeSlot = coursesAtTime.length > 0 && 
-                    coursesAtTime[0].timeSlots.some(ts => ts.day === day && ts.start === parseInt(timeSlot));
+                    coursesAtTime[0].timeSlots.some(ts => ts.day === day && getTimeString(ts.start) === timeSlot);
                   
                   if (isFirstTimeSlot) {
                     const course = coursesAtTime[0];
-                    const duration = course.timeSlots.find(ts => ts.day === day && ts.start === parseInt(timeSlot));
+                    const duration = course.timeSlots.find(ts => ts.day === day && getTimeString(ts.start) === timeSlot);
                     const startIndex = TIME_SLOTS.indexOf(timeSlot);
-                    const endIndex = duration ? TIME_SLOTS.indexOf(duration.end.toString()) : startIndex + 1;
+                    const endTimeString = duration ? getTimeString(duration.end) : timeSlot;
+                    const endIndex = TIME_SLOTS.indexOf(endTimeString);
                     const height = Math.max(1, endIndex - startIndex);
                     
                     return (

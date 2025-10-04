@@ -121,7 +121,7 @@ export function SubmittedStage({
                   <div className="text-xs text-gray-500">
                     {course.timeSlots.map((slot, index) => (
                       <span key={index}>
-                        {slot.day} {slot.start}-{slot.end}
+                        {slot.day} {slot.start.toString().padStart(2, '0')}:10-{slot.end.toString().padStart(2, '0')}:00
                         {index < course.timeSlots.length - 1 && ', '}
                       </span>
                     ))}
@@ -213,7 +213,8 @@ export function SubmittedStage({
                 Cancel
               </Button>
               <Button onClick={handleReset} variant="destructive">
-                Start New Registration
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Confirm & Start New Registration
               </Button>
             </DialogFooter>
           </DialogContent>
