@@ -133,9 +133,11 @@ export function WeeklySchedule({ courses, onRemoveCourse, showDeleteButton = tru
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="absolute top-0 right-0 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="btn-enhanced btn-ghost-enhanced absolute top-0 right-0 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity btn-press-animation"
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <span className="btn-icon-inner">
+                                  <Trash2 className="h-3 w-3" />
+                                </span>
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
@@ -151,10 +153,10 @@ export function WeeklySchedule({ courses, onRemoveCourse, showDeleteButton = tru
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>取消 / Cancel</AlertDialogCancel>
+                                <AlertDialogCancel className="btn-enhanced btn-outline-enhanced btn-press-animation">取消 / Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => onRemoveCourse(course.id)}
-                                  className="bg-red-600 hover:bg-red-700"
+                                  className="btn-enhanced btn-danger-enhanced btn-press-animation"
                                 >
                                   刪除 / Delete
                                 </AlertDialogAction>

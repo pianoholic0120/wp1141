@@ -96,8 +96,10 @@ export function PlanningStage({
         <div className="flex items-center space-x-2">
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" className="btn-enhanced btn-outline-enhanced btn-press-animation">
+                <span className="btn-icon-inner">
+                  <Plus className="h-4 w-4 mr-2" />
+                </span>
                 New Plan
               </Button>
             </DialogTrigger>
@@ -121,10 +123,10 @@ export function PlanningStage({
                 />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                <Button variant="outline" onClick={() => setShowCreateDialog(false)} className="btn-enhanced btn-outline-enhanced btn-press-animation">
                   取消 / Cancel
                 </Button>
-                <Button onClick={handleCreatePlan} disabled={!newPlanName.trim()}>
+                <Button onClick={handleCreatePlan} disabled={!newPlanName.trim()} className="btn-enhanced btn-primary-enhanced btn-press-animation">
                   建立計劃 / Create Plan
                 </Button>
               </DialogFooter>
@@ -136,6 +138,7 @@ export function PlanningStage({
               <Button 
                 onClick={() => setShowSubmitDialog(true)}
                 disabled={!activeSchedule?.courses.length}
+                className="btn-enhanced btn-primary-enhanced btn-press-animation"
               >
                 Submit Registration
               </Button>
@@ -191,15 +194,17 @@ export function PlanningStage({
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
+                <Button variant="outline" onClick={() => setShowSubmitDialog(false)} className="btn-enhanced btn-outline-enhanced btn-press-animation">
                   取消 / Cancel
                 </Button>
                 <Button 
                   onClick={handleSubmit} 
                   disabled={conflicts.length > 0}
-                  className={conflicts.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}
+                  className={`btn-enhanced btn-press-animation ${conflicts.length > 0 ? 'opacity-50 cursor-not-allowed' : 'btn-success-enhanced'}`}
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <span className="btn-icon-inner">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                  </span>
                   確認並提交 / Confirm & Submit
                 </Button>
               </DialogFooter>
@@ -325,8 +330,11 @@ export function PlanningStage({
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleRemoveCourse(course)}
+                                className="btn-enhanced btn-outline-enhanced btn-press-animation"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <span className="btn-icon-inner">
+                                  <Trash2 className="h-4 w-4" />
+                                </span>
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
@@ -342,10 +350,10 @@ export function PlanningStage({
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>取消 / Cancel</AlertDialogCancel>
+                                <AlertDialogCancel className="btn-enhanced btn-outline-enhanced btn-press-animation">取消 / Cancel</AlertDialogCancel>
                                 <AlertDialogAction 
                                   onClick={confirmRemoveCourse}
-                                  className="bg-red-600 hover:bg-red-700"
+                                  className="btn-enhanced btn-danger-enhanced btn-press-animation"
                                 >
                                   確認移除 / Confirm Remove
                                 </AlertDialogAction>

@@ -42,8 +42,38 @@ An interactive puzzle game where players control multiple blocks to cover all re
 - Responsive UI with fantasy adventure theme
 - Local storage for progress tracking and high scores
 
-### HW3 - [Assignment Title]
-*Assignment details will be added upon completion*
+### HW3 - NTU Course Registration Service
+**Technology Stack**: React 19, TypeScript, shadcn/ui, Tailwind CSS, Twitter Tweak UI Design System
+
+A comprehensive course registration system featuring a four-stage workflow that simulates the real-world course selection process at National Taiwan University:
+
+#### Core Features:
+- **🔥 Hot Reload Data**: Automatically updates when CSV data changes (5-second polling)
+- **⚡ Real-time Conflict Detection**: Instant schedule conflict checking with visual indicators
+- **📋 Multiple Planning Scenarios**: Create and compare different schedules (Plan A, B, C, etc.)
+- **🎨 Twitter Tweak UI Design**: Modern design system with OKLCH colors and smooth animations
+- **🌐 Multilingual Support**: Chinese and English interface
+- **📱 Responsive Design**: Optimized for desktop, tablet, and mobile devices
+
+#### Four-Stage Registration Process:
+1. **Browse & Explore**: Advanced course filtering with search, department, year, credits, and time slot filters
+2. **Planning Container**: Interactive weekly calendar with real-time conflict detection and multiple plan scenarios
+3. **Submit Registration**: Comprehensive review process with validation and confirmation
+4. **Modification System**: Safe modification of submitted registrations with change tracking
+
+#### Technical Highlights:
+- **State Management**: React Context API with useReducer for predictable state updates
+- **Data Processing**: Custom CSV parser with TypeScript interfaces and hot reload functionality
+- **UI Components**: shadcn/ui v4 with Radix UI primitives and enhanced button feedback
+- **Performance**: Code splitting, lazy loading, and efficient re-rendering with React hooks
+- **Accessibility**: WCAG 2.1 AA compliance with semantic HTML and keyboard navigation
+
+#### Design System:
+- **Color Space**: OKLCH for consistent visual perception
+- **Typography**: Open Sans font family with responsive scaling
+- **Shadows**: Twitter-style shadow system with multiple levels
+- **Border Radius**: 1.3rem base radius with responsive variants
+- **Animations**: CSS transitions with enhanced button feedback and hover effects
 
 ### HW4 - [Assignment Title]
 *Assignment details will be added upon completion*
@@ -66,8 +96,22 @@ The assignments are designed to progressively build web development skills:
 
 1. **Foundation (HW1)**: Native web technologies, responsive design, and accessibility
 2. **Framework Introduction (HW2)**: React ecosystem, TypeScript integration, and component architecture
-3. **Advanced Concepts (HW3-HW7)**: [To be updated as assignments are completed]
-4. **Capstone Project (Final)**: [To be updated upon completion]
+3. **Advanced Concepts (HW3)**: 
+   - **Complex State Management**: React Context API with useReducer
+   - **Advanced UI Components**: shadcn/ui with custom design systems
+   - **Data Processing**: CSV parsing, hot reload, and real-time updates
+   - **Performance Optimization**: Code splitting, lazy loading, and efficient rendering
+   - **Design Systems**: Twitter Tweak UI with OKLCH colors and modern styling
+   - **Accessibility**: WCAG 2.1 AA compliance and keyboard navigation
+   - **Multilingual Support**: Internationalization and responsive design
+4. **Future Assignments (HW4-HW7)**: [To be updated as assignments are completed]
+5. **Capstone Project (Final)**: [To be updated upon completion]
+
+### Skill Development Timeline
+- **HW1**: HTML5, CSS3, TypeScript fundamentals
+- **HW2**: React basics, component architecture, game development
+- **HW3**: Advanced React patterns, state management, design systems, data processing
+- **HW4+**: [Advanced topics to be covered in future assignments]
 
 ## Development Environment
 
@@ -99,36 +143,140 @@ npm start
 
 Through these assignments, students will gain proficiency in:
 
+### Core Web Technologies
 - **Frontend Development**: HTML5, CSS3, JavaScript/TypeScript
 - **Modern Frameworks**: React ecosystem and component-based architecture
 - **Responsive Design**: Mobile-first approach and cross-device compatibility
 - **User Experience**: Interactive design and accessibility best practices
-- **Development Tools**: Build systems, package management, and version control
+
+### Advanced Development Skills
+- **State Management**: Complex application state with Context API and useReducer
+- **Data Processing**: CSV parsing, real-time updates, and hot reload functionality
+- **Design Systems**: Modern design tokens, OKLCH colors, and consistent styling
 - **Performance Optimization**: Code splitting, lazy loading, and efficient rendering
+- **Accessibility**: WCAG 2.1 AA compliance and inclusive design practices
+
+### Development Tools & Practices
+- **Build Systems**: Vite, webpack, and modern bundling tools
+- **Package Management**: npm/yarn and dependency management
+- **Version Control**: Git workflow and collaborative development
+- **Code Quality**: TypeScript, ESLint, and testing frameworks
+- **Deployment**: Production builds and deployment strategies
+
+### Project Management
+- **Component Architecture**: Reusable and maintainable component design
+- **Documentation**: Comprehensive README files and code documentation
+- **Testing**: Unit testing, integration testing, and test-driven development
+- **Collaboration**: Team development and code review processes
 
 ## Project Standards
 
 All assignments follow these development standards:
 
-- **Code Quality**: TypeScript for type safety and maintainability
+### Code Quality & Architecture
+- **TypeScript**: Strict type checking for type safety and maintainability
+- **Component Architecture**: Functional components with hooks and single responsibility
+- **State Management**: Predictable state updates with Context API and useReducer
+- **Error Handling**: Comprehensive error boundaries and graceful error recovery
+- **Code Organization**: Modular structure with clear separation of concerns
+
+### Design & User Experience
 - **Responsive Design**: Mobile-first approach with progressive enhancement
-- **Accessibility**: WCAG guidelines compliance and semantic HTML
+- **Accessibility**: WCAG 2.1 AA compliance and semantic HTML structure
+- **Design Systems**: Consistent styling with design tokens and component libraries
+- **User Feedback**: Intuitive interactions with visual feedback and animations
 - **Performance**: Optimized loading times and smooth user interactions
+
+### Development Practices
 - **Documentation**: Comprehensive README files and inline code comments
 - **Version Control**: Proper Git workflow with meaningful commit messages
+- **Testing**: Unit testing and integration testing for critical functionality
+- **Code Review**: Peer review process for code quality assurance
+- **Continuous Integration**: Automated testing and deployment pipelines
 
 ## Browser Compatibility
 
 All projects are tested and compatible with:
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
 
-## License
+| Browser | Version | Status |
+|---------|---------|--------|
+| Chrome | 90+ | ✅ Fully Supported |
+| Firefox | 88+ | ✅ Fully Supported |
+| Safari | 14+ | ✅ Fully Supported |
+| Edge | 90+ | ✅ Fully Supported |
 
-This repository contains educational projects and is intended for learning purposes only.
+### Device Support
+- **Desktop**: Full feature support with optimal layout
+- **Tablet**: Responsive layout with touch-friendly interactions
+- **Mobile**: Optimized mobile experience with simplified navigation
 
-## Contact
+## 📊 Assignment Progress
 
-For questions or feedback regarding any assignment, please refer to the individual assignment README files or contact the course instructor.
+| Assignment | Status | Technologies | Key Features |
+|------------|--------|--------------|--------------|
+| HW1 | ✅ Complete | HTML5, CSS3, TypeScript | Portfolio website, responsive design |
+| HW2 | ✅ Complete | React 18, TypeScript | Puzzle game, audio feedback, animations |
+| HW3 | ✅ Complete | React 19, shadcn/ui, Tailwind | Course registration, hot reload, design system |
+| HW4 | 🔄 In Progress | TBD | TBD |
+| HW5 | 📋 Planned | TBD | TBD |
+| HW6 | 📋 Planned | TBD | TBD |
+| HW7 | 📋 Planned | TBD | TBD |
+| Final Project | 📋 Planned | TBD | TBD |
+
+## 🎯 Key Achievements
+
+### Technical Skills Developed
+- **Frontend Development**: Modern React applications with TypeScript
+- **State Management**: Complex application state with Context API
+- **Design Systems**: Twitter Tweak UI with OKLCH colors and modern styling
+- **Data Processing**: CSV parsing, hot reload, and real-time updates
+- **Performance Optimization**: Code splitting, lazy loading, and efficient rendering
+- **Accessibility**: WCAG 2.1 AA compliance and inclusive design
+
+### Project Highlights
+- **HW1**: Responsive portfolio with modern CSS techniques
+- **HW2**: Interactive puzzle game with audio feedback and animations
+- **HW3**: Comprehensive course registration system with advanced features
+
+## 📄 License
+
+This repository contains **educational projects** and is intended for learning purposes only.
+
+### Usage Rights
+- ✅ **Educational Use**: Free for academic and learning purposes
+- ✅ **Personal Projects**: Can be used as reference for personal projects
+- ❌ **Commercial Use**: Not permitted for commercial applications
+- ❌ **Redistribution**: Cannot be redistributed without permission
+
+## 🆘 Support & Contact
+
+### Getting Help
+- **Assignment Issues**: Refer to individual assignment README files
+- **Technical Questions**: Check course documentation and resources
+- **Course Questions**: Contact the course instructor
+- **Development Help**: Stack Overflow and developer communities
+
+### Contributing
+We welcome contributions and feedback! Please follow these guidelines:
+
+1. **Fork the repository**
+2. **Create a feature branch**
+3. **Make your changes**
+4. **Submit a pull request**
+
+---
+
+## 📚 Additional Resources
+
+- [React Documentation](https://react.dev/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [shadcn/ui Components](https://ui.shadcn.com/)
+- [Vite Guide](https://vitejs.dev/guide/)
+- [Web Accessibility Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+
+---
+
+**Built with ❤️ for the NTU Web Programming Course**
+
+*This repository showcases progressive web development skills through practical, real-world projects.*

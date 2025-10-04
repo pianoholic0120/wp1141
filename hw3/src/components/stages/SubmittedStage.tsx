@@ -172,8 +172,10 @@ export function SubmittedStage({
       <div className="flex justify-center space-x-4">
         <Dialog open={showModifyDialog} onOpenChange={setShowModifyDialog}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-50">
-              <Edit3 className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="btn-enhanced btn-outline-enhanced border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400 active:bg-orange-100 btn-press-animation">
+              <span className="btn-icon-inner">
+                <Edit3 className="h-4 w-4 mr-2" />
+              </span>
               Modify Registration
             </Button>
           </DialogTrigger>
@@ -190,10 +192,10 @@ export function SubmittedStage({
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex-col sm:flex-row gap-3 mt-4">
-              <Button variant="outline" onClick={() => setShowModifyDialog(false)} className="w-full sm:w-auto text-sm">
+              <Button variant="outline" onClick={() => setShowModifyDialog(false)} className="btn-enhanced btn-outline-enhanced w-full sm:w-auto text-sm btn-press-animation">
                 取消 / Cancel
               </Button>
-              <Button onClick={handleModify} className="bg-orange-600 hover:bg-orange-700 w-full sm:w-auto text-sm">
+              <Button onClick={handleModify} className="btn-enhanced btn-warning-enhanced w-full sm:w-auto text-sm btn-press-animation">
                 <span className="hidden sm:inline">繼續修改 / Proceed to Modification</span>
                 <span className="sm:hidden">繼續修改 / Proceed</span>
               </Button>
@@ -203,8 +205,10 @@ export function SubmittedStage({
 
         <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
           <DialogTrigger asChild>
-            <Button variant="outline">
-              <RotateCcw className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="btn-enhanced btn-outline-enhanced border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400 active:bg-red-100 btn-press-animation">
+              <span className="btn-icon-inner">
+                <RotateCcw className="h-4 w-4 mr-2" />
+              </span>
               Start New Registration
             </Button>
           </DialogTrigger>
@@ -222,11 +226,13 @@ export function SubmittedStage({
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex-col sm:flex-row gap-6 mt-8">
-              <Button variant="outline" onClick={() => setShowResetDialog(false)} className="w-full sm:w-auto text-base">
+              <Button variant="outline" onClick={() => setShowResetDialog(false)} className="btn-enhanced btn-outline-enhanced w-full sm:w-auto text-base btn-press-animation">
                 取消 / Cancel
               </Button>
-              <Button onClick={handleReset} className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto text-base">
-                <RotateCcw className="h-5 w-5 mr-2" />
+              <Button onClick={handleReset} className="btn-enhanced btn-danger-enhanced w-full sm:w-auto text-base btn-press-animation">
+                <span className="btn-icon-inner">
+                  <RotateCcw className="h-5 w-5 mr-2" />
+                </span>
                 <span className="hidden xl:inline">確認並開始新註冊 / Confirm & Start New Registration</span>
                 <span className="hidden lg:inline xl:hidden">確認並開始新註冊 / Confirm & Start New</span>
                 <span className="hidden sm:inline lg:hidden">開始新註冊 / Start New</span>

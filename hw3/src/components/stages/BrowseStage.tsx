@@ -293,14 +293,17 @@ export function BrowseStage({
                 <div className="flex items-center space-x-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowFilters(!showFilters)}
-                      >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="btn-enhanced btn-outline-enhanced btn-press-animation"
+                    >
+                      <span className="btn-icon-inner">
                         <Filter className="h-4 w-4 mr-2" />
-                        Filters
-                      </Button>
+                      </span>
+                      Filters
+                    </Button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>開啟篩選選項</p>
@@ -314,9 +317,11 @@ export function BrowseStage({
                           variant={viewMode === 'grid' ? 'default' : 'ghost'}
                           size="sm"
                           onClick={() => setViewMode('grid')}
-                          className="rounded-r-none"
+                          className={`rounded-r-none btn-enhanced btn-press-animation ${viewMode === 'grid' ? 'btn-primary-enhanced' : 'btn-ghost-enhanced'}`}
                         >
-                          <Grid className="h-4 w-4" />
+                          <span className="btn-icon-inner">
+                            <Grid className="h-4 w-4" />
+                          </span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -329,9 +334,11 @@ export function BrowseStage({
                           variant={viewMode === 'list' ? 'default' : 'ghost'}
                           size="sm"
                           onClick={() => setViewMode('list')}
-                          className="rounded-l-none"
+                          className={`rounded-l-none btn-enhanced btn-press-animation ${viewMode === 'list' ? 'btn-primary-enhanced' : 'btn-ghost-enhanced'}`}
                         >
-                          <List className="h-4 w-4" />
+                          <span className="btn-icon-inner">
+                            <List className="h-4 w-4" />
+                          </span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -479,7 +486,7 @@ export function BrowseStage({
               <div className="flex justify-end space-x-3 mt-6">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" onClick={handleResetFilters} className="text-base">
+                    <Button variant="outline" onClick={handleResetFilters} className="btn-enhanced btn-outline-enhanced text-base btn-press-animation">
                       Reset All Filters
                     </Button>
                   </TooltipTrigger>
@@ -493,10 +500,12 @@ export function BrowseStage({
                     <Button 
                       onClick={handleApplyFilters} 
                       disabled={filtersApplied}
-                      className="text-base"
+                      className={`text-base btn-enhanced btn-press-animation ${filtersApplied ? 'btn-outline-enhanced' : 'btn-success-enhanced'}`}
                       variant={filtersApplied ? "secondary" : "default"}
                     >
-                      <Check className="h-4 w-4 mr-2" />
+                      <span className="btn-icon-inner">
+                        <Check className="h-4 w-4 mr-2" />
+                      </span>
                       {filtersApplied ? "已套用" : "套用篩選"}
                     </Button>
                   </TooltipTrigger>
@@ -676,9 +685,11 @@ export function BrowseStage({
                     });
                   }}
                   size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="btn-enhanced btn-primary-enhanced bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 btn-press-animation"
                 >
-                  <Calendar className="h-5 w-5 mr-2" />
+                  <span className="btn-icon-inner">
+                    <Calendar className="h-5 w-5 mr-2" />
+                  </span>
                   進入課程計劃
                 </Button>
               </TooltipTrigger>
@@ -755,10 +766,12 @@ const CourseCard = React.memo(function CourseCard({ course, onAddToPlanning }: {
                   <TooltipTrigger asChild>
                     <Button 
                       onClick={handleAddToPlanning}
-                      className="w-full text-base"
+                      className="w-full text-base btn-enhanced btn-success-enhanced btn-press-animation"
                       size="default"
                     >
-                      <Plus className="h-5 w-5 mr-2" />
+                      <span className="btn-icon-inner">
+                        <Plus className="h-5 w-5 mr-2" />
+                      </span>
                       Add to Planning
                     </Button>
                   </TooltipTrigger>
@@ -819,8 +832,10 @@ const CourseListItem = React.memo(function CourseListItem({ course, onAddToPlann
             
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button onClick={handleAddToPlanning} size="default" className="text-base">
-                          <Plus className="h-5 w-5 mr-2" />
+                        <Button onClick={handleAddToPlanning} size="default" className="text-base btn-enhanced btn-success-enhanced btn-press-animation">
+                          <span className="btn-icon-inner">
+                            <Plus className="h-5 w-5 mr-2" />
+                          </span>
                           Add
                         </Button>
                       </TooltipTrigger>

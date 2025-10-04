@@ -85,15 +85,17 @@ export function AppShell({ currentStage, onStageChange, submittedRegistration, p
                     size="default"
                     onClick={() => isAccessible && onStageChange(stage.id as AppState['currentStage'])}
                     disabled={!isAccessible}
-                    className={`flex items-center space-x-2 text-base ${
+                    className={`btn-enhanced btn-press-animation flex items-center space-x-2 text-base ${
                       isActive 
-                        ? stage.color 
+                        ? `${stage.color} btn-primary-enhanced` 
                         : isAccessible 
-                          ? 'text-gray-600 hover:text-gray-900' 
+                          ? 'text-gray-600 hover:text-gray-900 btn-ghost-enhanced' 
                           : 'text-gray-400 cursor-not-allowed'
                     }`}
                   >
-                    <Icon className="h-5 w-5" />
+                    <span className="btn-icon-inner">
+                      <Icon className="h-5 w-5" />
+                    </span>
                     <span className="hidden sm:inline">{stage.name}</span>
                   </Button>
                 );
