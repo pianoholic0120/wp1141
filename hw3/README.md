@@ -9,51 +9,12 @@ A modern, responsive web application for course registration at National Taiwan 
 
 ## Features
 
-### 🎯 Four-Stage Registration Process
+### Four-Stage Registration Process
 
 1. **Browse & Explore** - Discover courses with advanced filtering
 2. **Planning Container** - Plan schedules with conflict detection
 3. **Submit Record** - Review and submit registration
 4. **Modification System** - Modify submitted registrations
-
-### ✨ Key Features
-
-- **🔥 Hot Reload Data**: Automatically updates when CSV data changes (5-second polling)
-- **⚡ Real-time Conflict Detection**: Instant schedule conflict checking with visual indicators
-- **📋 Multiple Planning Scenarios**: Create and compare different schedules (Plan A, B, C, etc.)
-- **📱 Responsive Design**: Works seamlessly on desktop, tablet, and mobile
-- **🎨 Twitter Tweak UI Design**: Modern design system with OKLCH colors and smooth animations
-- **♿ Accessibility**: Built with WCAG guidelines and accessibility best practices
-- **🌐 Multilingual Support**: Chinese and English interface
-- **💾 State Persistence**: Browser-based state management with hot reload
-- **🎯 Enhanced Button Feedback**: Intuitive user interactions with visual feedback
-- **🔍 Advanced Filtering**: Search by name, code, instructor, department, credits, time slots
-
-## Tech Stack
-
-### 🚀 Core Technologies
-
-- **Frontend Framework**: React 19 with TypeScript 5.9.3
-- **Build Tool**: Vite 7.1.9 with hot module replacement
-- **Styling**: Tailwind CSS 3.4.18 with Twitter Tweak UI design system
-- **UI Components**: shadcn/ui v4 with Radix UI primitives
-- **Icons**: Lucide React 0.544.0
-- **State Management**: React Context API with useReducer
-
-### 🎨 Design System
-
-- **Color Space**: OKLCH for consistent visual perception
-- **Typography**: Open Sans font family with responsive scaling
-- **Shadows**: Twitter-style shadow system with multiple levels
-- **Border Radius**: 1.3rem base radius with responsive variants
-- **Animations**: CSS transitions with enhanced button feedback
-
-### 📊 Data & State
-
-- **Data Source**: CSV-based course data with hot reload
-- **File Polling**: 5-second interval for automatic updates
-- **State Persistence**: Browser memory (no localStorage per requirements)
-- **Data Parsing**: Custom CSV parser with TypeScript interfaces
 
 ## Getting Started
 
@@ -101,7 +62,7 @@ npm run preview
 npx tsc --noEmit
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 hw3/
@@ -148,7 +109,7 @@ hw3/
 └── README.md                       # This file
 ```
 
-## 📊 Data Management
+## Data Management
 
 ### Course Data Format
 
@@ -165,7 +126,7 @@ The application reads course data from `public/data/hw3-ntucourse-data-1002.csv`
 | `limit`                    | Course capacity         | 120      |
 | `dpt_abbr`                 | Department abbreviation | MATH     |
 
-### 🔄 Hot Reload System
+### Hot Reload System
 
 The application automatically detects changes to the CSV file and reloads the data without requiring a restart:
 
@@ -183,7 +144,7 @@ The application automatically detects changes to the CSV file and reloads the da
 4. **Caching**: Efficient data storage and retrieval
 5. **Filtering**: Real-time filtering with multiple criteria
 
-## 🎯 Usage Guide
+## Usage Guide
 
 ### Stage 1: Browse & Explore
 
@@ -191,12 +152,12 @@ The application automatically detects changes to the CSV file and reloads the da
 
 #### Features:
 
-- **🔍 Smart Search**: Find courses by name, code, or instructor
-- **🎛️ Advanced Filtering**: Filter by department, year, credits, time slots, and days
-- **📊 Dual Views**: Switch between grid cards and detailed list view
-- **📅 Time Reference**: Built-in time slot reference table
-- **➕ Easy Addition**: One-click "Add to Planning" with toast feedback
-- **📱 Responsive**: Optimized for desktop, tablet, and mobile
+- **Smart Search**: Find courses by name, code, or instructor
+- **Advanced Filtering**: Filter by department, year, credits, time slots, and days
+- **Dual Views**: Switch between grid cards and detailed list view
+- **Time Reference**: Built-in time slot reference table
+- **Easy Addition**: One-click "Add to Planning" with toast feedback
+- **Responsive**: Optimized for desktop, tablet, and mobile
 
 #### Filter Options:
 
@@ -213,12 +174,10 @@ The application automatically detects changes to the CSV file and reloads the da
 
 #### Features:
 
-- **📅 Interactive Calendar**: Visual weekly schedule with drag-and-drop support
-- **⚡ Real-time Conflicts**: Instant conflict detection with visual indicators
-- **📋 Multiple Plans**: Create and compare different scenarios (Plan A, B, C, etc.)
-- **🗑️ Easy Removal**: Hover to reveal delete buttons with confirmation
-- **📊 Statistics**: Live course count, credits, and conflict tracking
-- **💾 Auto-save**: Continuous state persistence
+- **Multiple Plans**: Create and compare different scenarios (Plan A, B, C, etc.)
+- **Easy Removal**: Hover to reveal delete buttons with confirmation
+- **Statistics**: Live course count, credits, and conflict tracking
+- **Auto-save**: Continuous state persistence
 
 #### Planning Tools:
 
@@ -233,11 +192,9 @@ The application automatically detects changes to the CSV file and reloads the da
 
 #### Features:
 
-- **📋 Pre-submission Review**: Comprehensive course summary
-- **✅ Validation**: Credit requirements and conflict checking
-- **🔒 Confirmation**: Two-step submission process
-- **🎉 Success Feedback**: Confirmation number and celebration
-- **📄 Export Options**: Download or print schedule
+- **Pre-submission Review**: Comprehensive course summary
+- **Confirmation**: Two-step submission process
+- **Success Feedback**: Confirmation number and celebration
 
 #### Submission Process:
 
@@ -252,11 +209,11 @@ The application automatically detects changes to the CSV file and reloads the da
 
 #### Features:
 
-- **⚠️ Modification Mode**: Clear visual distinction from planning
-- **📊 Change Tracking**: Real-time change summary with visual indicators
-- **🔄 Comparison View**: Side-by-side original vs modified schedules
-- **✅ Re-submission**: Complete modification with new confirmation
-- **📝 Reason Tracking**: Optional reason for modification
+- **Modification Mode**: Clear visual distinction from planning
+- **Change Tracking**: Real-time change summary with visual indicators
+- **Comparison View**: Side-by-side original vs modified schedules
+- **Re-submission**: Complete modification with new confirmation
+- **Reason Tracking**: Optional reason for modification
 
 #### Modification Tools:
 
@@ -265,7 +222,7 @@ The application automatically detects changes to the CSV file and reloads the da
 - **Change Summary**: Visual indicators for added/removed courses
 - **Final Review**: Before/after comparison before submission
 
-## 🛠️ Customization & Development
+## Customization & Development
 
 ### Adding New Components
 
@@ -291,7 +248,7 @@ cp component.tsx src/components/ui/
 import { Component } from '@/components/ui/component'
 ```
 
-### 🎨 Styling System
+### Styling System
 
 - **Global Styles**: `src/index.css` with Twitter Tweak UI design system
 - **CSS Variables**: OKLCH color space for consistent visual perception
@@ -300,7 +257,7 @@ import { Component } from '@/components/ui/component'
 - **Responsive Design**: Mobile-first approach with breakpoint utilities
 - **Dark Mode**: Built-in support with CSS variables
 
-### 🔧 State Management
+### State Management
 
 The application uses React Context API with useReducer:
 
@@ -309,7 +266,7 @@ The application uses React Context API with useReducer:
 - **`useCourseData`**: Course data with hot reload functionality
 - **State Actions**: Type-safe actions for state updates
 
-### 📦 Component Architecture
+### Component Architecture
 
 ```
 App.tsx (Root)
@@ -323,7 +280,7 @@ App.tsx (Root)
 └── UI Components (shadcn/ui)
 ```
 
-### 🚀 Performance Optimization
+### Performance Optimization
 
 - **Code Splitting**: Dynamic imports for route-based splitting
 - **Lazy Loading**: Components loaded on demand
@@ -331,7 +288,7 @@ App.tsx (Root)
 - **Efficient Rendering**: Optimized re-rendering with React hooks
 - **Bundle Optimization**: Vite's built-in optimization
 
-## 🌐 Browser Support
+## Browser Support
 
 | Browser | Version | Status             |
 | ------- | ------- | ------------------ |
@@ -340,64 +297,7 @@ App.tsx (Root)
 | Safari  | 14+     | ✅ Fully Supported |
 | Edge    | 90+     | ✅ Fully Supported |
 
-### 📱 Device Support
-
-- **Desktop**: Full feature support with optimal layout
-- **Tablet**: Responsive layout with touch-friendly interactions
-- **Mobile**: Optimized mobile experience with simplified navigation
-
-## ⚡ Performance
-
-### Optimization Features
-
-- **Bundle Size**: Optimized with Vite's tree-shaking and code splitting
-- **Lazy Loading**: Components loaded on demand for faster initial load
-- **Efficient Rendering**: React.memo and useMemo for performance optimization
-- **Smooth Animations**: CSS transitions with hardware acceleration
-- **Memory Management**: Efficient state management with React hooks
-
-### Performance Metrics
-
-- **Initial Load**: < 2 seconds on 3G connection
-- **Time to Interactive**: < 3 seconds
-- **Bundle Size**: < 500KB gzipped
-- **Lighthouse Score**: 90+ across all categories
-
-## 🔧 Development Guidelines
-
-### Code Standards
-
-1. **TypeScript**: Strict type checking enabled
-2. **ESLint**: Code quality and consistency
-3. **Prettier**: Code formatting
-4. **Component Architecture**: Functional components with hooks
-5. **Error Handling**: Comprehensive error boundaries
-
-### Best Practices
-
-1. **Component Design**: Single responsibility principle
-2. **State Management**: Minimal and predictable state updates
-3. **Performance**: Memoization for expensive operations
-4. **Accessibility**: WCAG 2.1 AA compliance
-5. **Testing**: Component testing with React Testing Library
-
-### Git Workflow
-
-```bash
-# Feature development
-git checkout -b feature/new-feature
-git add .
-git commit -m "feat: add new feature"
-git push origin feature/new-feature
-
-# Bug fixes
-git checkout -b fix/bug-description
-git add .
-git commit -m "fix: resolve bug description"
-git push origin fix/bug-description
-```
-
-## 📄 License
+## License
 
 This project is for **educational purposes** as part of the National Taiwan University Web Programming course.
 
@@ -408,7 +308,7 @@ This project is for **educational purposes** as part of the National Taiwan Univ
 - ❌ **Commercial Use**: Not permitted for commercial applications
 - ❌ **Redistribution**: Cannot be redistributed without permission
 
-## 🆘 Support & Troubleshooting
+## Support & Troubleshooting
 
 ### Common Issues
 
@@ -436,7 +336,7 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [React Documentation](https://react.dev/)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
