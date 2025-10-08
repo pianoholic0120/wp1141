@@ -119,7 +119,7 @@ export function useAppState() {
       ...prev,
       currentStage: 'submitted',
       submittedRegistration: {
-        courses: activePlan.courses,
+        courses: [...activePlan.courses], // 創建新數組，避免引用共享
         timestamp: new Date().toISOString(),
         confirmationNumber,
         sourcePlanId: state.activePlan // 記錄提交來源
@@ -147,10 +147,10 @@ export function useAppState() {
       const sourcePlanId = prev.submittedRegistration?.sourcePlanId;
       
       if (sourcePlanId && updatedPlanningSchedules[sourcePlanId]) {
-        // 只更新源 plan 的課程列表
+        // 只更新源 plan 的課程列表（創建新數組）
         updatedPlanningSchedules[sourcePlanId] = {
           ...updatedPlanningSchedules[sourcePlanId],
-          courses: [...modifiedCourses],
+          courses: [...modifiedCourses], // 創建新數組副本
           totalCredits: calculateTotalCredits(modifiedCourses)
         };
       }
@@ -160,7 +160,7 @@ export function useAppState() {
         currentStage: 'submitted',
         planningSchedules: updatedPlanningSchedules,
         submittedRegistration: {
-          courses: modifiedCourses,
+          courses: [...modifiedCourses], // 創建新數組，避免引用共享
           timestamp: new Date().toISOString(),
           confirmationNumber,
           sourcePlanId: sourcePlanId || prev.activePlan // 保留或使用當前 active plan

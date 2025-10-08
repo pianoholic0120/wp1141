@@ -1,40 +1,102 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
+import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 import { Input } from '../ui/input';
-import { Calendar, Plus, Trash2, BookOpen, CheckCircle, AlertTriangle } from 'lucide-react';
-import { PlanningSchedule, ParsedCourse } from '@/types/course';
+import { Calendar, Plus, Trash2, BookOpen, CheckCircle, AlertTriangle, Info, Award } from 'lucide-react';
+import { PlanningSchedule, ParsedCourse, AppState } from '@/types/course';
 import { WeeklySchedule } from '../WeeklySchedule';
 import { hasTimeConflict } from '@/data/courseLoader';
+import { toast } from 'sonner';
 
 interface PlanningStageProps {
   schedules: { [key: string]: PlanningSchedule };
   activePlan: string;
+  submittedRegistration: AppState['submittedRegistration'];
   onSetActivePlan: (planId: string) => void;
   onCreateSchedule: (name: string) => void;
   onRemoveCourse: (courseId: string) => void;
   onSubmitRegistration: () => void;
+  onUpdatePlanName: (planId: string, newName: string) => void;
 }
 
 export function PlanningStage({
   schedules,
   activePlan,
+  submittedRegistration,
   onSetActivePlan,
   onCreateSchedule,
   onRemoveCourse,
-  onSubmitRegistration
+  onSubmitRegistration,
+  onUpdatePlanName
 }: PlanningStageProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newPlanName, setNewPlanName] = useState('');
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [courseToRemove, setCourseToRemove] = useState<ParsedCourse | null>(null);
+  const [previousActivePlan, setPreviousActivePlan] = useState(activePlan);
+  const [showEditNameDialog, setShowEditNameDialog] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [editingPlanName, setEditingPlanName] = useState('');
 
   const activeSchedule = schedules[activePlan];
   const scheduleValues = Object.values(schedules);
+  const submittedPlanId = submittedRegistration?.sourcePlanId;
+
+  // 檢測 plan 切換
+  useEffect(() => {
+    // 如果有提交記錄，且切換到了不同的 plan（非提交來源的 plan）
+    if (submittedPlanId && activePlan !== previousActivePlan && activePlan !== submittedPlanId) {
+      const submittedPlanName = schedules[submittedPlanId]?.name || submittedPlanId;
+      const currentPlanName = schedules[activePlan]?.name || activePlan;
+      
+      toast.info("切換到不同的計劃 / Switched to Different Plan", {
+        description: `目前檢視: ${currentPlanName}。已提交的計劃是: ${submittedPlanName}。若要改為此計劃，請重新提交。/ Currently viewing: ${currentPlanName}. Submitted plan is: ${submittedPlanName}. Please resubmit to change to this plan.`,
+        duration: 5000,
+      });
+    }
+    setPreviousActivePlan(activePlan);
+  }, [activePlan, previousActivePlan, submittedPlanId, schedules]);
+
+  // 檢測當前 plan 是否與已提交的 registration 不同
+  const hasScheduleChanged = useMemo(() => {
+    // 如果沒有提交記錄，或者當前 plan 不是提交來源，則不顯示提醒
+    if (!submittedRegistration || submittedRegistration.sourcePlanId !== activePlan) {
+      return false;
+    }
+
+    // 比較課程列表
+    const currentCourses = activeSchedule.courses;
+    const submittedCourses = submittedRegistration.courses;
+
+    // 如果數量不同，肯定有變化
+    if (currentCourses.length !== submittedCourses.length) {
+      return true;
+    }
+
+    // 比較課程 ID
+    const currentCourseIds = new Set(currentCourses.map(c => c.id));
+    const submittedCourseIds = new Set(submittedCourses.map(c => c.id));
+
+    // 檢查是否有不同的課程
+    for (const id of currentCourseIds) {
+      if (!submittedCourseIds.has(id)) {
+        return true;
+      }
+    }
+
+    for (const id of submittedCourseIds) {
+      if (!currentCourseIds.has(id)) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [activeSchedule, submittedRegistration, activePlan]);
 
   // Check for conflicts in current schedule
   const conflicts = React.useMemo(() => {
@@ -79,6 +141,24 @@ export function PlanningStage({
     if (courseToRemove) {
       onRemoveCourse(courseToRemove.id);
       setCourseToRemove(null);
+    }
+  };
+
+  const handleDoubleClickPlanName = (planId: string, currentName: string) => {
+    setEditingPlanId(planId);
+    setEditingPlanName(currentName);
+    setShowEditNameDialog(true);
+  };
+
+  const handleUpdatePlanName = () => {
+    if (editingPlanId && editingPlanName.trim()) {
+      onUpdatePlanName(editingPlanId, editingPlanName.trim());
+      setShowEditNameDialog(false);
+      setEditingPlanId(null);
+      setEditingPlanName('');
+      toast.success("計劃名稱已更新", {
+        description: `計劃名稱已更新為「${editingPlanName.trim()}」`,
+      });
     }
   };
 
@@ -213,20 +293,126 @@ export function PlanningStage({
         </div>
       </div>
 
+      {/* Schedule Change Alert */}
+      {hasScheduleChanged && (
+        <Alert className="border-orange-300 bg-orange-50">
+          <Info className="h-5 w-5 text-orange-600" />
+          <AlertTitle className="text-orange-900 text-lg">課程表已變更 / Schedule Has Changed</AlertTitle>
+          <AlertDescription className="text-orange-800">
+            <div className="space-y-2">
+              <p className="text-base">
+                您的計劃課程與已提交的註冊不同。如需更新註冊，請重新提交。
+              </p>
+              <p className="text-sm">
+                Your planning schedule differs from your submitted registration. Please resubmit to update your registration.
+              </p>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Edit Plan Name Dialog */}
+      <Dialog open={showEditNameDialog} onOpenChange={setShowEditNameDialog}>
+        <DialogContent className="max-w-lg bg-white shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-gray-900">
+              編輯計劃名稱 / Edit Plan Name
+            </DialogTitle>
+            <DialogDescription className="text-base text-gray-700">
+              <div className="space-y-1">
+                <p>為您的計劃輸入新名稱。</p>
+                <p className="text-sm text-gray-600">Enter a new name for your plan.</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="計劃名稱 / Plan name"
+              value={editingPlanName}
+              onChange={(e) => setEditingPlanName(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleUpdatePlanName();
+                }
+              }}
+              className="text-base"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowEditNameDialog(false)} 
+              className="btn-enhanced btn-outline-enhanced btn-press-animation"
+            >
+              取消 / Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdatePlanName} 
+              disabled={!editingPlanName.trim()} 
+              className="btn-enhanced btn-primary-enhanced btn-press-animation"
+            >
+              更新名稱 / Update Name
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Schedule Tabs */}
       <Tabs value={activePlan} onValueChange={onSetActivePlan}>
         <TabsList>
-          {scheduleValues.map((schedule) => (
-            <TabsTrigger key={schedule.id} value={schedule.id}>
-              {schedule.name}
-            </TabsTrigger>
-          ))}
+          {scheduleValues.map((schedule) => {
+            const isSubmittedPlan = submittedPlanId === schedule.id;
+            return (
+              <TabsTrigger 
+                key={schedule.id} 
+                value={schedule.id}
+                className="relative"
+                onDoubleClick={() => handleDoubleClickPlanName(schedule.id, schedule.name)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="cursor-pointer">{schedule.name}</span>
+                  {isSubmittedPlan && (
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-green-100 text-green-800 border-green-300 ml-1 text-xs px-2 py-0.5 flex items-center gap-1"
+                    >
+                      <Award className="h-3 w-3" />
+                      已提交
+                    </Badge>
+                  )}
+                </div>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
-        {scheduleValues.map((schedule) => (
-          <TabsContent key={schedule.id} value={schedule.id} className="space-y-6">
-            {/* Schedule Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {scheduleValues.map((schedule) => {
+          const isCurrentSubmittedPlan = submittedPlanId === schedule.id;
+          const isViewingNonSubmittedPlan = submittedPlanId && !isCurrentSubmittedPlan;
+          
+          return (
+            <TabsContent key={schedule.id} value={schedule.id} className="space-y-6">
+              {/* Non-Submitted Plan Alert */}
+              {isViewingNonSubmittedPlan && (
+                <Alert className="border-blue-300 bg-blue-50">
+                  <Info className="h-5 w-5 text-blue-600" />
+                  <AlertTitle className="text-blue-900 text-lg">目前檢視的是不同計劃 / Viewing Different Plan</AlertTitle>
+                  <AlertDescription className="text-blue-800">
+                    <div className="space-y-2">
+                      <p className="text-base">
+                        這不是已提交的計劃。已提交的計劃是「{schedules[submittedPlanId]?.name || submittedPlanId}」。
+                      </p>
+                      <p className="text-sm">
+                        This is not your submitted plan. Your submitted plan is "{schedules[submittedPlanId]?.name || submittedPlanId}". To switch to this plan, please resubmit your registration.
+                      </p>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Schedule Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center space-x-2">
@@ -380,7 +566,8 @@ export function PlanningStage({
               </Card>
             )}
           </TabsContent>
-        ))}
+          );
+        })}
       </Tabs>
     </div>
   );

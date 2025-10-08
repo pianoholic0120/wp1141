@@ -13,6 +13,7 @@ type AppAction =
   | { type: 'REMOVE_FROM_PLANNING'; payload: { courseId: string; planId?: string } }
   | { type: 'CREATE_PLANNING_SCHEDULE'; payload: PlanningSchedule }
   | { type: 'SET_ACTIVE_PLAN'; payload: string }
+  | { type: 'UPDATE_PLAN_NAME'; payload: { planId: string; newName: string } }
   | { type: 'SUBMIT_REGISTRATION' }
   | { type: 'START_MODIFICATION' }
   | { type: 'COMPLETE_MODIFICATION'; payload: ParsedCourse[] }
@@ -146,6 +147,16 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_ACTIVE_PLAN':
       return { ...state, activePlan: action.payload };
 
+    case 'UPDATE_PLAN_NAME':
+      const updatedSchedules = { ...state.planningSchedules };
+      if (updatedSchedules[action.payload.planId]) {
+        updatedSchedules[action.payload.planId] = {
+          ...updatedSchedules[action.payload.planId],
+          name: action.payload.newName
+        };
+      }
+      return { ...state, planningSchedules: updatedSchedules };
+
     case 'SUBMIT_REGISTRATION':
       const activePlan = state.planningSchedules[state.activePlan];
       if (!activePlan) return state;
@@ -156,7 +167,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         currentStage: 'submitted',
         submittedRegistration: {
-          courses: activePlan.courses,
+          courses: [...activePlan.courses], // 創建新數組，避免引用共享
           timestamp: new Date().toISOString(),
           confirmationNumber,
           sourcePlanId: state.activePlan // 記錄提交來源
@@ -174,10 +185,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
       const sourcePlanId = state.submittedRegistration?.sourcePlanId;
       
       if (sourcePlanId && updatedPlanningSchedulesAfterMod[sourcePlanId]) {
-        // 只更新源 plan 的課程列表
+        // 只更新源 plan 的課程列表（創建新數組）
         updatedPlanningSchedulesAfterMod[sourcePlanId] = {
           ...updatedPlanningSchedulesAfterMod[sourcePlanId],
-          courses: [...action.payload], // 使用修改後的課程列表
+          courses: [...action.payload], // 創建新數組副本
           totalCredits: calculateTotalCredits(action.payload)
         };
       }
@@ -187,7 +198,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         currentStage: 'submitted',
         planningSchedules: updatedPlanningSchedulesAfterMod,
         submittedRegistration: {
-          courses: action.payload,
+          courses: [...action.payload], // 創建新數組，避免引用共享
           timestamp: new Date().toISOString(),
           confirmationNumber: confirmationNumberMod,
           sourcePlanId: sourcePlanId || state.activePlan // 保留或使用當前 active plan
@@ -281,6 +292,11 @@ export const appActions = {
   setActivePlan: (planId: string) => ({
     type: 'SET_ACTIVE_PLAN' as const,
     payload: planId
+  }),
+  
+  updatePlanName: (planId: string, newName: string) => ({
+    type: 'UPDATE_PLAN_NAME' as const,
+    payload: { planId, newName }
   }),
   
   submitRegistration: () => ({

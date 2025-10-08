@@ -103,6 +103,7 @@ function AppContent() {
           <PlanningStage
             schedules={state.planningSchedules}
             activePlan={state.activePlan}
+            submittedRegistration={state.submittedRegistration}
             onSetActivePlan={(planId) => dispatch(appActions.setActivePlan(planId))}
             onCreateSchedule={(name) => {
               const newPlan = {
@@ -115,6 +116,7 @@ function AppContent() {
             }}
             onRemoveCourse={(courseId) => dispatch(appActions.removeFromPlanning(courseId))}
             onSubmitRegistration={() => dispatch(appActions.submitRegistration())}
+            onUpdatePlanName={(planId, newName) => dispatch(appActions.updatePlanName(planId, newName))}
           />
         );
       
