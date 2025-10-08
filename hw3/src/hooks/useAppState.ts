@@ -19,7 +19,9 @@ const initialState: AppState = {
     department: [],
     year: [],
     credits: [],
-    search: ''
+    search: '',
+    days: [],
+    timeSlots: []
   },
   selectedCourse: null
 };
@@ -119,7 +121,8 @@ export function useAppState() {
       submittedRegistration: {
         courses: activePlan.courses,
         timestamp: new Date().toISOString(),
-        confirmationNumber
+        confirmationNumber,
+        sourcePlanId: state.activePlan // 記錄提交來源
       }
     }));
   }, [state.planningSchedules, state.activePlan]);
@@ -138,15 +141,32 @@ export function useAppState() {
   const completeModification = useCallback((modifiedCourses: ParsedCourse[]) => {
     const confirmationNumber = `NTU-2025-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
     
-    setState(prev => ({
-      ...prev,
-      currentStage: 'submitted',
-      submittedRegistration: {
-        courses: modifiedCourses,
-        timestamp: new Date().toISOString(),
-        confirmationNumber
+    setState(prev => {
+      // 只更新原本提交的那個 plan
+      const updatedPlanningSchedules = { ...prev.planningSchedules };
+      const sourcePlanId = prev.submittedRegistration?.sourcePlanId;
+      
+      if (sourcePlanId && updatedPlanningSchedules[sourcePlanId]) {
+        // 只更新源 plan 的課程列表
+        updatedPlanningSchedules[sourcePlanId] = {
+          ...updatedPlanningSchedules[sourcePlanId],
+          courses: [...modifiedCourses],
+          totalCredits: calculateTotalCredits(modifiedCourses)
+        };
       }
-    }));
+      
+      return {
+        ...prev,
+        currentStage: 'submitted',
+        planningSchedules: updatedPlanningSchedules,
+        submittedRegistration: {
+          courses: modifiedCourses,
+          timestamp: new Date().toISOString(),
+          confirmationNumber,
+          sourcePlanId: sourcePlanId || prev.activePlan // 保留或使用當前 active plan
+        }
+      };
+    });
   }, []);
 
   // Reset to browse stage

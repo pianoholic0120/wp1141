@@ -90,6 +90,7 @@ export interface AppState {
     courses: ParsedCourse[];
     timestamp: string;
     confirmationNumber: string;
+    sourcePlanId: string; // 記錄是從哪個 plan 提交的
   } | null;
   filters: {
     department: string[];

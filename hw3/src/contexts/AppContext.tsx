@@ -158,7 +158,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
         submittedRegistration: {
           courses: activePlan.courses,
           timestamp: new Date().toISOString(),
-          confirmationNumber
+          confirmationNumber,
+          sourcePlanId: state.activePlan // 記錄提交來源
         }
       };
 
@@ -168,13 +169,28 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'COMPLETE_MODIFICATION':
       const confirmationNumberMod = `NTU-2025-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       
+      // 只更新原本提交的那個 plan
+      const updatedPlanningSchedulesAfterMod = { ...state.planningSchedules };
+      const sourcePlanId = state.submittedRegistration?.sourcePlanId;
+      
+      if (sourcePlanId && updatedPlanningSchedulesAfterMod[sourcePlanId]) {
+        // 只更新源 plan 的課程列表
+        updatedPlanningSchedulesAfterMod[sourcePlanId] = {
+          ...updatedPlanningSchedulesAfterMod[sourcePlanId],
+          courses: [...action.payload], // 使用修改後的課程列表
+          totalCredits: calculateTotalCredits(action.payload)
+        };
+      }
+      
       return {
         ...state,
         currentStage: 'submitted',
+        planningSchedules: updatedPlanningSchedulesAfterMod,
         submittedRegistration: {
           courses: action.payload,
           timestamp: new Date().toISOString(),
-          confirmationNumber: confirmationNumberMod
+          confirmationNumber: confirmationNumberMod,
+          sourcePlanId: sourcePlanId || state.activePlan // 保留或使用當前 active plan
         }
       };
 
