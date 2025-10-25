@@ -4,6 +4,25 @@
 
 echo "Starting Rental Platform System..."
 
+# Function to kill processes on specific ports
+kill_port() {
+    local port=$1
+    local pids=$(lsof -ti:$port 2>/dev/null)
+    if [ ! -z "$pids" ]; then
+        echo "Killing processes on port $port (PIDs: $pids)..."
+        kill -9 $pids 2>/dev/null
+        sleep 1
+    else
+        echo "Port $port is already free"
+    fi
+}
+
+# Clean up ports 3000 and 5173 if they are in use
+echo "Checking and cleaning up ports..."
+kill_port 3000
+kill_port 5173
+echo ""
+
 # Check environment variables files
 if [ ! -f backend/.env ]; then
     echo "Error: Backend environment variables file does not exist"

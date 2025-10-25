@@ -90,10 +90,12 @@ cd hw4
 After setup, edit environment variables files:
 
 ```bash
-# Edit backend environment variables (you can use any method, e.g. vim, vi)
+# Edit backend environment variables (you can use any method, e.g. vim, vi; sometimes cursor well forbit this, try manually open the file and edit it.)
+# Edit .env file and add your Google Maps API Key
 nano backend/.env
 
-# Edit frontend environment variables (you can use any method, e.g. vim, vi)
+# Edit frontend environment variables (you can use any method, e.g. vim, vi; sometimes cursor well forbit this, try manually open the file and edit it.)
+# Edit .env file and add your Google Maps API Key
 nano frontend/.env
 ```
 
