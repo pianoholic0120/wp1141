@@ -16,12 +16,12 @@ jspm_packages/
 .env.test
 .env.production
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-database/
-backend/database/
+# Database files (keep the database with test data)
+# *.db
+# *.sqlite
+# *.sqlite3
+# database/
+# backend/database/
 
 # Build outputs
 dist/
@@ -131,15 +131,6 @@ Thumbs.db
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-
-# Project specific files
-API-KEY-REPLACEMENT.sh
-shad-cn.mdc
-重啟系統.md
-rental.md
-SETUP-GUIDE.md
-TROUBLESHOOTING.md
-implementation-plan.md
 
 # Backend admin interface
 backend/admin/

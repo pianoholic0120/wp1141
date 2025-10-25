@@ -1,213 +1,245 @@
-# 租屋平台系統
+# Rental Platform System
 
-## 專案簡介與功能清單
+A comprehensive full-stack rental platform system that integrates Google Maps API to provide location services, featuring user authentication, property management, favorites and ratings functionality.
 
-本專案為一個全端租屋平台系統，提供房東與租客雙向服務。系統整合 Google Maps API 提供地理位置服務，並具備完整的用戶認證、房源管理、收藏評分等功能。
+## Key Features
 
-### 主要功能
+### Property Management
 
-#### 用戶管理
-- 用戶註冊與登入（JWT 認證）
-- 密碼加密存儲（bcrypt）
-- 自動登入狀態維持
-- 用戶資料管理
+- Property creation, editing, and deletion
+- Property search and filtering
+- Geographic location marking
+- Property status management
 
-#### 房源管理
-- 房源創建、編輯、刪除
-- 房源搜尋與篩選
-- 地理位置標記
-- 房源狀態管理
+### Map Services
 
-#### 地圖服務
-- Google Maps 整合
-- 地址地理編碼
-- 地圖標記互動
-- 位置搜尋功能
+- Google Maps integration
+- Address geocoding
+- Interactive map markers
+- Location search functionality
 
-#### 收藏與評分
-- 房源收藏功能
-- 評分系統（1-5星）
-- 收藏列表管理
-- 評分統計顯示
+### User System
 
-#### 進階篩選
-- 價格範圍篩選
-- 房型篩選
-- 公設設施篩選
-- 地理位置篩選
+- User registration and login (JWT authentication)
+- Password encryption storage (bcrypt)
+- Automatic login state maintenance
+- User profile management
 
-## 架構圖
+### Favorites and Ratings
+
+- Property favorites functionality
+- Rating system (1-5 stars)
+- Favorites list management
+- Rating statistics display
+
+### Advanced Filtering
+
+- Price range filtering
+- Property type filtering
+- Amenities filtering
+- Geographic location filtering
+
+## Technical Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   前端 (React)   │    │   後端 (Express) │    │   資料庫 (SQLite) │
+│  Frontend       │    │  Backend        │    │  Database       │
+│  (React)        │    │  (Express)      │    │  (SQLite)       │
 │                 │    │                 │    │                 │
 │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
-│ │ 用戶介面    │ │◄──►│ │ API 路由    │ │◄──►│ │ 用戶資料    │ │
+│ │ User UI     │ │◄──►│ │ API Routes  │ │◄──►│ │ User Data   │ │
 │ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │
 │                 │    │                 │    │                 │
 │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
-│ │ 地圖組件    │ │◄──►│ │ 地圖服務    │ │◄──►│ │ 房源資料    │ │
-│ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │
-│                 │    │                 │    │                 │
-│ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
-│ │ 表單組件    │ │◄──►│ │ 業務邏輯    │ │◄──►│ │ 收藏評分    │ │
-│ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
+│ │ Map Component│ │◄──►│ │ Map Service │ │◄──►│ │ Property    │ │
+│ └─────────────┘ │    │ └─────────────┘ │    │ │ Data        │ │
+│                 │    │                 │    │ └─────────────┘ │
+│ ┌─────────────┐ │    │ ┌─────────────┐ │    │                 │
+│ │ Form        │ │◄──►│ │ Business    │ │◄──►│ ┌─────────────┐ │
+│ │ Components  │ │    │ │ Logic       │ │    │ │ Favorites   │ │
+│ └─────────────┘ │    │ └─────────────┘ │    │ │ & Ratings   │ │
+└─────────────────┘    └─────────────────┘    │ └─────────────┘ │
+         │                       │            └─────────────────┘
+         └───────────────────────┼───────────────────────────────┘
                                  │
                     ┌─────────────────┐
                     │ Google Maps API  │
-                    │ (地理編碼服務)    │
+                    │ (Geocoding)      │
                     └─────────────────┘
 ```
 
-## 技術架構
+## Quick Start
 
-### 前端技術棧
-- React 18 + TypeScript
-- Vite 建構工具
-- Tailwind CSS 樣式框架
-- shadcn/ui 組件庫
-- React Router 路由管理
-- Axios HTTP 客戶端
+### Requirements
 
-### 後端技術棧
-- Node.js + Express.js
-- TypeScript 類型安全
-- SQLite 資料庫
-- JWT 認證機制
-- bcrypt 密碼加密
-- Google Maps API 整合
+- Node.js 18.0 or higher
+- npm or yarn package manager
+- Google Maps API Key (required)
 
-## 快速開始
+### One-Click Setup (Recommended)
 
-### 環境需求
-- Node.js 18.0 或更高版本
-- npm 或 yarn 套件管理器
-- Google Maps API Key（可選）
-
-### 1. 克隆專案
 ```bash
+# Clone the project
 git clone <repository-url>
 cd hw4
+
+# Run automatic setup script
+./setup.sh
 ```
 
-### 2. 後端設置
+After setup, edit environment variables files:
+
+```bash
+# Edit backend environment variables (you can use any method, e.g. vim, vi)
+nano backend/.env
+
+# Edit frontend environment variables (you can use any method, e.g. vim, vi)
+nano frontend/.env
+```
+
+Replace `your_google_maps_api_key_here` with your Google Maps API Key.
+
+### Quick Start
+
+```bash
+# Start the complete system
+./start.sh
+```
+
+### Manual Setup (Optional)
+
+If you prefer manual setup, follow these steps:
+
+#### 1. Backend Setup
 
 ```bash
 cd backend
 npm install
-```
-
-複製環境變量範例文件：
-```bash
-cp .env.example .env
-```
-
-編輯 `.env` 文件，填入必要的配置：
-```bash
-nano .env
-```
-
-初始化資料庫並啟動後端服務：
-```bash
+cp env.example .env
+# Edit .env file and add your Google Maps API Key
 npm run init-db
+npm run generate-taiwan
+npm run generate-reviewers
+npm run add-ratings
 npm run dev
 ```
 
-後端服務將運行於 `http://localhost:3000`
-
-### 3. 前端設置
+#### 2. Frontend Setup
 
 ```bash
-cd ../frontend
+cd frontend
 npm install
-```
-
-複製環境變量範例文件：
-```bash
-cp .env.example .env
-```
-
-編輯 `.env` 文件：
-```bash
-nano .env
-```
-
-安裝 shadcn/ui 組件：
-```bash
+cp env.example .env
+# Edit .env file and add your Google Maps API Key
 npx shadcn-ui@latest init
 npx shadcn-ui@latest add button input label card alert dialog tabs select textarea slider checkbox table dropdown-menu separator scroll-area tooltip badge popover alert-dialog
-```
-
-啟動前端服務：
-```bash
 npm run dev
 ```
 
-前端服務將運行於 `http://localhost:5173`
+### System Data
 
-### 4. 初始化測試資料
+The system comes pre-loaded with complete test data:
 
-後端啟動後會自動創建測試資料，包含：
-- 400 個虛擬房源
-- 100 個虛擬用戶
-- 隨機評分與收藏資料
+- **400 virtual properties**: Distributed across Taiwan with real addresses and coordinates
+- **100 landlord users**: For property management
+- **200 reviewer users**: Chinese names for rating system
+- **Complete rating data**: 3-5 ratings per property with diverse comments
+- **Favorites data**: User favorite property records
 
-## 環境變量配置
+## Technology Stack
 
-### 後端環境變量 (.env)
+### Frontend Technologies
+
+- React 18 + TypeScript
+- Vite build tool
+- Tailwind CSS styling framework
+- shadcn/ui component library
+- React Router for routing
+- Axios HTTP client
+
+### Backend Technologies
+
+- Node.js + Express.js
+- TypeScript for type safety
+- SQLite database
+- JWT authentication mechanism
+- bcrypt password encryption
+- Google Maps API integration
+
+## Project Structure
+
+```
+hw4/
+├── backend/                 # Backend service
+│   ├── database/           # Database with complete test data
+│   ├── src/                # Source code
+│   ├── env.example         # Environment variables example
+│   └── package.json        # Dependency management
+├── frontend/               # Frontend application
+│   ├── src/                # Source code
+│   ├── env.example         # Environment variables example
+│   └── package.json        # Dependency management
+├── chat-history/           # Development records
+├── setup.sh               # Automatic setup script
+├── start.sh               # Quick start script
+├── check-setup.sh         # Setup check script
+├── README.md              # Complete documentation
+└── .gitignore             # Git ignore rules
+```
+
+## Environment Variables Configuration
+
+### Backend Environment Variables (.env)
 
 ```env
-# 服務器配置
+# Server configuration
 PORT=3000
 NODE_ENV=development
 
-# 資料庫配置
+# Database configuration
 DATABASE_PATH=./database/rental_listings.db
 
-# JWT 認證配置
+# JWT authentication configuration
 JWT_SECRET=your_jwt_secret_here_change_this_in_production
 JWT_EXPIRES_IN=7d
 
-# CORS 配置
+# CORS configuration
 FRONTEND_URL=http://localhost:5173
 ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 
-# Google Maps API 配置
+# Google Maps API configuration
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
-# 密碼加密配置
+# Password encryption configuration
 BCRYPT_ROUNDS=10
 
-# 速率限制配置
+# Rate limiting configuration
 RATE_LIMIT_WINDOW_MS=60000
 RATE_LIMIT_MAX_REQUESTS=10000
 ```
 
-### 前端環境變量 (.env)
+### Frontend Environment Variables (.env)
 
 ```env
-# API 基礎 URL
+# API base URL
 VITE_API_BASE_URL=http://localhost:3000/api
 
 # Google Maps API Key
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
-# 應用配置
-VITE_APP_NAME=租屋平台
+# Application configuration
+VITE_APP_NAME=Rental Platform
 VITE_DEFAULT_MAP_CENTER_LAT=25.0330
 VITE_DEFAULT_MAP_CENTER_LNG=121.5654
 VITE_DEFAULT_MAP_ZOOM=12
 ```
 
-## API 文檔
+## API Documentation
 
-### 認證相關 API
+### Authentication APIs
 
-#### 用戶註冊
+#### User Registration
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -218,7 +250,8 @@ curl -X POST http://localhost:3000/api/auth/register \
   }'
 ```
 
-#### 用戶登入
+#### User Login
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -228,218 +261,285 @@ curl -X POST http://localhost:3000/api/auth/login \
   }'
 ```
 
-#### 獲取當前用戶資訊
+#### Get Current User Info
+
 ```bash
 curl -X GET http://localhost:3000/api/auth/me \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-### 房源相關 API
+### Property APIs
 
-#### 獲取所有房源
+#### Get All Properties
+
 ```bash
 curl -X GET "http://localhost:3000/api/listings?page=1&limit=10&minPrice=10000&maxPrice=50000"
 ```
 
-#### 創建新房源
+#### Create New Property
+
 ```bash
 curl -X POST http://localhost:3000/api/listings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{
-    "title": "溫馨套房",
-    "description": "位於市中心的溫馨套房",
-    "address": "台北市信義區信義路五段7號",
+    "title": "Cozy Studio",
+    "description": "A cozy studio in the city center",
+    "address": "Taipei City, Xinyi District, Xinyi Road Section 5, No. 7",
     "price": 25000,
     "bedrooms": 1,
     "bathrooms": 1,
     "area_sqft": 15,
-    "property_type": "套房",
-    "amenities": ["冷氣", "網路", "洗衣機"]
+    "property_type": "Studio",
+    "amenities": ["Air Conditioning", "Internet", "Washing Machine"]
   }'
 ```
 
-#### 獲取用戶的房源
+#### Get User Properties
+
 ```bash
 curl -X GET http://localhost:3000/api/listings/user/me \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-### 地圖服務 API
+### Map Service APIs
 
-#### 地址地理編碼
+#### Address Geocoding
+
 ```bash
 curl -X POST http://localhost:3000/api/maps/geocode \
   -H "Content-Type: application/json" \
   -d '{
-    "address": "台北市信義區信義路五段7號"
+    "address": "Taipei City, Xinyi District, Xinyi Road Section 5, No. 7"
   }'
 ```
 
-### 收藏與評分 API
+### Favorites and Ratings APIs
 
-#### 添加收藏
+#### Add Favorite
+
 ```bash
 curl -X POST http://localhost:3000/api/favorites/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-#### 獲取用戶收藏
+#### Get User Favorites
+
 ```bash
 curl -X GET http://localhost:3000/api/favorites \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-#### 添加評分
+#### Add Rating
+
 ```bash
 curl -X POST http://localhost:3000/api/ratings/1 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{
     "rating": 5,
-    "comment": "非常棒的房源！"
+    "comment": "Excellent property!"
   }'
 ```
 
-## 資料庫結構
+#### Get Property Ratings
 
-### 用戶表 (users)
-- id: 主鍵
-- email: 電子郵件（唯一）
-- username: 用戶名（唯一）
-- password_hash: 密碼雜湊
-- created_at: 創建時間
-- updated_at: 更新時間
-
-### 房源表 (listings)
-- id: 主鍵
-- user_id: 用戶ID（外鍵）
-- title: 房源標題
-- description: 房源描述
-- address: 地址
-- latitude: 緯度
-- longitude: 經度
-- price: 租金
-- bedrooms: 臥室數
-- bathrooms: 浴室數
-- area_sqft: 坪數
-- property_type: 房型
-- status: 狀態
-- amenities: 公設設施（JSON）
-- floor: 樓層
-- contact_phone: 聯絡電話
-- management_fee: 管理費
-- created_at: 創建時間
-- updated_at: 更新時間
-
-### 收藏表 (favorites)
-- id: 主鍵
-- user_id: 用戶ID（外鍵）
-- listing_id: 房源ID（外鍵）
-- created_at: 創建時間
-
-### 評分表 (ratings)
-- id: 主鍵
-- user_id: 用戶ID（外鍵）
-- listing_id: 房源ID（外鍵）
-- rating: 評分（1-5）
-- comment: 評分評論
-- created_at: 創建時間
-- updated_at: 更新時間
-
-## 已知問題與未來改進方向
-
-### 已知問題
-1. **圖片上傳功能**：目前圖片上傳功能已移除，未來需要重新實現
-2. **效能優化**：大量房源時地圖載入可能較慢
-3. **行動裝置適配**：部分功能在行動裝置上體驗有待改善
-4. **搜尋功能**：目前搜尋功能較為基礎，缺乏全文搜尋
-
-### 未來改進方向
-1. **圖片管理系統**：實現房源圖片上傳、管理、展示功能
-2. **進階搜尋**：添加全文搜尋、智能推薦功能
-3. **即時通訊**：房東與租客即時聊天功能
-4. **支付整合**：整合第三方支付服務
-5. **行動應用**：開發原生行動應用
-6. **數據分析**：添加房源瀏覽統計、用戶行為分析
-7. **多語言支援**：國際化功能
-8. **API 文檔**：使用 Swagger 生成完整 API 文檔
-
-## 安全性風險說明
-
-### Google Maps API Key 安全性
-本專案使用 Google Maps API Key 提供地圖服務。如果 API Key 未設置 IP 限制，存在以下安全風險：
-
-1. **API 濫用風險**：未授權用戶可能濫用 API Key，導致超出配額
-2. **費用風險**：API 調用可能產生費用，未限制的 Key 可能被惡意使用
-3. **資料洩露風險**：API Key 暴露在前端代碼中，可能被逆向工程獲取
-
-### 建議安全措施
-1. **設置 API 限制**：在 Google Cloud Console 中設置 HTTP 引用者限制
-2. **監控使用量**：定期檢查 API 使用量，設置配額警報
-3. **定期輪換**：定期更換 API Key
-4. **環境分離**：開發、測試、生產環境使用不同的 API Key
-5. **代理服務**：考慮使用後端代理 Google Maps API 請求
-
-### 其他安全考量
-1. **JWT Secret**：生產環境必須使用強隨機密鑰
-2. **HTTPS**：生產環境必須使用 HTTPS
-3. **輸入驗證**：所有用戶輸入都經過驗證和清理
-4. **SQL 注入防護**：使用參數化查詢防止 SQL 注入
-5. **速率限制**：實施 API 速率限制防止濫用
-
-## 開發指南
-
-### 本地開發
 ```bash
-# 啟動後端開發服務器
+curl -X GET http://localhost:3000/api/ratings/1
+```
+
+#### Update Rating
+
+```bash
+curl -X PUT http://localhost:3000/api/ratings/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "rating": 4,
+    "comment": "Updated comment"
+  }'
+```
+
+#### Delete Rating
+
+```bash
+curl -X DELETE http://localhost:3000/api/ratings/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+#### Search Places
+
+```bash
+curl -X POST http://localhost:3000/api/maps/places/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Taipei 101"
+  }'
+```
+
+#### Reverse Geocoding
+
+```bash
+curl -X POST http://localhost:3000/api/maps/reverse-geocode \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lat": 25.0330,
+    "lng": 121.5654
+  }'
+```
+
+## Database Structure
+
+### Users Table (users)
+
+- id: Primary key
+- email: Email address (unique)
+- username: Username (unique)
+- password_hash: Password hash
+- created_at: Creation time
+- updated_at: Update time
+
+### Properties Table (listings)
+
+- id: Primary key
+- user_id: User ID (foreign key)
+- title: Property title
+- description: Property description
+- address: Address
+- latitude: Latitude
+- longitude: Longitude
+- price: Rent price
+- bedrooms: Number of bedrooms
+- bathrooms: Number of bathrooms
+- area_sqft: Area in square feet
+- property_type: Property type
+- status: Status
+- amenities: Amenities (JSON)
+- floor: Floor
+- contact_phone: Contact phone
+- management_fee: Management fee
+- created_at: Creation time
+- updated_at: Update time
+
+### Favorites Table (favorites)
+
+- id: Primary key
+- user_id: User ID (foreign key)
+- listing_id: Property ID (foreign key)
+- created_at: Creation time
+
+### Ratings Table (ratings)
+
+- id: Primary key
+- user_id: User ID (foreign key)
+- listing_id: Property ID (foreign key)
+- rating: Rating (1-5)
+- comment: Rating comment
+- created_at: Creation time
+- updated_at: Update time
+
+## Security Risk Explanation
+
+### Google Maps API Key Security
+
+This project uses Google Maps API Key to provide map services. If the API Key is not restricted by IP, there are the following security risks:
+
+1. **API Abuse Risk**: Unauthorized users may abuse the API Key, causing quota to be exceeded
+2. **Cost Risk**: API calls may generate costs, and unrestricted Keys may be maliciously used
+3. **Data Leakage Risk**: API Key exposed in frontend code may be obtained through reverse engineering
+
+### Recommended Security Measures
+
+1. **Set API Restrictions**: Set HTTP referrer restrictions in Google Cloud Console
+2. **Monitor Usage**: Regularly check API usage and set quota alerts
+3. **Regular Rotation**: Regularly change API Keys
+4. **Environment Separation**: Use different API Keys for development, testing, and production environments
+5. **Proxy Service**: Consider using backend proxy for Google Maps API requests
+
+### Other Security Considerations
+
+1. **JWT Secret**: Production environment must use strong random keys
+2. **HTTPS**: Production environment must use HTTPS
+3. **Input Validation**: All user inputs are validated and sanitized
+4. **SQL Injection Protection**: Use parameterized queries to prevent SQL injection
+5. **Rate Limiting**: Implement API rate limiting to prevent abuse
+
+## Known Issues and Future Improvements
+
+### Known Issues
+
+1. **Image Upload Functionality**: Image upload functionality has been removed and needs to be re-implemented
+2. **Performance Optimization**: Map loading may be slow with large numbers of properties
+3. **Mobile Device Adaptation**: Some features need improvement on mobile devices
+4. **Search Functionality**: Current search functionality is basic and lacks full-text search
+
+### Future Improvements
+
+1. **Image Management System**: Implement property image upload, management, and display functionality
+2. **Advanced Search**: Add full-text search and intelligent recommendation features
+3. **Real-time Communication**: Real-time chat functionality between landlords and tenants
+4. **Payment Integration**: Integrate third-party payment services
+5. **Mobile Application**: Develop native mobile applications
+6. **Data Analytics**: Add property view statistics and user behavior analysis
+7. **Multi-language Support**: Internationalization functionality
+8. **API Documentation**: Use Swagger to generate complete API documentation
+
+## Development Guide
+
+### Local Development
+
+```bash
+# Start backend development server
 cd backend
 npm run dev
 
-# 啟動前端開發服務器
+# Start frontend development server
 cd frontend
 npm run dev
 ```
 
-### 生產部署
+### Production Deployment
+
 ```bash
-# 建構後端
+# Build backend
 cd backend
 npm run build
 npm start
 
-# 建構前端
+# Build frontend
 cd frontend
 npm run build
-# 將 dist/ 目錄部署到 Web 服務器
+# Deploy dist/ directory to web server
 ```
 
-### 測試
+### Testing
+
 ```bash
-# 後端測試
+# Backend testing
 cd backend
 npm test
 
-# 前端測試
+# Frontend testing
 cd frontend
 npm test
 ```
 
-## 貢獻指南
+## Contributing
 
-1. Fork 本專案
-2. 創建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交變更 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟 Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 授權
+## License
 
-本專案採用 MIT 授權條款。詳見 [LICENSE](LICENSE) 文件。
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 聯絡資訊
+## Contact
 
-如有問題或建議，請透過以下方式聯絡：
-- 提交 Issue
-- 發送 Pull Request
-- 電子郵件聯絡
+If you have any questions or suggestions, please contact us through:
+
+- Submit an Issue
+- Send a Pull Request
+- Email contact

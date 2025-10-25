@@ -14,7 +14,10 @@
     "clear-and-regenerate": "ts-node src/scripts/clearAndRegenerate.ts",
     "regenerate-complete": "ts-node src/scripts/regenerateCompleteData.ts",
     "generate-realistic": "ts-node src/scripts/run-generator.ts",
-    "generate-taiwan": "ts-node src/scripts/run-taiwan-generator.ts"
+    "generate-taiwan": "ts-node src/scripts/run-taiwan-generator.ts",
+    "add-ratings": "ts-node src/scripts/run-add-ratings.ts",
+    "clear-ratings": "ts-node src/scripts/clear-ratings.ts",
+    "generate-reviewers": "ts-node src/scripts/generate-reviewers.ts"
   },
   "keywords": [
     "rental",

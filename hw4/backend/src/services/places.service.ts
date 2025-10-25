@@ -23,6 +23,7 @@ export async function searchPlaces(
     const params: any = {
       query: query,
       key: apiKey,
+      language: 'zh-TW' as any, // 設定為繁體中文
     };
 
     if (location) {
@@ -64,6 +65,7 @@ export async function getPlaceAutocomplete(
     const params: any = {
       input: input,
       key: apiKey,
+      language: 'zh-TW' as any, // 設定為繁體中文
     };
 
     if (location) {

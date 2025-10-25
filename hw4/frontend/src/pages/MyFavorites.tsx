@@ -187,6 +187,7 @@ export default function MyFavorites() {
                   ratingStats={ratingStats[favorite.listing_id]}
                   showViewButton={true}
                   onView={() => handleViewDetails(favorite.listing_id)}
+                  onFavoriteUpdate={handleFavoriteUpdate}
                 />
               ))}
             </div>

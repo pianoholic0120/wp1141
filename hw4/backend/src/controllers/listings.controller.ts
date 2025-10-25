@@ -25,6 +25,8 @@ export function getAllListings(req: AuthRequest, res: Response): void {
       propertyType: req.query.propertyType as string,
       bedrooms: req.query.bedrooms ? parseInt(req.query.bedrooms as string) : undefined,
       bathrooms: req.query.bathrooms ? parseInt(req.query.bathrooms as string) : undefined,
+      minArea: req.query.minArea ? parseInt(req.query.minArea as string) : undefined,
+      maxArea: req.query.maxArea ? parseInt(req.query.maxArea as string) : undefined,
       status: req.query.status as string,
       amenities,
       city: req.query.city as string,

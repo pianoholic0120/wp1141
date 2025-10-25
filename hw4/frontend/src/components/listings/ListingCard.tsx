@@ -20,6 +20,7 @@ interface ListingCardProps {
     average_rating: number;
     total_ratings: number;
   };
+  onFavoriteUpdate?: (listingId: number) => void;
 }
 
 export function ListingCard({
@@ -32,6 +33,7 @@ export function ListingCard({
   showFavorite = true,
   showRating = true,
   ratingStats,
+  onFavoriteUpdate,
 }: ListingCardProps) {
   const statusColors = {
     available: 'bg-green-100 text-green-800',
@@ -61,6 +63,7 @@ export function ListingCard({
                 listingId={listing.id}
                 size="sm"
                 variant="ghost"
+                onFavoriteUpdate={onFavoriteUpdate}
               />
             )}
             <Badge className={statusColors[listing.status]}>

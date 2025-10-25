@@ -69,6 +69,8 @@ export interface ListingFilters {
   propertyType?: string;
   bedrooms?: number;
   bathrooms?: number;
+  minArea?: number;
+  maxArea?: number;
   status?: string;
   amenities?: string[];
   city?: string;

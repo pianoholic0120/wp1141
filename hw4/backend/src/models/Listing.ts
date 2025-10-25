@@ -96,6 +96,16 @@ export class ListingModel {
         params.push(filters.bathrooms);
       }
 
+      if (filters.minArea !== undefined) {
+        query += ` AND l.area_sqft >= ?`;
+        params.push(filters.minArea);
+      }
+
+      if (filters.maxArea !== undefined) {
+        query += ` AND l.area_sqft <= ?`;
+        params.push(filters.maxArea);
+      }
+
       if (filters.status) {
         query += ` AND l.status = ?`;
         params.push(filters.status);

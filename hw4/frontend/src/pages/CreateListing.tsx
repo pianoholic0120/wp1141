@@ -67,9 +67,9 @@ export default function CreateListing() {
     } catch (err: any) {
       console.error('Geocoding error:', err);
       setError(
-        'Failed to geocode address. You can either:\n' +
-        '1. Check your Google Maps API setup (see GOOGLE-MAPS-TROUBLESHOOTING.md)\n' +
-        '2. Manually enter coordinates in the Location tab'
+        '無法找到該地址。您可以：\n' +
+        '1. 檢查 Google Maps API 設定\n' +
+        '2. 在位置標籤中手動輸入座標'
       );
     } finally {
       setGeocoding(false);

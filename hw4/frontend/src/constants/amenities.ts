@@ -51,7 +51,6 @@ export const AMENITIES = [
   // 其他特色
   { value: '寵物友善', label: '寵物友善', category: 'other' },
   { value: '獨立套房', label: '獨立套房', category: 'other' },
-  { value: '獨立套房', label: '獨立套房', category: 'other' },
   { value: '可租屋補助', label: '可租屋補助', category: 'other' },
   { value: '可短租', label: '可短租', category: 'other' },
   { value: '可設籍', label: '可設籍', category: 'other' },
@@ -59,7 +58,6 @@ export const AMENITIES = [
   { value: '可吸菸', label: '可吸菸', category: 'other' },
   { value: '禁酒', label: '禁酒', category: 'other' },
   { value: '安靜', label: '安靜', category: 'other' },
-  { value: '安靜區域', label: '安靜區域', category: 'other' },
   { value: '採光好', label: '採光好', category: 'other' },
   { value: '通風佳', label: '通風佳', category: 'other' },
   
@@ -67,7 +65,6 @@ export const AMENITIES = [
   { value: '管理費', label: '管理費', category: 'building' },
   { value: '水電包含', label: '水電包含', category: 'basic' },
   { value: '聯絡電話', label: '聯絡電話', category: 'other' },
-  { value: '樓層', label: '樓層', category: 'building' },
   
   // 購物與生活
   { value: '近購物中心', label: '近購物中心', category: 'location' },

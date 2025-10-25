@@ -23,6 +23,8 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult | n
       params: {
         address: address,
         key: apiKey,
+        language: 'zh-TW' as any, // 設定為繁體中文
+        region: 'TW', // 設定為台灣地區
       },
     });
 
@@ -71,6 +73,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
       params: {
         latlng: { lat, lng },
         key: apiKey,
+        language: 'zh-TW' as any, // 設定為繁體中文
       },
     });
 
