@@ -392,11 +392,34 @@ const houseFeatures = [
 
 // 公設設施
 const amenities = [
-  "冷氣", "網路", "洗衣機", "冰箱", "熱水器", "電視", "床", "衣櫃", "書桌", "椅子",
-  "沙發", "餐桌", "廚房", "衛浴", "陽台", "停車位", "電梯", "管理員", "保全系統",
-  "監視器", "門禁卡", "垃圾處理", "清潔服務", "健身房", "游泳池", "交誼廳", "閱覽室",
-  "KTV", "麻將間", "桌球室", "撞球室", "電影院", "咖啡廳", "餐廳", "便利商店",
-  "停車場", "機車位", "腳踏車位", "充電樁", "WiFi", "有線電視", "第四台", "MOD"
+  // 基本設施
+  "冷氣", "暖氣", "熱水器", "網路", "第四台", "瓦斯",
+  
+  // 廚房設備
+  "廚房", "冰箱", "瓦斯爐", "微波爐", "飲水機",
+  
+  // 家具家電
+  "床", "衣櫃", "書桌", "椅子", "窗簾", "燈具", "洗衣機", "電視", "沙發",
+  
+  // 建築設施
+  "電梯", "停車場", "陽台", "露台", "花園", "游泳池", "健身房", "保全", "管理員", 
+  "門禁", "監視器", "消防設備", "逃生梯", "無障礙設施",
+  
+  // 交通便利性
+  "近捷運站", "近公車站", "近學校", "近市場", "近公園",
+  
+  // 其他特色
+  "寵物友善", "獨立套房", "可租屋補助", "可短租", "可設籍", "禁菸", "可吸菸", 
+  "禁酒", "安靜", "安靜區域", "採光好", "通風佳",
+  
+  // 管理相關
+  "管理費", "水電包含", "聯絡電話", "樓層",
+  
+  // 購物與生活
+  "近購物中心", "近醫院",
+  
+  // 家具與設備
+  "附家具", "屋頂花園", "門房服務"
 ];
 
 // 房型數據
@@ -633,7 +656,18 @@ export async function generateTaiwanData(db: any) {
   console.log(`✅ 已創建 ${listings.length} 個房屋資料`);
   
   // 生成一些收藏和評分數據
-  const testUserId = 1; // 使用測試用戶ID
+  // 使用第一個創建的用戶ID
+  const testUserId = landlords[0];
+  if (!testUserId) {
+    console.log('⚠️ 沒有找到用戶，跳過收藏和評分數據生成');
+    return {
+      users: landlords.length,
+      listings: listings.length,
+      favorites: 0,
+      ratings: 0,
+      cityStats: {}
+    };
+  }
   
   // 隨機收藏一些房屋
   const favoriteListings = getRandomItems(listings, 50);
@@ -642,7 +676,16 @@ export async function generateTaiwanData(db: any) {
       INSERT INTO favorites (user_id, listing_id, created_at)
       VALUES (?, ?, datetime('now'))
     `);
-    stmt.run(testUserId, listing.id);
+    try {
+      stmt.run(testUserId, listing.id);
+    } catch (e: any) {
+      if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        // 跳過重複的收藏
+        continue;
+      } else {
+        throw e;
+      }
+    }
   }
   
   // 隨機評分一些房屋
@@ -654,12 +697,21 @@ export async function generateTaiwanData(db: any) {
       "設備齊全", "採光良好", "安靜舒適", "生活機能完善", "推薦！"
     ];
     const comment = comments[Math.floor(Math.random() * comments.length)];
-    
+
     const stmt = db.prepare(`
       INSERT INTO ratings (user_id, listing_id, rating, comment, created_at, updated_at)
       VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
     `);
-    stmt.run(testUserId, listing.id, rating, comment);
+    try {
+      stmt.run(testUserId, listing.id, rating, comment);
+    } catch (e: any) {
+      if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        // 跳過重複的評分
+        continue;
+      } else {
+        throw e;
+      }
+    }
   }
   
   console.log('✅ 已生成收藏和評分數據');

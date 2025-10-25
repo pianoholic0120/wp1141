@@ -39,7 +39,7 @@ export function getAllListings(req: AuthRequest, res: Response): void {
     });
   } catch (error) {
     console.error('Get listings error:', error);
-    res.status(500).json({ error: 'Failed to retrieve listings' });
+    res.status(500).json({ error: '獲取房源列表失敗' });
   }
 }
 
@@ -68,7 +68,7 @@ export function createListing(req: AuthRequest, res: Response): void {
     const userId = req.user?.userId;
     if (!userId) {
       console.log('No user ID found in request');
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: '需要認證' });
       return;
     }
 
@@ -96,13 +96,13 @@ export function createListing(req: AuthRequest, res: Response): void {
 
     console.log('Listing created successfully:', listing.id);
     res.status(201).json({
-      message: 'Listing created successfully',
+      message: '房源創建成功',
       listing
     });
   } catch (error) {
     console.error('Create listing error:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    res.status(500).json({ error: 'Failed to create listing', details: error instanceof Error ? error.message : 'Unknown error' });
+    res.status(500).json({ error: '創建房源失敗', details: error instanceof Error ? error.message : '未知錯誤' });
   }
 }
 

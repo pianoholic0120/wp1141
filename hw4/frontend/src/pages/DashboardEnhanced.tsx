@@ -39,7 +39,7 @@ export default function DashboardEnhanced() {
   const [sidebarWidth, setSidebarWidth] = useState(384); // 初始寬度 96 * 4 = 384px (w-96)
   const [isDragging, setIsDragging] = useState(false);
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
-  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null);
+  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [clearFilterSignal, setClearFilterSignal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -215,7 +215,8 @@ export default function DashboardEnhanced() {
   const handleClearFilters = async () => {
     setCurrentFilters({});
     setShowMyListingsOnly(false);
-    setSearchLocation(null); // 清除搜尋位置
+    // 清除搜尋位置和距離排序
+    setSearchLocation(null);
     // 觸發清除信號
     setClearFilterSignal(true);
     setTimeout(() => setClearFilterSignal(false), 100);
@@ -225,7 +226,7 @@ export default function DashboardEnhanced() {
   };
 
   // 處理地圖搜尋位置選擇
-  const handleLocationSearch = (location: { lat: number; lng: number; address?: string }) => {
+  const handleLocationSearch = (location: { lat: number; lng: number }) => {
     setSearchLocation(location);
     // 自動滾動到列表頂部
     if (scrollAreaRef.current) {
@@ -529,7 +530,7 @@ export default function DashboardEnhanced() {
           {searchLocation && (
             <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-md text-xs">
               <MapPin className="w-3 h-3" />
-              <span>已按距離排序: {searchLocation.address || '搜尋位置'}</span>
+              <span>已按距離排序</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -563,7 +564,7 @@ export default function DashboardEnhanced() {
           />
 
           {/* Clear All Filters */}
-          {(Object.keys(currentFilters).length > 0 || searchLocation) && (
+          {(Object.keys(currentFilters).length > 0 || searchLocation || showMyListingsOnly) && (
             <Button
               variant="ghost"
               size="sm"

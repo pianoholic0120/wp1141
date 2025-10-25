@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MapPin, Bed, Bath, Square, Phone, Building2, DollarSign, User, Home, FileText, Wrench, Star } from 'lucide-react';
 import { AMENITIES } from '@/constants/amenities';
 import { RatingInput } from './RatingInput';
+import { RatingList } from './RatingList';
 // import { RatingDisplay } from './RatingDisplay';
 import { FavoriteButton } from './FavoriteButton';
 
@@ -302,6 +303,7 @@ export function ListingDetailDialog({
                 <span className="text-sm text-muted-foreground">收藏此房屋</span>
               </div>
               
+              {/* 我的評分 */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -323,6 +325,9 @@ export function ListingDetailDialog({
                   />
                 </CardContent>
               </Card>
+
+              {/* 所有評分留言 */}
+              <RatingList listingId={listing.id} />
             </TabsContent>
           </div>
         </Tabs>

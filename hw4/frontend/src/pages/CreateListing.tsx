@@ -275,7 +275,7 @@ export default function CreateListing() {
 
                 <TabsContent value="location" className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address *</Label>
+                    <Label htmlFor="address">地址 *</Label>
                     <div className="flex gap-2">
                       <Input
                         id="address"

@@ -9,7 +9,7 @@ interface MapViewProps {
   onMarkerClick?: (listing: Listing) => void;
   selectedListing?: Listing | null;
   highlightedId?: number | null;
-  onLocationSearch?: (location: { lat: number; lng: number; address?: string }) => void;
+  onLocationSearch?: (location: { lat: number; lng: number }) => void;
 }
 
 export function MapView({
@@ -206,7 +206,7 @@ export function MapView({
       
       // 通知父組件位置搜尋
       if (onLocationSearch) {
-        onLocationSearch({ lat: location.latitude, lng: location.longitude, address: location.address });
+        onLocationSearch({ lat: location.latitude, lng: location.longitude });
       }
     }
   };
