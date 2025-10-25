@@ -167,7 +167,8 @@ export const validateFilters = [
   query('bedrooms').optional().isInt({ min: 0 }),
   query('bathrooms').optional().isInt({ min: 0 }),
   query('status').optional().isIn(['available', 'rented', 'pending']),
-  query('amenities').optional().isArray().withMessage('Amenities must be an array'),
+  // amenities can be a string or an array of strings
+  query('amenities').optional(),
   handleValidationErrors
 ];
 

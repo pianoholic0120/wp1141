@@ -70,6 +70,9 @@ export interface ListingFilters {
   bedrooms?: number;
   bathrooms?: number;
   status?: string;
+  amenities?: string[];
+  city?: string;
+  district?: string;
 }
 
 export interface GeocodeResult {

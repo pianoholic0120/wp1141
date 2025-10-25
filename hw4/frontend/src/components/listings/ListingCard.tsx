@@ -142,19 +142,51 @@ export function ListingCard({
         {listing.amenities && listing.amenities.length > 0 && (
           <div className="pt-2">
             <div className="flex flex-wrap gap-1">
-              {listing.amenities.slice(0, 5).map((amenityValue) => {
-                const amenity = AMENITIES.find((a) => a.value === amenityValue);
-                return amenity ? (
-                  <Badge key={amenityValue} variant="outline" className="text-xs">
-                    {amenity.label}
+              {(() => {
+                // 處理 amenities 可能是字符串或數組的情況
+                let amenitiesList: string[] = [];
+                if (typeof listing.amenities === 'string') {
+                  try {
+                    amenitiesList = JSON.parse(listing.amenities);
+                  } catch (e) {
+                    console.warn('Failed to parse amenities:', listing.amenities);
+                    amenitiesList = [];
+                  }
+                } else if (Array.isArray(listing.amenities)) {
+                  amenitiesList = listing.amenities;
+                }
+                
+                return amenitiesList.slice(0, 5).map((amenityValue) => {
+                  const amenity = AMENITIES.find((a) => a.value === amenityValue);
+                  return amenity ? (
+                    <Badge key={amenityValue} variant="outline" className="text-xs">
+                      {amenity.label}
+                    </Badge>
+                  ) : (
+                    <Badge key={amenityValue} variant="outline" className="text-xs">
+                      {amenityValue}
+                    </Badge>
+                  );
+                });
+              })()}
+              {(() => {
+                let amenitiesList: string[] = [];
+                if (typeof listing.amenities === 'string') {
+                  try {
+                    amenitiesList = JSON.parse(listing.amenities);
+                  } catch (e) {
+                    amenitiesList = [];
+                  }
+                } else if (Array.isArray(listing.amenities)) {
+                  amenitiesList = listing.amenities;
+                }
+                
+                return amenitiesList.length > 5 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{amenitiesList.length - 5}
                   </Badge>
-                ) : null;
-              })}
-              {listing.amenities.length > 5 && (
-                <Badge variant="outline" className="text-xs">
-                  +{listing.amenities.length - 5}
-                </Badge>
-              )}
+                );
+              })()}
             </div>
           </div>
         )}

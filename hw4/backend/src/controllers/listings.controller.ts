@@ -27,6 +27,8 @@ export function getAllListings(req: AuthRequest, res: Response): void {
       bathrooms: req.query.bathrooms ? parseInt(req.query.bathrooms as string) : undefined,
       status: req.query.status as string,
       amenities,
+      city: req.query.city as string,
+      district: req.query.district as string,
     };
 
     const listings = ListingModel.findAll(filters);

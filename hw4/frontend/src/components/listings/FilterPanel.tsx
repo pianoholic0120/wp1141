@@ -98,9 +98,11 @@ export function FilterPanel({ onFilterChange, onClear, clearSignal }: FilterPane
                     setFilters({...filters, amenities: updated.length > 0 ? updated : undefined});
                     
                     // 自動套用
-                    onFilterChange({
+                    const newFilters = {
+                      ...filters,
                       amenities: updated.length > 0 ? updated : undefined
-                    });
+                    };
+                    onFilterChange(newFilters);
                   }}
                 />
                 <Label htmlFor={`filter-${amenity.value}`} className="text-xs font-normal cursor-pointer leading-tight">

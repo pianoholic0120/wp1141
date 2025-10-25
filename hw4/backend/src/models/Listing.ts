@@ -101,9 +101,21 @@ export class ListingModel {
         params.push(filters.status);
       }
 
-      // 公設篩選 - 包含任一公設即可
+      // 城市篩選
+      if (filters.city) {
+        query += ` AND l.address LIKE ?`;
+        params.push(`%${filters.city}%`);
+      }
+
+      // 區域篩選
+      if (filters.district) {
+        query += ` AND l.address LIKE ?`;
+        params.push(`%${filters.district}%`);
+      }
+
+      // 公設篩選 - 包含所有選中的公設
       if (filters.amenities && filters.amenities.length > 0) {
-        const amenityConditions = filters.amenities.map(() => 'l.amenities LIKE ?').join(' OR ');
+        const amenityConditions = filters.amenities.map(() => 'l.amenities LIKE ?').join(' AND ');
         query += ` AND (${amenityConditions})`;
         filters.amenities.forEach(amenity => {
           params.push(`%"${amenity}"%`);

@@ -8,7 +8,12 @@ export const listingsService = {
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          params.append(key, value.toString());
+          // 處理 amenities 參數：如果是陣列，則為每個元素添加參數
+          if (key === 'amenities' && Array.isArray(value)) {
+            value.forEach(amenity => params.append('amenities', amenity));
+          } else {
+            params.append(key, value.toString());
+          }
         }
       });
     }

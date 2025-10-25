@@ -39,7 +39,7 @@ export default function DashboardEnhanced() {
   const [sidebarWidth, setSidebarWidth] = useState(384); // 初始寬度 96 * 4 = 384px (w-96)
   const [isDragging, setIsDragging] = useState(false);
   const [highlightedId, setHighlightedId] = useState<number | null>(null);
-  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null);
   const [clearFilterSignal, setClearFilterSignal] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -60,83 +60,61 @@ export default function DashboardEnhanced() {
     return R * c;
   };
 
-  const applyFilters = useCallback((filters: FilterOptions) => {
-    let filtered = [...listings];
-
-    // 只顯示我的房屋
-    if (showMyListingsOnly && user) {
-      filtered = filtered.filter(listing => listing.user_id === user.id);
+  const applyFilters = useCallback(async (filters: FilterOptions) => {
+    try {
+      setLoading(true);
+      
+      // 構建 API 篩選參數
+      const apiFilters: any = { ...filters };
+      
+      // 只顯示我的房屋
+      if (showMyListingsOnly && user) {
+        // 這個需要特殊處理，因為 API 沒有這個參數
+        // 我們先載入所有房屋，然後在前端篩選
+      }
+      
+      // 如果有搜尋位置，添加位置參數
+      if (searchLocation) {
+        apiFilters.lat = searchLocation.lat;
+        apiFilters.lng = searchLocation.lng;
+        apiFilters.distance = 50; // 50km 範圍
+      }
+      
+      // 調用 API 獲取篩選後的房屋
+      const data = await listingsService.getAllListings(apiFilters);
+      let filtered = data.listings;
+      
+      // 只顯示我的房屋（前端篩選）
+      if (showMyListingsOnly && user) {
+        filtered = filtered.filter(listing => listing.user_id === user.id);
+      }
+      
+      // 如果有搜尋位置，按距離排序
+      if (searchLocation) {
+        filtered = filtered.map(listing => ({
+          ...listing,
+          distance: calculateDistance(
+            searchLocation.lat,
+            searchLocation.lng,
+            listing.latitude,
+            listing.longitude
+          )
+        })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+      }
+      
+      setListings(data.listings);
+      setFilteredListings(filtered);
+      setCurrentFilters(filters);
+      
+      // 載入評分統計
+      await loadRatingStats(filtered);
+      
+    } catch (error) {
+      console.error('Failed to apply filters:', error);
+    } finally {
+      setLoading(false);
     }
-
-    // 價格範圍
-    if (filters.minPrice) {
-      filtered = filtered.filter(l => l.price >= filters.minPrice!);
-    }
-    if (filters.maxPrice) {
-      filtered = filtered.filter(l => l.price <= filters.maxPrice!);
-    }
-
-    // 坪數範圍
-    if (filters.minArea) {
-      filtered = filtered.filter(l => l.area_sqft >= filters.minArea!);
-    }
-    if (filters.maxArea) {
-      filtered = filtered.filter(l => l.area_sqft <= filters.maxArea!);
-    }
-
-    // 房型
-    if (filters.propertyType) {
-      filtered = filtered.filter(l => l.property_type === filters.propertyType);
-    }
-
-    // 房間數
-    if (filters.bedrooms) {
-      filtered = filtered.filter(l => l.bedrooms >= filters.bedrooms!);
-    }
-    if (filters.bathrooms) {
-      filtered = filtered.filter(l => l.bathrooms >= filters.bathrooms!);
-    }
-
-    // 公設 - 改為包含任一公設即可
-    if (filters.amenities && filters.amenities.length > 0) {
-      filtered = filtered.filter(listing => {
-        if (!listing.amenities || listing.amenities.length === 0) return false;
-        return filters.amenities!.some(amenity => listing.amenities!.includes(amenity));
-      });
-    }
-
-    // 縣市篩選
-    if (filters.city) {
-      filtered = filtered.filter(listing => {
-        // 檢查地址是否包含選定的縣市
-        return listing.address.includes(filters.city!);
-      });
-    }
-
-    // 區域篩選（需要先選擇縣市）
-    if (filters.district && filters.city) {
-      filtered = filtered.filter(listing => {
-        // 檢查地址是否包含選定的區域
-        return listing.address.includes(filters.district!);
-      });
-    }
-
-    // 如果有搜尋位置，按距離排序
-    if (searchLocation) {
-      filtered = filtered.map(listing => ({
-        ...listing,
-        distance: calculateDistance(
-          searchLocation.lat,
-          searchLocation.lng,
-          listing.latitude,
-          listing.longitude
-        )
-      })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-    }
-
-    setFilteredListings(filtered);
-    setCurrentFilters(filters);
-  }, [listings, showMyListingsOnly, user, searchLocation]);
+  }, [showMyListingsOnly, user, searchLocation]);
 
   useEffect(() => {
     loadListings();
@@ -174,9 +152,9 @@ export default function DashboardEnhanced() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchLocation]);
 
-  const loadListings = async () => {
+  const loadListings = async (filters?: FilterOptions) => {
     try {
-      const data = await listingsService.getAllListings();
+      const data = await listingsService.getAllListings(filters);
       setListings(data.listings);
       setFilteredListings(data.listings);
       console.log('Listings loaded:', data.listings.length);
@@ -230,22 +208,24 @@ export default function DashboardEnhanced() {
     }
   };
 
-  const handleFilterChange = (filters: FilterOptions) => {
-    applyFilters(filters);
+  const handleFilterChange = async (filters: FilterOptions) => {
+    await applyFilters(filters);
   };
 
-  const handleClearFilters = () => {
+  const handleClearFilters = async () => {
     setCurrentFilters({});
-    setFilteredListings(listings);
-    // 清除公設篩選面板的狀態
     setShowMyListingsOnly(false);
+    setSearchLocation(null); // 清除搜尋位置
     // 觸發清除信號
     setClearFilterSignal(true);
     setTimeout(() => setClearFilterSignal(false), 100);
+    
+    // 重新載入所有房屋
+    await loadListings();
   };
 
   // 處理地圖搜尋位置選擇
-  const handleLocationSearch = (location: { lat: number; lng: number }) => {
+  const handleLocationSearch = (location: { lat: number; lng: number; address?: string }) => {
     setSearchLocation(location);
     // 自動滾動到列表頂部
     if (scrollAreaRef.current) {
@@ -441,10 +421,14 @@ export default function DashboardEnhanced() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部</SelectItem>
-                <SelectItem value="apartment">公寓</SelectItem>
-                <SelectItem value="house">透天</SelectItem>
-                <SelectItem value="condo">大樓</SelectItem>
-                <SelectItem value="studio">套房</SelectItem>
+                <SelectItem value="套房">套房</SelectItem>
+                <SelectItem value="雅房">雅房</SelectItem>
+                <SelectItem value="分租套房">分租套房</SelectItem>
+                <SelectItem value="獨立套房">獨立套房</SelectItem>
+                <SelectItem value="一房一廳">一房一廳</SelectItem>
+                <SelectItem value="兩房一廳">兩房一廳</SelectItem>
+                <SelectItem value="三房兩廳">三房兩廳</SelectItem>
+                <SelectItem value="四房兩廳">四房兩廳</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -545,7 +529,7 @@ export default function DashboardEnhanced() {
           {searchLocation && (
             <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-md text-xs">
               <MapPin className="w-3 h-3" />
-              <span>已按距離排序</span>
+              <span>已按距離排序: {searchLocation.address || '搜尋位置'}</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -579,7 +563,7 @@ export default function DashboardEnhanced() {
           />
 
           {/* Clear All Filters */}
-          {Object.keys(currentFilters).length > 0 && (
+          {(Object.keys(currentFilters).length > 0 || searchLocation) && (
             <Button
               variant="ghost"
               size="sm"

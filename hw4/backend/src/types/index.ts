@@ -51,6 +51,8 @@ export interface ListingFilters {
   bathrooms?: number;
   status?: string;
   amenities?: string[];
+  city?: string;
+  district?: string;
 }
 
 export interface JWTPayload {
