@@ -75,8 +75,41 @@ A comprehensive course registration system featuring a four-stage workflow that 
 - **Border Radius**: 1.3rem base radius with responsive variants
 - **Animations**: CSS transitions with enhanced button feedback and hover effects
 
-### HW4 - [Assignment Title]
-*Assignment details will be added upon completion*
+### HW4 - Taiwan Rental Property Platform
+**Technology Stack**: React 18, TypeScript, Node.js, Express.js, SQLite, Google Maps API
+
+A comprehensive full-stack rental property platform featuring:
+
+#### Core Features:
+- **Interactive Map Integration**: Google Maps with geocoding, reverse geocoding, and place search
+- **Property Management**: Complete CRUD operations for rental listings
+- **Advanced Filtering**: Multi-criteria filtering by location, price, amenities, and property type
+- **User Authentication**: JWT-based authentication with secure password hashing
+- **Favorites System**: User favorites management with real-time updates
+- **Rating System**: Comprehensive rating and review system with Chinese reviewer names
+- **Real-time Search**: Location-based search with distance calculations
+
+#### Technical Architecture:
+- **Frontend**: React 18 with TypeScript, Vite build system, shadcn/ui components
+- **Backend**: Node.js with Express.js, TypeScript, SQLite database
+- **Maps Integration**: Google Maps JavaScript API and server-side geocoding services
+- **Security**: JWT authentication, bcrypt password hashing, CORS protection
+- **Data Management**: Automated data generation with 400+ realistic property listings
+
+#### Key Features:
+- **Nationwide Coverage**: Properties distributed across all of Taiwan
+- **Multilingual Support**: Chinese interface with localized Google Maps responses
+- **Responsive Design**: Mobile-first approach with modern UI components
+- **Real-time Updates**: Immediate UI updates for favorites and ratings
+- **Data Persistence**: SQLite database with comprehensive test data
+- **Automated Setup**: One-click setup and start scripts for easy deployment
+
+#### Development Tools:
+- **Build System**: Vite for fast development and optimized production builds
+- **Type Safety**: Full TypeScript implementation across frontend and backend
+- **Component Library**: shadcn/ui with custom styling and animations
+- **Database Management**: SQLite with automated data generation scripts
+- **API Documentation**: Comprehensive RESTful API with curl examples
 
 ### HW5 - [Assignment Title]
 *Assignment details will be added upon completion*
@@ -111,7 +144,8 @@ The assignments are designed to progressively build web development skills:
 - **HW1**: HTML5, CSS3, TypeScript fundamentals
 - **HW2**: React basics, component architecture, game development
 - **HW3**: Advanced React patterns, state management, design systems, data processing
-- **HW4+**: [Advanced topics to be covered in future assignments]
+- **HW4**: Full-stack development, Google Maps integration, authentication, database management, real-time features
+- **HW5+**: [Advanced topics to be covered in future assignments]
 
 ## Development Environment
 
@@ -217,7 +251,7 @@ All projects are tested and compatible with:
 | HW1 | ✅ Complete | HTML5, CSS3, TypeScript | Portfolio website, responsive design |
 | HW2 | ✅ Complete | React 18, TypeScript | Puzzle game, audio feedback, animations |
 | HW3 | ✅ Complete | React 19, shadcn/ui, Tailwind | Course registration, hot reload, design system |
-| HW4 | 🔄 In Progress | TBD | TBD |
+| HW4 | ✅ Complete | React 18, TypeScript, Node.js, Express.js, SQLite, Google Maps | Rental platform, map integration, authentication, favorites, ratings |
 | HW5 | 📋 Planned | TBD | TBD |
 | HW6 | 📋 Planned | TBD | TBD |
 | HW7 | 📋 Planned | TBD | TBD |
@@ -237,6 +271,7 @@ All projects are tested and compatible with:
 - **HW1**: Responsive portfolio with modern CSS techniques
 - **HW2**: Interactive puzzle game with audio feedback and animations
 - **HW3**: Comprehensive course registration system with advanced features
+- **HW4**: Full-stack rental platform with Google Maps integration and real-time features
 
 ## 📄 License
 
