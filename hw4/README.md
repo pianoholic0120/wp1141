@@ -78,6 +78,7 @@ A comprehensive full-stack rental platform system that integrates Google Maps AP
 
 ### One-Click Setup (Recommended)
 
+#### For Regular Linux/macOS/Windows:
 ```bash
 # Clone the project
 git clone <repository-url>
@@ -85,6 +86,16 @@ cd hw4
 
 # Run automatic setup script
 ./setup.sh
+```
+
+#### For WSL2 Environment:
+```bash
+# Clone the project
+git clone <repository-url>
+cd hw4
+
+# Run WSL2-specific setup script
+./install-wsl2.sh
 ```
 
 After setup, edit environment variables files:
@@ -603,6 +614,29 @@ npx shadcn-ui@latest add button input label card alert dialog tabs select textar
 node -v
 # If version is too low, upgrade Node.js
 ```
+
+#### 7. WSL2 Environment Issues (better-sqlite3 compilation error)
+
+**Problem**: `better-sqlite3` fails to compile in WSL2 environment with errors like "gyp ERR! configure error".
+
+**Solution**: Install build tools and use specific flags:
+```bash
+# Install build tools
+sudo apt-get update
+sudo apt-get install -y build-essential python3-dev
+
+# Install dependencies with WSL2 compatibility
+cd backend
+npm install --build-from-source --sqlite=/usr
+```
+
+**Alternative Solution**: Use prebuilt binaries:
+```bash
+cd backend
+npm install --prefer-offline --no-audit
+```
+
+**Note**: The updated `start.sh` script automatically detects WSL2 environment and installs necessary build tools.
 
 ### Manual Dependency Check
 
