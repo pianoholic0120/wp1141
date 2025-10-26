@@ -526,6 +526,113 @@ cd frontend
 npm test
 ```
 
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. "nodemon: not found" Error
+
+**Problem**: Backend fails to start with "nodemon: not found" error.
+
+**Solution**: 
+```bash
+# Navigate to backend directory and install dependencies
+cd backend
+npm install
+
+# Or run the updated start.sh script which will auto-install dependencies
+./start.sh
+```
+
+#### 2. Port Already in Use
+
+**Problem**: Ports 3000 or 5173 are already in use.
+
+**Solution**: The updated `start.sh` script automatically kills processes on these ports before starting.
+
+#### 3. Environment Variables Not Set
+
+**Problem**: Google Maps API not working or authentication errors.
+
+**Solution**:
+```bash
+# Check if .env files exist
+ls backend/.env frontend/.env
+
+# If missing, copy from examples
+cp backend/env.example backend/.env
+cp frontend/env.example frontend/.env
+
+# Edit the files and add your Google Maps API Key
+nano backend/.env
+nano frontend/.env
+```
+
+#### 4. Database Issues
+
+**Problem**: Database errors or missing data.
+
+**Solution**:
+```bash
+# Reinitialize database
+cd backend
+npm run init-db
+npm run generate-taiwan
+npm run generate-reviewers
+npm run add-ratings
+```
+
+#### 5. Frontend Dependencies Missing
+
+**Problem**: Frontend fails to start or UI components missing.
+
+**Solution**:
+```bash
+cd frontend
+npm install
+npx shadcn-ui@latest init --yes
+npx shadcn-ui@latest add button input label card alert dialog tabs select textarea slider checkbox table dropdown-menu separator scroll-area tooltip badge popover alert-dialog --yes
+```
+
+#### 6. Node.js Version Issues
+
+**Problem**: Compatibility issues with Node.js version.
+
+**Solution**: Ensure you have Node.js 18.0 or higher:
+```bash
+node -v
+# If version is too low, upgrade Node.js
+```
+
+### Manual Dependency Check
+
+If you encounter dependency issues, you can manually check and install:
+
+```bash
+# Check backend dependencies
+cd backend
+ls node_modules
+npm install
+
+# Check frontend dependencies  
+cd ../frontend
+ls node_modules
+npm install
+```
+
+### Complete Reset
+
+If you need to completely reset the project:
+
+```bash
+# Remove node_modules and package-lock.json
+rm -rf backend/node_modules backend/package-lock.json
+rm -rf frontend/node_modules frontend/package-lock.json
+
+# Run setup again
+./setup.sh
+```
+
 ## Contributing
 
 1. Fork the project

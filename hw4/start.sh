@@ -23,6 +23,31 @@ kill_port 3000
 kill_port 5173
 echo ""
 
+# Check and install dependencies
+echo "Checking dependencies..."
+
+# Check backend dependencies
+if [ ! -d "backend/node_modules" ] || [ ! -f "backend/node_modules/.package-lock.json" ]; then
+    echo "Backend dependencies not found. Installing..."
+    cd backend
+    npm install
+    cd ..
+else
+    echo "Backend dependencies found"
+fi
+
+# Check frontend dependencies
+if [ ! -d "frontend/node_modules" ] || [ ! -f "frontend/node_modules/.package-lock.json" ]; then
+    echo "Frontend dependencies not found. Installing..."
+    cd frontend
+    npm install
+    cd ..
+else
+    echo "Frontend dependencies found"
+fi
+
+echo ""
+
 # Check environment variables files
 if [ ! -f backend/.env ]; then
     echo "Error: Backend environment variables file does not exist"
