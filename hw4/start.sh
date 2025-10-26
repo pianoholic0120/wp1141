@@ -30,23 +30,7 @@ echo "Checking dependencies..."
 if [ ! -d "backend/node_modules" ] || [ ! -f "backend/node_modules/.package-lock.json" ]; then
     echo "Backend dependencies not found. Installing..."
     cd backend
-    
-    # Check if we're in WSL2 environment
-    if grep -q "microsoft" /proc/version 2>/dev/null; then
-        echo "Detected WSL2 environment. Installing build tools..."
-        
-        # Install build tools for WSL2
-        sudo apt-get update -qq
-        sudo apt-get install -y build-essential python3-dev
-        
-        # Try to install with specific flags for better-sqlite3
-        echo "Installing dependencies with WSL2 compatibility..."
-        npm install --build-from-source --sqlite=/usr
-    else
-        echo "Installing dependencies..."
-        npm install
-    fi
-    
+    npm install
     cd ..
 else
     echo "Backend dependencies found"
