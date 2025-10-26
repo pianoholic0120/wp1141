@@ -78,6 +78,21 @@ A comprehensive full-stack rental platform system that integrates Google Maps AP
 
 ### One-Click Setup (Recommended)
 
+#### For Windows Users:
+
+**Using PowerShell/Command Prompt**
+
+```powershell
+# Clone the project
+git clone <repository-url>
+cd hw4
+
+# Run setup script using bash
+bash setup.sh # Don't make mistake of using tap
+```
+
+#### For Linux/macOS Users:
+
 ```bash
 # Clone the project
 git clone <repository-url>
@@ -87,21 +102,49 @@ cd hw4
 ./setup.sh
 ```
 
+### Environment Variables Setup
+
 After setup, edit environment variables files:
+**(It's definitely okay to edit files without utilizing terminal!!)**
+
+#### Windows Users:
+
+```powershell
+# Option 1: Using PowerShell
+notepad backend\.env
+notepad frontend\.env
+
+# Option 2: Using Command Prompt
+notepad backend\.env
+notepad frontend\.env
+
+# Option 3: Using Git Bash
+nano backend/.env
+nano frontend/.env
+```
+
+#### Linux/macOS Users:
 
 ```bash
-# Edit backend environment variables (you can use any method, e.g. vim, vi; sometimes cursor well forbit this, try manually open the file and edit it.)
-# Edit .env file and add your Google Maps API Key
+# Edit backend environment variables
 nano backend/.env
 
-# Edit frontend environment variables (you can use any method, e.g. vim, vi; sometimes cursor well forbit this, try manually open the file and edit it.)
-# Edit .env file and add your Google Maps API Key
+# Edit frontend environment variables  
 nano frontend/.env
 ```
 
 Replace `your_google_maps_api_key_here` with your Google Maps API Key.
 
 ### Quick Start
+
+#### Windows Users:
+
+```powershell
+# Using PowerShell/Command Prompt
+bash start.sh
+```
+
+#### Linux/macOS Users:
 
 ```bash
 # Start the complete system
@@ -113,6 +156,23 @@ Replace `your_google_maps_api_key_here` with your Google Maps API Key.
 If you prefer manual setup, follow these steps:
 
 #### 1. Backend Setup
+
+**Windows Users:**
+
+```powershell
+# Using PowerShell/Command Prompt
+cd backend
+npm install
+copy env.example .env
+# Edit .env file and add your Google Maps API Key (use notepad .env)
+npm run init-db
+npm run generate-taiwan
+npm run generate-reviewers
+npm run add-ratings
+npm run dev
+```
+
+**Linux/macOS Users:**
 
 ```bash
 cd backend
@@ -127,6 +187,21 @@ npm run dev
 ```
 
 #### 2. Frontend Setup
+
+**Windows Users:**
+
+```powershell
+# Using PowerShell/Command Prompt
+cd frontend
+npm install
+copy env.example .env
+# Edit .env file and add your Google Maps API Key (use notepad .env)
+npx shadcn-ui@latest init
+npx shadcn-ui@latest add button input label card alert dialog tabs select textarea slider checkbox table dropdown-menu separator scroll-area tooltip badge popover alert-dialog
+npm run dev
+```
+
+**Linux/macOS Users:**
 
 ```bash
 cd frontend
@@ -534,7 +609,8 @@ npm test
 
 **Problem**: Backend fails to start with "nodemon: not found" error.
 
-**Solution**: 
+**Solution**:
+
 ```bash
 # Navigate to backend directory and install dependencies
 cd backend
@@ -554,7 +630,23 @@ npm install
 
 **Problem**: Google Maps API not working or authentication errors.
 
-**Solution**:
+**Solution for Windows Users**:
+
+```powershell
+# Check if .env files exist
+dir backend\.env frontend\.env
+
+# If missing, copy from examples
+copy backend\env.example backend\.env
+copy frontend\env.example frontend\.env
+
+# Edit the files and add your Google Maps API Key
+notepad backend\.env
+notepad frontend\.env
+```
+
+**Solution for Linux/macOS Users**:
+
 ```bash
 # Check if .env files exist
 ls backend/.env frontend/.env
@@ -573,6 +665,7 @@ nano frontend/.env
 **Problem**: Database errors or missing data.
 
 **Solution**:
+
 ```bash
 # Reinitialize database
 cd backend
@@ -587,6 +680,7 @@ npm run add-ratings
 **Problem**: Frontend fails to start or UI components missing.
 
 **Solution**:
+
 ```bash
 cd frontend
 npm install
@@ -599,6 +693,7 @@ npx shadcn-ui@latest add button input label card alert dialog tabs select textar
 **Problem**: Compatibility issues with Node.js version.
 
 **Solution**: Ensure you have Node.js 18.0 or higher:
+
 ```bash
 node -v
 # If version is too low, upgrade Node.js
@@ -607,6 +702,22 @@ node -v
 ### Manual Dependency Check
 
 If you encounter dependency issues, you can manually check and install:
+
+**Windows Users:**
+
+```powershell
+# Check backend dependencies
+cd backend
+dir node_modules
+npm install
+
+# Check frontend dependencies  
+cd ..\frontend
+dir node_modules
+npm install
+```
+
+**Linux/macOS Users:**
 
 ```bash
 # Check backend dependencies
@@ -623,6 +734,21 @@ npm install
 ### Complete Reset
 
 If you need to completely reset the project:
+
+**Windows Users:**
+
+```powershell
+# Remove node_modules and package-lock.json
+rmdir /s backend\node_modules
+del backend\package-lock.json
+rmdir /s frontend\node_modules
+del frontend\package-lock.json
+
+# Run setup again
+bash setup.sh
+```
+
+**Linux/macOS Users:**
 
 ```bash
 # Remove node_modules and package-lock.json
