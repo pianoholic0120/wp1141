@@ -15,16 +15,19 @@ export default function LoginPage() {
   useEffect(() => {
     if (status === 'authenticated' && !isRedirecting) {
       console.log('[Login] Authenticated, user_id:', session?.user?.user_id)
+      console.log('[Login] Full session user:', session?.user)
       setIsRedirecting(true)
       
-      // Immediate redirect with window.location
-      if (session?.user?.user_id) {
-        console.log('[Login] Redirecting to /home')
-        window.location.href = '/home'
-      } else {
-        console.log('[Login] Redirecting to /register')
-        window.location.href = '/register'
-      }
+      // Small delay to ensure session is fully loaded
+      setTimeout(() => {
+        if (session?.user?.user_id) {
+          console.log('[Login] Has user_id, redirecting to /home')
+          window.location.href = '/home'
+        } else {
+          console.log('[Login] No user_id, redirecting to /register')
+          window.location.href = '/register'
+        }
+      }, 100)
     }
   }, [session, status, isRedirecting])
 

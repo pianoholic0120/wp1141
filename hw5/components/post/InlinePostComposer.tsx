@@ -78,7 +78,7 @@ export default function InlinePostComposer({ parentPostId, onSuccess, placeholde
     <div className="border-b border-border p-4">
       <div className="flex space-x-3">
         <Avatar
-          src={session.user.image || session.user.avatar_url || undefined}
+          src={session.user.avatar_url || session.user.image || undefined}
           alt={session.user.name || 'User'}
           size={48}
           className="flex-shrink-0"
