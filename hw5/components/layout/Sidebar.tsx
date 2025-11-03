@@ -1,0 +1,82 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useState } from 'react'
+import { HomeIcon, UserIcon, PencilSquareIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
+import { HomeIcon as HomeIconSolid, UserIcon as UserIconSolid } from '@heroicons/react/24/solid'
+import UserMenu from './UserMenu'
+import Link from 'next/link'
+
+export default function Sidebar() {
+  const { data: session } = useSession()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const navItems = [
+    {
+      name: 'Home',
+      icon: pathname === '/home' || pathname === '/' ? HomeIconSolid : HomeIcon,
+      href: '/home',
+      active: pathname === '/home' || pathname === '/'
+    },
+    {
+      name: 'Profile',
+      icon: pathname?.startsWith('/profile') ? UserIconSolid : UserIcon,
+      href: session?.user?.user_id ? `/profile/${session.user.user_id}` : '/home',
+      active: pathname?.startsWith('/profile')
+    },
+  ]
+
+  if (!session?.user) {
+    return null
+  }
+
+  return (
+    <div className="fixed left-0 top-0 h-full w-64 border-r border-border bg-background p-4 flex flex-col">
+      {/* Logo */}
+      <div className="mb-8">
+        <Link href="/home" className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">V</span>
+          </div>
+          <span className="text-xl font-bold">Vector</span>
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-2">
+        {navItems.map((item) => {
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center space-x-4 px-4 py-3 rounded-full transition-colors ${
+                item.active
+                  ? 'font-bold'
+                  : 'hover:bg-gray-900'
+              }`}
+            >
+              <Icon className="w-6 h-6" />
+              <span>{item.name}</span>
+            </Link>
+          )
+        })}
+
+        {/* Post Button */}
+        <button
+          onClick={() => router.push('/home?post=true')}
+          className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-full transition-colors flex items-center justify-center space-x-2 mt-4"
+        >
+          <PencilSquareIcon className="w-5 h-5" />
+          <span>Post</span>
+        </button>
+      </nav>
+
+      {/* User Menu */}
+      <UserMenu />
+    </div>
+  )
+}
+
