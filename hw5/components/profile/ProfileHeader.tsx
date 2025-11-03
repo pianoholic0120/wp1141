@@ -5,7 +5,6 @@ import { useSession } from 'next-auth/react'
 import Avatar from '../common/Avatar'
 import EditProfileModal from './EditProfileModal'
 import FollowButton from './FollowButton'
-import Image from 'next/image'
 
 interface User {
   id: string
@@ -35,16 +34,18 @@ export default function ProfileHeader({ user, onUpdate }: ProfileHeaderProps) {
   return (
     <div className="border-b border-border">
       {/* Background Image */}
-      <div className="h-48 bg-gray-800 relative">
-        {user.background_image_url && (
-          <Image
+      <div className="h-48 bg-gray-800 relative overflow-hidden">
+        {user.background_image_url ? (
+          <img
             src={user.background_image_url}
             alt="Background"
-            fill
-            className="object-cover"
-            unoptimized
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={(e) => {
+              // Hide image on error
+              e.currentTarget.style.display = 'none'
+            }}
           />
-        )}
+        ) : null}
       </div>
 
       {/* Profile Info */}

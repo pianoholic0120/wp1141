@@ -80,13 +80,12 @@ export default function PostDetailPage() {
         placeholder="Post your reply"
         onSuccess={() => {
           setRefreshKey(prev => prev + 1)
+          fetchPost() // Refresh main post to update comment count
         }}
       />
 
       {/* Comments */}
-      <div key={refreshKey}>
-        <PostList parentId={postId} />
-      </div>
+      <PostList key={refreshKey} parentId={postId} />
     </div>
   )
 }

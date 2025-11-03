@@ -1,7 +1,5 @@
 'use client'
 
-import Image from 'next/image'
-
 interface AvatarProps {
   src?: string | null
   alt: string
@@ -23,13 +21,19 @@ export default function Avatar({ src, alt, size = 48, className = '' }: AvatarPr
 
   return (
     <div className={`rounded-full overflow-hidden ${className}`} style={{ width: size, height: size }}>
-      <Image
+      <img
         src={src}
         alt={alt}
-        width={size}
-        height={size}
-        className="object-cover"
-        unoptimized
+        className="w-full h-full object-cover"
+        style={{ width: size, height: size }}
+        onError={(e) => {
+          // Replace with fallback on error
+          e.currentTarget.style.display = 'none'
+          const parent = e.currentTarget.parentElement
+          if (parent) {
+            parent.innerHTML = `<div class="rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold" style="width: ${size}px; height: ${size}px;">${alt.charAt(0).toUpperCase()}</div>`
+          }
+        }}
       />
     </div>
   )

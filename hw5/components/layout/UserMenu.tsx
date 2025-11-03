@@ -34,7 +34,7 @@ export default function UserMenu() {
         className="w-full flex items-center space-x-3 p-3 rounded-full hover:bg-gray-900 transition-colors"
       >
         <Avatar
-          src={user.image || user.avatar_url || undefined}
+          src={user.avatar_url || user.image || undefined}
           alt={user.name || 'User'}
           size={40}
         />

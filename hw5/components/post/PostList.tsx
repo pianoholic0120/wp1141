@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import PostCard from './PostCard'
 import { getPusherClient } from '@/lib/pusher-client'
 
@@ -33,7 +33,7 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       let url = '/api/posts'
       if (userId && likesOnly) {
@@ -48,16 +48,17 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
       if (!res.ok) throw new Error('Failed to fetch posts')
       const data = await res.json()
       setPosts(data)
+      setLoading(false)
     } catch (error) {
       console.error('Error fetching posts:', error)
-    } finally {
       setLoading(false)
     }
-  }
+  }, [filter, parentId, userId, likesOnly])
 
   useEffect(() => {
+    setLoading(true)
     fetchPosts()
-  }, [filter, parentId, userId, likesOnly])
+  }, [fetchPosts])
 
   // Setup Pusher for real-time updates
   useEffect(() => {
@@ -70,13 +71,67 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
     
     const handleNewPost = (data: { post: Post }) => {
       if (!parentId) {
-        setPosts(prev => [data.post, ...prev])
+        setPosts(prev => {
+          // Check if post already exists to prevent duplicates
+          const exists = prev.some(p => p.id === data.post.id)
+          if (exists) {
+            return prev
+          }
+          return [data.post, ...prev]
+        })
       }
     }
     
     channel.bind('new-post', handleNewPost)
 
-    // Subscribe to individual post channels for likes/comments
+    // If showing comments (parentId exists), subscribe to parent post channel for new comments
+    if (parentId) {
+      const parentChannel = pusherClient.subscribe(`post-${parentId}`)
+      
+      const handleNewComment = (data: { postId: string, commentCount?: number, comment?: Post }) => {
+        if (data.comment && parentId === data.postId) {
+          // Add new comment to the list and refresh
+          fetchPosts()
+        }
+      }
+      
+      parentChannel.bind('comment-added', handleNewComment)
+
+      // Also subscribe to individual comment channels for likes
+      const commentChannels = posts.map(post => {
+        const commentChannel = pusherClient!.subscribe(`post-${post.id}`)
+        
+        const handleLikeAdded = (data: { postId: string, likeCount: number }) => {
+          setPosts(prev => prev.map(p => 
+            p.id === data.postId ? { ...p, likeCount: data.likeCount, isLiked: true } : p
+          ))
+        }
+
+        const handleLikeRemoved = (data: { postId: string, likeCount: number }) => {
+          setPosts(prev => prev.map(p => 
+            p.id === data.postId ? { ...p, likeCount: data.likeCount, isLiked: false } : p
+          ))
+        }
+
+        commentChannel.bind('like-added', handleLikeAdded)
+        commentChannel.bind('like-removed', handleLikeRemoved)
+
+        return { channel: commentChannel, postId: post.id }
+      })
+
+      return () => {
+        channel.unbind('new-post', handleNewPost)
+        pusherClient!.unsubscribe('posts')
+        parentChannel.unbind('comment-added', handleNewComment)
+        pusherClient!.unsubscribe(`post-${parentId}`)
+        commentChannels.forEach(({ channel: commentChannel, postId }) => {
+          commentChannel.unbind_all()
+          pusherClient!.unsubscribe(`post-${postId}`)
+        })
+      }
+    }
+
+    // Subscribe to individual post channels for likes/comments (for main feed)
     const postChannels = posts.map(post => {
       const postChannel = pusherClient!.subscribe(`post-${post.id}`)
       
@@ -127,7 +182,7 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
         pusherClient!.unsubscribe(`post-${postId}`)
       })
     }
-  }, [posts, parentId])
+  }, [posts, parentId, fetchPosts])
 
   if (loading) {
     return (

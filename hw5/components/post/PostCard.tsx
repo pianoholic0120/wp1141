@@ -131,6 +131,10 @@ export default function PostCard({ post, onUpdate, showComments = false }: PostC
     router.push(`/post/${post.id}`)
   }
 
+  const handlePostClick = () => {
+    router.push(`/post/${post.id}`)
+  }
+
   const displayPost = post.originalPost || post
   const author = displayPost.author
 
@@ -158,13 +162,19 @@ export default function PostCard({ post, onUpdate, showComments = false }: PostC
           <div className="flex items-center space-x-2 mb-1">
             <span
               className="font-semibold hover:underline cursor-pointer"
-              onClick={() => router.push(`/profile/${author.user_id}`)}
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(`/profile/${author.user_id}`)
+              }}
             >
               {author.name || 'Anonymous'}
             </span>
             <span
               className="text-gray-500 hover:underline cursor-pointer"
-              onClick={() => router.push(`/profile/${author.user_id}`)}
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(`/profile/${author.user_id}`)
+              }}
             >
               @{author.user_id || 'user'}
             </span>
@@ -173,7 +183,7 @@ export default function PostCard({ post, onUpdate, showComments = false }: PostC
               {formatRelativeTime(post.createdAt)}
             </span>
             {isOwnPost && (
-              <div className="relative ml-auto">
+              <div className="relative ml-auto" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => setShowMenu(!showMenu)}
                   className="p-1 rounded-full hover:bg-gray-800"
@@ -199,11 +209,19 @@ export default function PostCard({ post, onUpdate, showComments = false }: PostC
             )}
           </div>
 
-          <div className="mb-3">
+          {/* Clickable post content area */}
+          <div 
+            onClick={handlePostClick}
+            className="mb-3 cursor-pointer"
+          >
             <ParsedText text={displayPost.content} />
           </div>
 
-          <div className="flex items-center space-x-8 text-gray-500">
+          {/* Interaction buttons - prevent navigation when clicking buttons */}
+          <div 
+            className="flex items-center space-x-8 text-gray-500"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Comment */}
             <button
               onClick={handleComment}

@@ -27,9 +27,12 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Get post count
+    // Get post count (only top-level posts, excluding comments/replies)
     const postCount = await prisma.post.count({
-      where: { authorId: user.id }
+      where: { 
+        authorId: user.id,
+        parentPostId: null // Only count top-level posts, not replies/comments
+      }
     })
 
     // Get follower and following counts

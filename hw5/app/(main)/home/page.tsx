@@ -12,7 +12,6 @@ export default function HomePage() {
   const router = useRouter()
   const [filter, setFilter] = useState<'all' | 'following'>('all')
   const [showPostModal, setShowPostModal] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (searchParams.get('post') === 'true') {
@@ -53,16 +52,10 @@ export default function HomePage() {
       </div>
 
       {/* Inline Post Composer */}
-      <InlinePostComposer
-        onSuccess={() => {
-          setRefreshKey(prev => prev + 1)
-        }}
-      />
+      <InlinePostComposer />
 
       {/* Post List */}
-      <div key={refreshKey}>
-        <PostList filter={filter} />
-      </div>
+      <PostList filter={filter} />
 
       {/* Post Modal */}
       <PostModal
@@ -70,7 +63,6 @@ export default function HomePage() {
         onClose={() => setShowPostModal(false)}
         onSuccess={() => {
           setShowPostModal(false)
-          setRefreshKey(prev => prev + 1)
         }}
       />
     </div>

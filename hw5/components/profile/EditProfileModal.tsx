@@ -54,6 +54,10 @@ export default function EditProfileModal({ user, isOpen, onClose, onSuccess }: E
         throw new Error('Failed to update profile')
       }
 
+      // Refresh session to update avatar in sidebar
+      const { update } = await import('next-auth/react')
+      await update()
+
       toast.success('Profile updated!')
       onSuccess()
     } catch (error) {
@@ -116,9 +120,28 @@ export default function EditProfileModal({ user, isOpen, onClose, onSuccess }: E
                 type="url"
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
-                className="w-full bg-transparent border border-border rounded-lg px-4 py-2 outline-none focus:border-primary"
+                className="w-full bg-transparent border border-border rounded-lg px-4 py-2 outline-none focus:border-primary mb-2"
                 placeholder="https://..."
               />
+              {avatarUrl && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-500 mb-1">Preview:</div>
+                  <div className="w-20 h-20 rounded-full overflow-hidden border border-border">
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        const parent = e.currentTarget.parentElement
+                        if (parent) {
+                          parent.innerHTML = '<div class="w-full h-full bg-gray-700 flex items-center justify-center text-white text-sm">Invalid URL</div>'
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -127,9 +150,28 @@ export default function EditProfileModal({ user, isOpen, onClose, onSuccess }: E
                 type="url"
                 value={backgroundImageUrl}
                 onChange={(e) => setBackgroundImageUrl(e.target.value)}
-                className="w-full bg-transparent border border-border rounded-lg px-4 py-2 outline-none focus:border-primary"
+                className="w-full bg-transparent border border-border rounded-lg px-4 py-2 outline-none focus:border-primary mb-2"
                 placeholder="https://..."
               />
+              {backgroundImageUrl && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-500 mb-1">Preview:</div>
+                  <div className="w-full h-32 rounded-lg overflow-hidden border border-border bg-gray-800">
+                    <img
+                      src={backgroundImageUrl}
+                      alt="Background preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        const parent = e.currentTarget.parentElement
+                        if (parent) {
+                          parent.innerHTML = '<div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-500 text-sm">Invalid URL</div>'
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

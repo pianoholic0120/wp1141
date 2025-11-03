@@ -46,7 +46,7 @@ export async function POST(
           )
         },
         mentions: {
-          create: await Promise.all(
+          create: (await Promise.all(
             mentions.map(async (mentionUserId) => {
               const mentionedUser = await prisma.user.findUnique({
                 where: { user_id: mentionUserId }
@@ -55,8 +55,8 @@ export async function POST(
                 return { userId: mentionedUser.id }
               }
               return null
-            }).then(results => results.filter(Boolean) as any[])
-          )
+            })
+          )).filter(Boolean) as any[]
         }
       },
       include: {
