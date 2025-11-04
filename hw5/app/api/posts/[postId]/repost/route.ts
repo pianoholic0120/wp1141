@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusher } from '@/lib/pusher'
+import { createNotification } from '@/lib/notifications'
 
 export async function POST(
   req: NextRequest,
@@ -68,6 +69,16 @@ export async function POST(
           is_repost: true
         }
       })
+
+      // Create notification for original post author (if not reposting own post)
+      if (originalPost.authorId !== session.user.id) {
+        await createNotification({
+          userId: originalPost.authorId,
+          actorId: session.user.id as string,
+          type: 'repost',
+          postId: params.postId
+        })
+      }
 
       pusher.trigger(`post-${params.postId}`, 'repost-added', {
         postId: params.postId,

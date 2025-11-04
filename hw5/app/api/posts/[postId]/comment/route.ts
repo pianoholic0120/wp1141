@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { parseText } from '@/lib/utils/textParser'
 import { pusher } from '@/lib/pusher'
+import { createNotification } from '@/lib/notifications'
 
 export async function POST(
   req: NextRequest,
@@ -138,6 +139,31 @@ export async function POST(
     const commentCount = await prisma.post.count({
       where: { parentPostId: params.postId }
     })
+
+    // Create notification for post author (if not commenting on own post)
+    if (parentPost.authorId !== session.user.id) {
+      await createNotification({
+        userId: parentPost.authorId,
+        actorId: session.user.id as string,
+        type: 'comment',
+        postId: params.postId
+      })
+    }
+
+    // Create notifications for mentioned users
+    for (const mentionUserId of mentions) {
+      const mentionedUser = await prisma.user.findUnique({
+        where: { user_id: mentionUserId }
+      })
+      if (mentionedUser && mentionedUser.id !== session.user.id && mentionedUser.id !== parentPost.authorId) {
+        await createNotification({
+          userId: mentionedUser.id,
+          actorId: session.user.id as string,
+          type: 'mention',
+          postId: comment.id
+        })
+      }
+    }
 
     // Trigger Pusher event
     pusher.trigger(`post-${params.postId}`, 'comment-added', {

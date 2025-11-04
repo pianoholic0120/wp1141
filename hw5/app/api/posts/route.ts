@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { parseText } from '@/lib/utils/textParser'
+import { createNotification } from '@/lib/notifications'
 
 export async function GET(req: NextRequest) {
   try {
@@ -279,6 +280,21 @@ export async function POST(req: NextRequest) {
         }
       }
     })
+
+    // Create notifications for mentioned users
+    for (const mentionUserId of mentions) {
+      const mentionedUser = await prisma.user.findUnique({
+        where: { user_id: mentionUserId }
+      })
+      if (mentionedUser && mentionedUser.id !== session.user.id) {
+        await createNotification({
+          userId: mentionedUser.id,
+          actorId: session.user.id as string,
+          type: 'mention',
+          postId: post.id
+        })
+      }
+    }
 
     // Trigger Pusher event for new post
     const { pusher } = await import('@/lib/pusher')

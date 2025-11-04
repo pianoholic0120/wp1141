@@ -58,6 +58,8 @@ model User {
   followers           Follow[] @relation("Following")
   drafts              Draft[]
   mentions            Mention[]
+  notifications       Notification[] @relation("NotificationRecipient")
+  notificationsSent   Notification[] @relation("NotificationActor")
 
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -89,6 +91,7 @@ model Post {
   likes           Like[]
   hashtags        PostHashtag[]
   mentions        Mention[]
+  notifications   Notification[]
   visibility      String   @default("public") // 'public' | 'followers' | 'mentioned'
   replySettings   String   @default("everyone") // 'everyone' | 'following' | 'mentioned'
   createdAt       DateTime @default(now())
@@ -168,5 +171,24 @@ model Mention {
 
   @@id([postId, userId])
   @@map("mentions")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   // Recipient user ID
+  actorId   String   // User who triggered the notification
+  type      String   // 'like' | 'comment' | 'follow' | 'mention' | 'repost'
+  postId    String?  // Related post ID (for like, comment, mention, repost)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  read      Boolean  @default(false)
+  user      User     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor     User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
+  @@index([postId])
+  @@map("notifications")
 }
 

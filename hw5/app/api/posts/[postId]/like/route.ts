@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusher } from '@/lib/pusher'
+import { createNotification } from '@/lib/notifications'
 
 export async function POST(
   req: NextRequest,
@@ -44,6 +45,12 @@ export async function POST(
 
       return NextResponse.json({ liked: false, likeCount })
     } else {
+      // Get post to find author
+      const post = await prisma.post.findUnique({
+        where: { id: params.postId },
+        select: { authorId: true }
+      })
+
       // Like
       await prisma.like.create({
         data: {
@@ -55,6 +62,16 @@ export async function POST(
       const likeCount = await prisma.like.count({
         where: { postId: params.postId }
       })
+
+      // Create notification for post author
+      if (post && post.authorId !== session.user.id) {
+        await createNotification({
+          userId: post.authorId,
+          actorId: session.user.id as string,
+          type: 'like',
+          postId: params.postId
+        })
+      }
 
       // Trigger Pusher event
       pusher.trigger(`post-${params.postId}`, 'like-added', {

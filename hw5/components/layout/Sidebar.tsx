@@ -2,9 +2,9 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useState } from 'react'
-import { HomeIcon, UserIcon, PencilSquareIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
-import { HomeIcon as HomeIconSolid, UserIcon as UserIconSolid } from '@heroicons/react/24/solid'
+import { useState, useEffect } from 'react'
+import { HomeIcon, UserIcon, PencilSquareIcon, ArrowRightOnRectangleIcon, BellIcon } from '@heroicons/react/24/outline'
+import { HomeIcon as HomeIconSolid, UserIcon as UserIconSolid, BellIcon as BellIconSolid } from '@heroicons/react/24/solid'
 import UserMenu from './UserMenu'
 import Link from 'next/link'
 
@@ -12,6 +12,60 @@ export default function Sidebar() {
   const { data: session } = useSession()
   const router = useRouter()
   const pathname = usePathname()
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  // Fetch unread notification count
+  useEffect(() => {
+    if (!session?.user?.id) return
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch('/api/notifications/unread-count')
+        if (res.ok) {
+          const data = await res.json()
+          setUnreadCount(data.count || 0)
+        }
+      } catch (error) {
+        console.error('Error fetching unread count:', error)
+      }
+    }
+
+    fetchUnreadCount()
+
+    // Set up real-time updates via Pusher
+    if (typeof window !== 'undefined') {
+      const { getPusherClient } = require('@/lib/pusher-client')
+      const pusherClient = getPusherClient()
+      
+      if (pusherClient && session?.user?.id) {
+        const channel = pusherClient.subscribe(`user-${session.user.id}`)
+        
+        const handleNewNotification = () => {
+          fetchUnreadCount()
+        }
+        
+        const handleNotificationsRead = () => {
+          fetchUnreadCount()
+        }
+        
+        channel.bind('new-notification', handleNewNotification)
+        channel.bind('notifications-read', handleNotificationsRead)
+
+        // Also listen to custom events for immediate updates
+        const handleCustomRead = () => {
+          fetchUnreadCount()
+        }
+        window.addEventListener('notifications-read', handleCustomRead)
+
+        return () => {
+          channel.unbind('new-notification', handleNewNotification)
+          channel.unbind('notifications-read', handleNotificationsRead)
+          pusherClient.unsubscribe(`user-${session.user.id}`)
+          window.removeEventListener('notifications-read', handleCustomRead)
+        }
+      }
+    }
+  }, [session?.user?.id])
 
   const navItems = [
     {
@@ -19,6 +73,13 @@ export default function Sidebar() {
       icon: pathname === '/home' || pathname === '/' ? HomeIconSolid : HomeIcon,
       href: '/home',
       active: pathname === '/home' || pathname === '/'
+    },
+    {
+      name: 'Notifications',
+      icon: pathname === '/notifications' ? BellIconSolid : BellIcon,
+      href: '/notifications',
+      active: pathname === '/notifications',
+      badge: unreadCount > 0 ? unreadCount : undefined
     },
     {
       name: 'Profile',
@@ -52,13 +113,20 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center space-x-4 px-4 py-3 rounded-full transition-colors ${
+              className={`flex items-center space-x-4 px-4 py-3 rounded-full transition-colors relative ${
                 item.active
                   ? 'font-bold'
                   : 'hover:bg-gray-900'
               }`}
             >
-              <Icon className="w-6 h-6" />
+              <div className="relative">
+                <Icon className="w-6 h-6" />
+                {item.badge && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
+              </div>
               <span>{item.name}</span>
             </Link>
           )

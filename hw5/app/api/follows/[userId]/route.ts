@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusher } from '@/lib/pusher'
+import { createNotification } from '@/lib/notifications'
 
 export async function POST(
   req: NextRequest,
@@ -66,6 +67,13 @@ export async function POST(
     // Get updated follower count
     const followerCount = await prisma.follow.count({
       where: { followingId: targetUser.id }
+    })
+
+    // Create notification for followed user
+    await createNotification({
+      userId: targetUser.id,
+      actorId: session.user.id as string,
+      type: 'follow'
     })
 
     // Trigger Pusher event for real-time updates
