@@ -35,15 +35,18 @@ interface Post {
   commentCount: number
   repostCount: number
   is_repost?: boolean
+  replySettings?: string
+  visibility?: string
 }
 
 interface PostCardProps {
   post: Post
   onUpdate?: () => void
   showComments?: boolean
+  onMentionClick?: (userId: string) => void
 }
 
-export default function PostCard({ post, onUpdate, showComments = false }: PostCardProps) {
+export default function PostCard({ post, onUpdate, showComments = false, onMentionClick }: PostCardProps) {
   const router = useRouter()
   const { data: session } = useSession()
   const [isLiked, setIsLiked] = useState(post.isLiked)
@@ -140,6 +143,24 @@ export default function PostCard({ post, onUpdate, showComments = false }: PostC
 
   const isOwnPost = session?.user?.id === post.author.id && !post.is_repost
 
+  // Check if current user can reply
+  // Note: Full permission check is done on the server side
+  // This is just for UI display purposes - we show the button if user is logged in
+  // Server will do the actual validation (check follow relationship, mention, etc.)
+  const canReply = () => {
+    if (!session?.user) return false
+    if (isOwnPost) return true // Post author can always reply
+    
+    const settings = post.replySettings || 'everyone'
+    if (settings === 'everyone') return true
+    
+    // For 'followers' and 'mentioned', we show the button if user is logged in
+    // Server will validate the actual permission
+    return true
+  }
+
+  const userCanReply = canReply()
+
   return (
     <div className="border-b border-border p-4 hover:bg-gray-950 transition-colors">
       {/* Repost indicator */}
@@ -211,10 +232,17 @@ export default function PostCard({ post, onUpdate, showComments = false }: PostC
 
           {/* Clickable post content area */}
           <div 
-            onClick={handlePostClick}
+            onClick={(e) => {
+              // Only navigate if clicking on text, not on links/mentions/hashtags
+              const target = e.target as HTMLElement
+              if (target.tagName === 'A' || target.closest('a') || target.closest('[role="button"]')) {
+                return
+              }
+              handlePostClick()
+            }}
             className="mb-3 cursor-pointer"
           >
-            <ParsedText text={displayPost.content} />
+            <ParsedText text={displayPost.content} onMentionClick={onMentionClick} />
           </div>
 
           {/* Interaction buttons - prevent navigation when clicking buttons */}
@@ -223,13 +251,20 @@ export default function PostCard({ post, onUpdate, showComments = false }: PostC
             onClick={(e) => e.stopPropagation()}
           >
             {/* Comment */}
-            <button
-              onClick={handleComment}
-              className="flex items-center space-x-2 hover:text-primary transition-colors"
-            >
-              <ChatBubbleLeftIcon className="w-5 h-5" />
-              <span>{post.commentCount}</span>
-            </button>
+            {userCanReply || isOwnPost ? (
+              <button
+                onClick={handleComment}
+                className="flex items-center space-x-2 hover:text-primary transition-colors"
+              >
+                <ChatBubbleLeftIcon className="w-5 h-5" />
+                <span>{post.commentCount}</span>
+              </button>
+            ) : (
+              <div className="flex items-center space-x-2 text-gray-600 cursor-not-allowed" title="You can't reply to this post">
+                <ChatBubbleLeftIcon className="w-5 h-5" />
+                <span>{post.commentCount}</span>
+              </div>
+            )}
 
             {/* Repost */}
             <button

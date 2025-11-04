@@ -60,6 +60,8 @@ export async function GET(
           likeCount: comment._count.likes,
           commentCount: comment._count.comments,
           repostCount: comment._count.reposts,
+          visibility: comment.visibility,
+          replySettings: comment.replySettings,
           _count: undefined
         }
       })

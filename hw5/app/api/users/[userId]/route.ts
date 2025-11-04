@@ -78,8 +78,18 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
   try {
+    console.log('[PUT /api/users] Request received for userId:', params.userId)
+    
     const session = await getServerSession(authOptions)
+    console.log('[PUT /api/users] Session:', {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      user_id: session?.user?.user_id,
+      email: session?.user?.email
+    })
+    
     if (!session?.user?.id) {
+      console.log('[PUT /api/users] No session or user id')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -87,20 +97,42 @@ export async function PUT(
       where: { user_id: params.userId }
     })
 
-    if (!user || user.id !== session.user.id) {
+    console.log('[PUT /api/users] Found user:', {
+      userId: user?.id,
+      user_id: user?.user_id,
+      matchesSession: user?.id === session.user.id
+    })
+
+    if (!user) {
+      console.log('[PUT /api/users] User not found with user_id:', params.userId)
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    if (user.id !== session.user.id) {
+      console.log('[PUT /api/users] User ID mismatch:', {
+        dbUserId: user.id,
+        sessionUserId: session.user.id
+      })
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const body = await req.json()
+    console.log('[PUT /api/users] Update data:', {
+      name: body.name,
+      bio: body.bio ? `${body.bio.substring(0, 50)}...` : null,
+      hasBackgroundImage: !!body.background_image_url,
+      hasAvatarUrl: !!body.avatar_url
+    })
+
     const { name, bio, background_image_url, avatar_url } = body
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
-        name,
-        bio,
-        background_image_url,
-        avatar_url,
+        name: name || null,
+        bio: bio || null,
+        background_image_url: background_image_url || null,
+        avatar_url: avatar_url || null,
       },
       select: {
         id: true,
@@ -114,10 +146,15 @@ export async function PUT(
       }
     })
 
+    console.log('[PUT /api/users] Update successful')
     return NextResponse.json(updatedUser)
   } catch (error) {
-    console.error('Error updating user:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('[PUT /api/users] Error updating user:', error)
+    console.error('[PUT /api/users] Error stack:', error instanceof Error ? error.stack : 'No stack')
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 

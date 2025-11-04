@@ -1,11 +1,20 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, GlobeAltIcon, UserGroupIcon, AtSymbolIcon, LockClosedIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { calculateCharacterCount } from '@/lib/utils/characterCount'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import DraftsModal from './DraftsModal'
+import MentionAutocomplete from '../common/MentionAutocomplete'
+
+interface User {
+  id: string
+  user_id: string | null
+  name: string | null
+  avatar_url: string | null
+  image: string | null
+}
 
 interface PostModalProps {
   isOpen: boolean
@@ -13,24 +22,108 @@ interface PostModalProps {
   initialContent?: string
   parentPostId?: string
   onSuccess?: () => void
+  onMentionClick?: (userId: string) => void
 }
 
-export default function PostModal({ isOpen, onClose, initialContent = '', parentPostId, onSuccess }: PostModalProps) {
+export default function PostModal({ isOpen, onClose, initialContent = '', parentPostId, onSuccess, onMentionClick }: PostModalProps) {
   const [content, setContent] = useState(initialContent)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
   const [showDrafts, setShowDrafts] = useState(false)
+  const [showMentionAutocomplete, setShowMentionAutocomplete] = useState(false)
+  const [mentionCursorPosition, setMentionCursorPosition] = useState(0)
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null) // Track the draft ID being edited
+  const [visibility, setVisibility] = useState<'public' | 'followers' | 'mentioned'>('public')
+  const [replySettings, setReplySettings] = useState<'everyone' | 'followers' | 'mentioned'>('everyone')
+  const [showVisibilityDropdown, setShowVisibilityDropdown] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
     if (isOpen) {
       setContent(initialContent)
+      setShowMentionAutocomplete(false)
+      setCurrentDraftId(null) // Reset draft ID when modal opens
+      setVisibility('public') // Reset visibility
+      setReplySettings('everyone') // Reset reply settings (will sync with visibility)
+      setShowVisibilityDropdown(false) // Close visibility dropdown
       setTimeout(() => textareaRef.current?.focus(), 100)
     }
   }, [isOpen, initialContent])
 
+  // Sync replySettings with visibility
+  useEffect(() => {
+    if (visibility === 'public') {
+      setReplySettings('everyone')
+    } else if (visibility === 'followers') {
+      setReplySettings('followers')
+    } else if (visibility === 'mentioned') {
+      setReplySettings('mentioned')
+    }
+  }, [visibility])
+
   const charCount = calculateCharacterCount(content)
+
+  // Detect @ mention trigger
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value
+    const cursorPos = e.target.selectionStart
+    
+    setContent(newContent)
+    
+    // Check if we're in a mention context (@)
+    const textBeforeCursor = newContent.substring(0, cursorPos)
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@')
+    
+    if (lastAtIndex !== -1) {
+      // Check if there's a space or newline after @
+      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1)
+      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+        setShowMentionAutocomplete(true)
+        setMentionCursorPosition(cursorPos)
+        return
+      }
+    }
+    
+    setShowMentionAutocomplete(false)
+  }
+
+  const handleMentionSelect = (user: User) => {
+    if (!textareaRef.current) return
+    
+    const cursorPos = mentionCursorPosition
+    const textBeforeCursor = content.substring(0, cursorPos)
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@')
+    
+    if (lastAtIndex !== -1) {
+      const textAfterCursor = content.substring(cursorPos)
+      const newContent = 
+        content.substring(0, lastAtIndex) + 
+        `@${user.user_id} ` + 
+        textAfterCursor
+      
+      setContent(newContent)
+      setShowMentionAutocomplete(false)
+      
+      // Set cursor position after the mention
+      setTimeout(() => {
+        if (textareaRef.current) {
+          const newCursorPos = lastAtIndex + user.user_id!.length + 2 // @ + user_id + space
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
+          textareaRef.current.focus()
+        }
+      }, 0)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showMentionAutocomplete && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab' || e.key === 'Escape')) {
+      e.preventDefault()
+      // Let MentionAutocomplete handle these keys
+      return
+    }
+  }
 
   const handleClose = () => {
     if (content.trim() && content !== initialContent) {
@@ -68,25 +161,56 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
 
     setIsSubmitting(true)
     try {
+      const payload: any = {
+        content: content.trim(),
+        parentPostId: parentPostId || undefined
+      }
+
+      // Only set visibility and replySettings for top-level posts
+      if (!parentPostId) {
+        payload.visibility = visibility
+        payload.replySettings = replySettings
+      }
+
+      console.log('[PostModal] Submitting post with payload:', payload)
+
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: content.trim(),
-          parentPostId
-        })
+        body: JSON.stringify(payload)
       })
 
       if (!res.ok) {
-        throw new Error('Failed to create post')
+        const errorData = await res.json().catch(() => ({}))
+        console.error('[PostModal] Post creation failed:', errorData)
+        throw new Error(errorData.error || 'Failed to create post')
+      }
+
+      const data = await res.json()
+      console.log('[PostModal] Post created successfully:', data)
+
+      // Delete the draft if it was used to create this post
+      if (currentDraftId) {
+        try {
+          await fetch(`/api/drafts/${currentDraftId}`, {
+            method: 'DELETE'
+          })
+        } catch (error) {
+          console.error('Error deleting draft:', error)
+          // Don't fail the post creation if draft deletion fails
+        }
       }
 
       toast.success('Post created!')
       setContent('')
+      setCurrentDraftId(null)
+      setVisibility('public')
+      setReplySettings('everyone')
       onClose()
       if (onSuccess) onSuccess()
-    } catch (error) {
-      toast.error('Failed to create post')
+    } catch (error: any) {
+      console.error('[PostModal] Error creating post:', error)
+      toast.error(error.message || 'Failed to create post')
     } finally {
       setIsSubmitting(false)
     }
@@ -107,9 +231,72 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
+              {/* Visibility Dropdown - Only for top-level posts */}
+              {!parentPostId && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowVisibilityDropdown(!showVisibilityDropdown)}
+                    className="flex items-center space-x-1 px-3 py-1.5 text-sm border border-border rounded-full hover:bg-gray-900 transition-colors"
+                  >
+                    <span>
+                      {visibility === 'public' && 'Everyone'}
+                      {visibility === 'followers' && 'People you follow'}
+                      {visibility === 'mentioned' && 'People you mention'}
+                    </span>
+                    <ChevronDownIcon className="w-4 h-4" />
+                  </button>
+                  
+                  {showVisibilityDropdown && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowVisibilityDropdown(false)}
+                      />
+                      <div className="absolute top-full left-0 mt-2 bg-background border border-border rounded-lg shadow-lg z-50 min-w-[220px]">
+                        <button
+                          onClick={() => {
+                            setVisibility('public')
+                            setShowVisibilityDropdown(false)
+                          }}
+                          className={`w-full text-left px-4 py-3 hover:bg-gray-900 transition-colors ${
+                            visibility === 'public' ? 'bg-gray-900' : ''
+                          }`}
+                        >
+                          <div className="font-semibold">Everyone</div>
+                          <div className="text-xs text-gray-500">Anyone can see this post</div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setVisibility('followers')
+                            setShowVisibilityDropdown(false)
+                          }}
+                          className={`w-full text-left px-4 py-3 hover:bg-gray-900 transition-colors border-t border-border ${
+                            visibility === 'followers' ? 'bg-gray-900' : ''
+                          }`}
+                        >
+                          <div className="font-semibold">People you follow</div>
+                          <div className="text-xs text-gray-500">Only people you follow or who follow you can see</div>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setVisibility('mentioned')
+                            setShowVisibilityDropdown(false)
+                          }}
+                          className={`w-full text-left px-4 py-3 hover:bg-gray-900 transition-colors border-t border-border ${
+                            visibility === 'mentioned' ? 'bg-gray-900' : ''
+                          }`}
+                        >
+                          <div className="font-semibold">People you mention</div>
+                          <div className="text-xs text-gray-500">Only people mentioned in this post can see</div>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               <button
                 onClick={() => setShowDrafts(true)}
-                className="px-4 py-2 text-sm border border-border rounded-full hover:bg-gray-900 transition-colors"
+                className="px-4 py-2 text-sm border border-border rounded-full hover:bg-gray-900 transition-colors text-primary"
               >
                 Drafts
               </button>
@@ -124,16 +311,59 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
           </div>
 
           <div className="p-4">
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What's happening?"
-              className="w-full bg-transparent resize-none outline-none text-lg min-h-[200px]"
-              maxLength={charCount.isValid ? undefined : content.length}
-            />
+            <div className="relative" ref={containerRef}>
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                onSelectionChange={(e) => {
+                  if (textareaRef.current) {
+                    const cursorPos = textareaRef.current.selectionStart
+                    setMentionCursorPosition(cursorPos)
+                    const textBeforeCursor = content.substring(0, cursorPos)
+                    const lastAtIndex = textBeforeCursor.lastIndexOf('@')
+                    if (lastAtIndex !== -1) {
+                      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1)
+                      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+                        setShowMentionAutocomplete(true)
+                      } else {
+                        setShowMentionAutocomplete(false)
+                      }
+                    } else {
+                      setShowMentionAutocomplete(false)
+                    }
+                  }
+                }}
+                placeholder="What's happening?"
+                className="w-full bg-transparent resize-none outline-none text-lg min-h-[200px]"
+                maxLength={charCount.isValid ? undefined : content.length}
+              />
+              
+              {showMentionAutocomplete && (
+                <MentionAutocomplete
+                  text={content}
+                  cursorPosition={mentionCursorPosition}
+                  onSelect={handleMentionSelect}
+                  onClose={() => setShowMentionAutocomplete(false)}
+                />
+              )}
+            </div>
 
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+              {/* Reply Settings Display - Left side, not clickable */}
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                {!parentPostId && (
+                  <>
+                    <GlobeAltIcon className="w-4 h-4" />
+                    <span>
+                      {replySettings === 'everyone' && 'Everyone can reply'}
+                      {replySettings === 'followers' && 'People you follow can reply'}
+                      {replySettings === 'mentioned' && 'People you mention can reply'}
+                    </span>
+                  </>
+                )}
+              </div>
               <div className="text-sm text-gray-500">
                 <span className={charCount.count > 280 ? 'text-red-500' : ''}>
                   {charCount.count}
@@ -171,8 +401,9 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
       <DraftsModal
         isOpen={showDrafts}
         onClose={() => setShowDrafts(false)}
-        onSelect={(draftContent) => {
+        onSelect={(draftContent, draftId) => {
           setContent(draftContent)
+          setCurrentDraftId(draftId)
           setShowDrafts(false)
         }}
       />

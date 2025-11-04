@@ -36,9 +36,14 @@ export default function FollowButton({ userId, isFollowing: initialIsFollowing, 
 
   return (
     <button
-      onClick={handleToggle}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        console.log('[FollowButton] Button clicked, userId:', userId)
+        handleToggle()
+      }}
       disabled={isLoading}
-      className={`px-4 py-2 rounded-full font-semibold transition-colors disabled:opacity-50 ${
+      className={`px-4 py-2 rounded-full font-semibold transition-colors disabled:opacity-50 cursor-pointer relative z-20 ${
         isFollowing
           ? 'border border-border hover:bg-gray-900'
           : 'bg-white text-black hover:bg-gray-200'

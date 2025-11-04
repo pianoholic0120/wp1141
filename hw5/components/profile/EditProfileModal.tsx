@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
+import { update } from 'next-auth/react'
 
 interface User {
   id: string
@@ -39,6 +40,14 @@ export default function EditProfileModal({ user, isOpen, onClose, onSuccess }: E
   const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
+      console.log('[EditProfile] Updating profile for user_id:', user.user_id)
+      console.log('[EditProfile] Update data:', {
+        name,
+        bio,
+        background_image_url: backgroundImageUrl,
+        avatar_url: avatarUrl
+      })
+
       const res = await fetch(`/api/users/${user.user_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -51,17 +60,29 @@ export default function EditProfileModal({ user, isOpen, onClose, onSuccess }: E
       })
 
       if (!res.ok) {
-        throw new Error('Failed to update profile')
+        const errorData = await res.json().catch(() => ({}))
+        console.error('[EditProfile] Update failed:', res.status, errorData)
+        throw new Error(errorData.error || errorData.message || 'Failed to update profile')
       }
 
+      const updatedUser = await res.json()
+      console.log('[EditProfile] Update successful:', updatedUser)
+
       // Refresh session to update avatar in sidebar
-      const { update } = await import('next-auth/react')
-      await update()
+      try {
+        await update()
+        console.log('[EditProfile] Session updated successfully')
+      } catch (updateError) {
+        console.error('[EditProfile] Failed to update session:', updateError)
+        // Continue anyway - profile is updated, session will refresh on next page load
+      }
 
       toast.success('Profile updated!')
-      onSuccess()
-    } catch (error) {
-      toast.error('Failed to update profile')
+      onClose() // Close modal first
+      onSuccess() // Then trigger update
+    } catch (error: any) {
+      console.error('[EditProfile] Error:', error)
+      toast.error(error.message || 'Failed to update profile')
     } finally {
       setIsSubmitting(false)
     }

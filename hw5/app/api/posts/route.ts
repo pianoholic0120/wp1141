@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Fetch all posts first, then filter by visibility
     const posts = await prisma.post.findMany({
       where,
       include: {
@@ -73,9 +74,80 @@ export async function GET(req: NextRequest) {
       take: 50
     })
 
+    // Filter posts by visibility settings
+    const filteredPosts = await Promise.all(
+      posts.map(async (post) => {
+        const visibility = post.visibility || 'public'
+        const isOwnPost = currentUserId === post.authorId
+
+        // Post author can always see their own posts
+        if (isOwnPost) {
+          return post
+        }
+
+        // Public posts: everyone can see
+        if (visibility === 'public') {
+          return post
+        }
+
+        // For followers visibility: only people the author follows or who follow the author
+        if (visibility === 'followers' && currentUserId) {
+          const following = await prisma.follow.findUnique({
+            where: {
+              followerId_followingId: {
+                followerId: currentUserId,
+                followingId: post.authorId
+              }
+            }
+          })
+          const followedBy = await prisma.follow.findUnique({
+            where: {
+              followerId_followingId: {
+                followerId: post.authorId,
+                followingId: currentUserId
+              }
+            }
+          })
+          if (following || followedBy) {
+            return post
+          }
+          return null // User cannot see this post
+        }
+
+        // For mentioned visibility: only people mentioned in the post
+        if (visibility === 'mentioned' && currentUserId) {
+          const currentUser = await prisma.user.findUnique({
+            where: { id: currentUserId },
+            select: { user_id: true }
+          })
+          if (currentUser?.user_id) {
+            const mentions = await prisma.mention.findMany({
+              where: { postId: post.id },
+              include: { user: true }
+            })
+            const mentionedUserIds = mentions.map(m => m.user.user_id).filter(Boolean)
+            if (mentionedUserIds.includes(currentUser.user_id)) {
+              return post
+            }
+          }
+          return null // User cannot see this post
+        }
+
+        // If not logged in and visibility is not public, hide the post
+        if (!currentUserId) {
+          return null
+        }
+
+        return null
+      })
+    )
+
+    // Remove null posts (filtered out)
+    const visiblePosts = filteredPosts.filter(post => post !== null) as typeof posts
+
     // Get like status for current user
     const postsWithLikes = await Promise.all(
-      posts.map(async (post) => {
+      visiblePosts.map(async (post) => {
         let isLiked = false
         if (currentUserId) {
           const like = await prisma.like.findUnique({
@@ -95,6 +167,8 @@ export async function GET(req: NextRequest) {
           likeCount: post._count.likes,
           commentCount: post._count.comments,
           repostCount: post._count.reposts,
+          visibility: post.visibility,
+          replySettings: post.replySettings,
           _count: undefined
         }
       })
@@ -121,7 +195,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     console.log('[POST /api/posts] Body:', body)
-    const { content, parentPostId, originalPostId } = body
+    const { content, parentPostId, originalPostId, visibility, replySettings } = body
 
     if (!content || content.trim().length === 0) {
       console.log('[POST /api/posts] No content provided')
@@ -144,6 +218,8 @@ export async function POST(req: NextRequest) {
         parentPostId: parentPostId || null,
         originalPostId: originalPostId || null,
         is_repost: !!originalPostId,
+        visibility: visibility || 'public',
+        replySettings: replySettings || 'everyone',
         hashtags: {
           create: await Promise.all(
             hashtags.map(async (tag) => {
@@ -213,6 +289,8 @@ export async function POST(req: NextRequest) {
         likeCount: 0,
         commentCount: 0,
         repostCount: 0,
+        visibility: post.visibility,
+        replySettings: post.replySettings,
       }
     })
 
@@ -222,6 +300,8 @@ export async function POST(req: NextRequest) {
       likeCount: 0,
       commentCount: 0,
       repostCount: 0,
+      visibility: post.visibility,
+      replySettings: post.replySettings,
       _count: undefined
     })
   } catch (error: any) {

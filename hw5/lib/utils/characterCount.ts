@@ -14,12 +14,14 @@ export function calculateCharacterCount(text: string): CharacterCountResult {
   const urlRegex = /(https?:\/\/[^\s]+)/g
   const links = text.match(urlRegex) || []
   
-  // Extract hashtags (# followed by word characters)
-  const hashtagRegex = /#[\w]+/g
+  // Extract hashtags (# followed by Unicode characters, numbers, or underscore)
+  // Support Unicode characters (including Chinese, Japanese, etc.)
+  const hashtagRegex = /#[\p{L}\p{N}_]+/gu
   const hashtags = text.match(hashtagRegex) || []
   
-  // Extract mentions (@ followed by word characters)
-  const mentionRegex = /@[\w]+/g
+  // Extract mentions (@ followed by Unicode characters, numbers, or underscore)
+  // Support Unicode characters (including Chinese, Japanese, etc.)
+  const mentionRegex = /@[\p{L}\p{N}_]+/gu
   const mentions = text.match(mentionRegex) || []
   
   // Remove hashtags and mentions from counting

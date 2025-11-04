@@ -9,8 +9,11 @@ export interface ParsedTextPart {
 export function parseText(text: string): ParsedTextPart[] {
   const parts: ParsedTextPart[] = []
   const urlRegex = /(https?:\/\/[^\s]+)/g
-  const hashtagRegex = /#[\w]+/g
-  const mentionRegex = /@[\w]+/g
+  // Support Unicode characters (including Chinese, Japanese, etc.) and alphanumeric + underscore
+  // Match # followed by at least one valid character (letter, number, underscore, or Unicode letter)
+  const hashtagRegex = /#[\p{L}\p{N}_]+/gu
+  // Match @ followed by at least one valid character (letter, number, underscore, or Unicode letter)
+  const mentionRegex = /@[\p{L}\p{N}_]+/gu
   
   // Find all matches with their positions
   const matches: Array<{ type: 'url' | 'hashtag' | 'mention', match: RegExpMatchArray, index: number }> = []

@@ -76,6 +76,8 @@ export async function GET(
       likeCount: like.post._count.likes,
       commentCount: like.post._count.comments,
       repostCount: like.post._count.reposts,
+      visibility: like.post.visibility,
+      replySettings: like.post.replySettings,
       _count: undefined
     }))
 

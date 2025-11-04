@@ -70,6 +70,8 @@ export async function GET(
       likeCount: post._count.likes,
       commentCount: post._count.comments,
       repostCount: post._count.reposts,
+      visibility: post.visibility,
+      replySettings: post.replySettings,
       _count: undefined
     })
   } catch (error) {

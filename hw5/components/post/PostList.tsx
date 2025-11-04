@@ -27,9 +27,10 @@ interface PostListProps {
   parentId?: string | null
   userId?: string
   likesOnly?: boolean
+  onMentionClick?: (userId: string) => void
 }
 
-export default function PostList({ filter = 'all', parentId = null, userId, likesOnly = false }: PostListProps) {
+export default function PostList({ filter = 'all', parentId = null, userId, likesOnly = false, onMentionClick }: PostListProps) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -203,7 +204,7 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
   return (
     <div>
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} onUpdate={fetchPosts} />
+        <PostCard key={post.id} post={post} onUpdate={fetchPosts} onMentionClick={onMentionClick} />
       ))}
     </div>
   )

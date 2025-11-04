@@ -15,6 +15,61 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get the parent post to check reply settings
+    const parentPost = await prisma.post.findUnique({
+      where: { id: params.postId },
+      include: {
+        author: true,
+        mentions: {
+          include: {
+            user: true
+          }
+        }
+      }
+    })
+
+    if (!parentPost) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    }
+
+    // Check reply permissions
+    const replySettings = parentPost.replySettings || 'everyone'
+    const currentUserId = session.user.id as string
+    const currentUserUserId = session.user.user_id as string
+
+    let canReply = false
+    if (replySettings === 'everyone') {
+      canReply = true
+    } else if (replySettings === 'followers') {
+      // Check if current user follows the post author OR if post author follows current user
+      // This allows both: people you follow AND people who follow you to reply
+      const following = await prisma.follow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: currentUserId,
+            followingId: parentPost.authorId
+          }
+        }
+      })
+      const followedBy = await prisma.follow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: parentPost.authorId,
+            followingId: currentUserId
+          }
+        }
+      })
+      canReply = !!following || !!followedBy || currentUserId === parentPost.authorId
+    } else if (replySettings === 'mentioned') {
+      // Check if current user is mentioned
+      const mentionedUserIds = parentPost.mentions.map(m => m.user.user_id).filter(Boolean)
+      canReply = mentionedUserIds.includes(currentUserUserId) || currentUserId === parentPost.authorId
+    }
+
+    if (!canReply) {
+      return NextResponse.json({ error: 'You are not allowed to reply to this post' }, { status: 403 })
+    }
+
     const body = await req.json()
     const { content } = body
 

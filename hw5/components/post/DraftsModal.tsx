@@ -15,7 +15,7 @@ interface Draft {
 interface DraftsModalProps {
   isOpen: boolean
   onClose: () => void
-  onSelect: (content: string) => void
+  onSelect: (content: string, draftId: string) => void
 }
 
 export default function DraftsModal({ isOpen, onClose, onSelect }: DraftsModalProps) {
@@ -98,7 +98,7 @@ export default function DraftsModal({ isOpen, onClose, onSelect }: DraftsModalPr
                     <p className="text-sm mb-3 whitespace-pre-wrap">{draft.content}</p>
                     <button
                       onClick={() => {
-                        onSelect(draft.content)
+                        onSelect(draft.content, draft.id)
                         onClose()
                       }}
                       className="text-primary hover:underline text-sm font-semibold"

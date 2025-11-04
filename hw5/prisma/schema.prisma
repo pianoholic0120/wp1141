@@ -89,6 +89,8 @@ model Post {
   likes           Like[]
   hashtags        PostHashtag[]
   mentions        Mention[]
+  visibility      String   @default("public") // 'public' | 'followers' | 'mentioned'
+  replySettings   String   @default("everyone") // 'everyone' | 'following' | 'mentioned'
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
