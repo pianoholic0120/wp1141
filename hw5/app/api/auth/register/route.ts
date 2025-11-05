@@ -11,7 +11,7 @@ const registerSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -28,12 +28,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Update current user with user_id
+    // Use user.id instead of email (works for Facebook users without email)
     const user = await prisma.user.update({
-      where: { email: session.user.email },
+      where: { id: session.user.id },
       data: { user_id }
     })
 
-    return NextResponse.json({ user_id: user.user_id })
+    // Return success - client will trigger session update
+    return NextResponse.json({ 
+      user_id: user.user_id,
+      success: true 
+    })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 })

@@ -68,19 +68,32 @@ export const authOptions: NextAuthOptions = {
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID!,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+      // Facebook automatically includes email in public_profile scope
+      // Explicitly set authorization to only request public_profile
+      // This prevents NextAuth from requesting the invalid 'email' scope
+      authorization: {
+        params: {
+          scope: 'public_profile',
+        },
+      },
     }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
       // For OAuth providers, check if user has user_id
       if (account && account.provider !== 'userid') {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-          select: { user_id: true }
-        })
-        
-        // If user exists but has no user_id, allow sign in (will redirect to register)
-        // If user doesn't exist, PrismaAdapter will create it
+        // Handle case where email might be undefined (e.g., Facebook with only public_profile)
+        if (user.email) {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            select: { user_id: true }
+          })
+          
+          // If user exists but has no user_id, allow sign in (will redirect to register)
+          // If user doesn't exist, PrismaAdapter will create it
+        }
+        // Always allow sign in - PrismaAdapter will handle user creation
+        // Even if email is undefined, PrismaAdapter can create user with account relation
         return true
       }
       // Allow credentials provider sign in
@@ -121,9 +134,120 @@ export const authOptions: NextAuthOptions = {
           token.image = user.image
         } else {
           // For OAuth provider, fetch user data from database
-          // Use email to find user (more reliable for new OAuth users)
+          // Handle case where email might be undefined (e.g., Facebook with only public_profile)
+          if (user.email) {
+            // Use email to find user (more reliable for new OAuth users)
+            const dbUser = await prisma.user.findUnique({
+              where: { email: user.email },
+              select: {
+                id: true,
+                user_id: true,
+                email: true,
+                name: true,
+                image: true,
+                avatar_url: true,
+              }
+            })
+            
+            if (dbUser) {
+              token.id = dbUser.id
+              token.user_id = dbUser.user_id
+              token.avatar_url = dbUser.avatar_url
+              token.email = dbUser.email
+              token.name = dbUser.name || user.name
+              // Priority: avatar_url > image > user.image
+              token.image = dbUser.avatar_url || dbUser.image || user.image
+            } else {
+              // New user from OAuth - user will be created by PrismaAdapter
+              // But for JWT, we need to set initial values
+              token.id = user.id
+              token.email = user.email
+              token.name = user.name
+              token.image = user.image
+              token.user_id = null
+              token.avatar_url = null
+            }
+          } else {
+            // No email provided (e.g., Facebook user without email permission)
+            // Try to find user by account provider and providerAccountId
+            if (account && account.provider && account.providerAccountId) {
+              const accountRecord = await prisma.account.findUnique({
+                where: {
+                  provider_providerAccountId: {
+                    provider: account.provider,
+                    providerAccountId: account.providerAccountId,
+                  }
+                },
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      user_id: true,
+                      email: true,
+                      name: true,
+                      image: true,
+                      avatar_url: true,
+                    }
+                  }
+                }
+              })
+              
+              if (accountRecord && accountRecord.user) {
+                token.id = accountRecord.user.id
+                token.user_id = accountRecord.user.user_id
+                token.avatar_url = accountRecord.user.avatar_url
+                token.email = accountRecord.user.email
+                token.name = accountRecord.user.name || user.name
+                token.image = accountRecord.user.avatar_url || accountRecord.user.image || user.image
+              } else {
+                // New user without email - will be created by PrismaAdapter
+                token.id = user.id
+                token.email = null
+                token.name = user.name
+                token.image = user.image
+                token.user_id = null
+                token.avatar_url = null
+              }
+            } else {
+              // Fallback: set basic values
+              token.id = user.id
+              token.email = null
+              token.name = user.name
+              token.image = user.image
+              token.user_id = null
+              token.avatar_url = null
+            }
+          }
+        }
+      }
+      
+      // Refresh token when session is updated (e.g., after profile update)
+      if (trigger === 'update') {
+        // Try to find user by email first
+        if (token.email) {
           const dbUser = await prisma.user.findUnique({
-            where: { email: user.email! },
+            where: { email: token.email as string },
+            select: {
+              id: true,
+              user_id: true,
+              email: true,
+              name: true,
+              image: true,
+              avatar_url: true,
+            }
+          })
+          
+          if (dbUser) {
+            token.id = dbUser.id
+            token.user_id = dbUser.user_id
+            token.avatar_url = dbUser.avatar_url
+            token.name = dbUser.name
+            token.image = dbUser.avatar_url || dbUser.image
+          }
+        } else if (token.id) {
+          // Fallback: find by ID if no email
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
             select: {
               id: true,
               user_id: true,
@@ -139,42 +263,9 @@ export const authOptions: NextAuthOptions = {
             token.user_id = dbUser.user_id
             token.avatar_url = dbUser.avatar_url
             token.email = dbUser.email
-            token.name = dbUser.name || user.name
-            // Priority: avatar_url > image > user.image
-            token.image = dbUser.avatar_url || dbUser.image || user.image
-          } else {
-            // New user from OAuth - user will be created by PrismaAdapter
-            // But for JWT, we need to set initial values
-            token.id = user.id
-            token.email = user.email
-            token.name = user.name
-            token.image = user.image
-            token.user_id = null
-            token.avatar_url = null
+            token.name = dbUser.name
+            token.image = dbUser.avatar_url || dbUser.image
           }
-        }
-      }
-      
-      // Refresh token when session is updated (e.g., after profile update)
-      if (trigger === 'update' && token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email as string },
-          select: {
-            id: true,
-            user_id: true,
-            email: true,
-            name: true,
-            image: true,
-            avatar_url: true,
-          }
-        })
-        
-        if (dbUser) {
-          token.id = dbUser.id
-          token.user_id = dbUser.user_id
-          token.avatar_url = dbUser.avatar_url
-          token.name = dbUser.name
-          token.image = dbUser.avatar_url || dbUser.image
         }
       }
       

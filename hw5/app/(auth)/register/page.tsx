@@ -19,9 +19,11 @@ export default function RegisterPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
-    } else if (status === 'authenticated' && session.user?.user_id) {
+    } else if (status === 'authenticated' && session?.user?.user_id) {
+      // User already has user_id, redirect to home
       router.push('/home')
     }
+    // If authenticated but no user_id, stay on register page
   }, [session, status, router])
 
   const checkUserId = async (value: string) => {
@@ -84,12 +86,14 @@ export default function RegisterPage() {
       
       // Refresh the session to get updated user_id
       const { update } = await import('next-auth/react')
+      
+      // Trigger session update
       await update()
       
-      // Wait for session to update
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Wait a bit longer for session to fully update
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Use window.location for full page reload
+      // Force a full page reload to ensure session is updated
       console.log('[Register] Complete, redirecting to /home')
       window.location.href = '/home'
     } catch (error: any) {
