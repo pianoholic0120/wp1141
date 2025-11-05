@@ -86,6 +86,13 @@ export async function POST(
         repostCount
       })
 
+      // Also trigger on a general reposts channel for new post notice
+      pusher.trigger('reposts', 'repost-added', {
+        postId: params.postId,
+        userId: session.user.id,
+        repostCount
+      })
+
       return NextResponse.json({ reposted: true, repostCount })
     }
   } catch (error) {

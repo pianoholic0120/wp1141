@@ -6,6 +6,7 @@ import PostList from '@/components/post/PostList'
 import PostModal from '@/components/post/PostModal'
 import InlinePostComposer from '@/components/post/InlinePostComposer'
 import ProfilePreview from '@/components/profile/ProfilePreview'
+import NewPostNotice from '@/components/post/NewPostNotice'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
 export default function HomePage() {
@@ -15,6 +16,7 @@ export default function HomePage() {
   const [showPostModal, setShowPostModal] = useState(false)
   const [previewUserId, setPreviewUserId] = useState<string | null>(null)
   const [previewPosition, setPreviewPosition] = useState<{ x: number; y: number } | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (searchParams.get('post') === 'true') {
@@ -72,9 +74,9 @@ export default function HomePage() {
   }, [previewUserId])
 
   return (
-    <div className="flex max-w-6xl mx-auto min-h-screen">
+    <div className="max-w-2xl mx-auto border-x border-border min-h-screen">
       {/* Main Content */}
-      <div className="flex-1 max-w-2xl border-x border-border">
+      <div className="w-full">
         {/* Header */}
         <div className="sticky top-0 bg-background/80 backdrop-blur-md z-10 border-b border-border p-4">
           <h1 className="text-xl font-bold">Home</h1>
@@ -104,11 +106,14 @@ export default function HomePage() {
           </button>
         </div>
 
+        {/* New Post Notice */}
+        <NewPostNotice onRefresh={() => setRefreshKey(prev => prev + 1)} />
+
         {/* Inline Post Composer */}
         <InlinePostComposer onMentionClick={handleMentionClick} />
 
         {/* Post List */}
-        <PostList filter={filter} onMentionClick={handleMentionClick} />
+        <PostList key={refreshKey} filter={filter} onMentionClick={handleMentionClick} />
 
         {/* Post Modal */}
         <PostModal
