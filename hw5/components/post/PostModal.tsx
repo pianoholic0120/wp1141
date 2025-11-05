@@ -148,8 +148,22 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
     }
   }
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
+    // Delete the draft if it was being edited
+    if (currentDraftId) {
+      try {
+        await fetch(`/api/drafts/${currentDraftId}`, {
+          method: 'DELETE'
+        })
+        console.log('Draft deleted:', currentDraftId)
+      } catch (error) {
+        console.error('Error deleting draft:', error)
+        // Continue anyway - close the modal even if draft deletion fails
+      }
+    }
+    
     setContent('')
+    setCurrentDraftId(null)
     setShowDiscardConfirm(false)
     onClose()
   }
