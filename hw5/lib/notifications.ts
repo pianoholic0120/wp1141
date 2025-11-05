@@ -59,19 +59,27 @@ export async function createNotification(params: {
           }
         },
         post: {
-          include: {
+          select: {
+            id: true,
+            content: true,
             author: {
               select: {
                 id: true,
                 user_id: true,
                 name: true,
-                avatar_url: true,
-                image: true,
               }
             }
           }
         }
       }
+    })
+    
+    console.log('[Notification] Created notification:', {
+      id: notification.id,
+      type: notification.type,
+      userId: notification.userId,
+      actorId: notification.actorId,
+      postId: notification.postId
     })
 
     // Trigger Pusher event for real-time notification

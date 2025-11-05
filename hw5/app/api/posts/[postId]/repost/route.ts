@@ -15,7 +15,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const originalPost = await prisma.post.findUnique({
+    // Find the original post (if it's a repost, get the original; otherwise use the post itself)
+    let originalPost = await prisma.post.findUnique({
       where: { id: params.postId }
     })
 
@@ -23,11 +24,21 @@ export async function POST(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
-    // Check if user already reposted
+    // If this is a repost, get the original post
+    if (originalPost.is_repost && originalPost.originalPostId) {
+      const trueOriginalPost = await prisma.post.findUnique({
+        where: { id: originalPost.originalPostId }
+      })
+      if (trueOriginalPost) {
+        originalPost = trueOriginalPost
+      }
+    }
+
+    // Check if user already reposted (use originalPost.id, not params.postId)
     const existingRepost = await prisma.post.findFirst({
       where: {
         authorId: session.user.id as string,
-        originalPostId: params.postId,
+        originalPostId: originalPost.id,
         is_repost: true
       }
     })
@@ -40,32 +51,32 @@ export async function POST(
 
       const repostCount = await prisma.post.count({
         where: {
-          originalPostId: params.postId,
+          originalPostId: originalPost.id,
           is_repost: true
         }
       })
 
-      pusher.trigger(`post-${params.postId}`, 'repost-removed', {
-        postId: params.postId,
+      pusher.trigger(`post-${originalPost.id}`, 'repost-removed', {
+        postId: originalPost.id,
         userId: session.user.id,
         repostCount
       })
 
       return NextResponse.json({ reposted: false, repostCount })
     } else {
-      // Create repost
+      // Create repost (use originalPost.id)
       await prisma.post.create({
         data: {
           authorId: session.user.id as string,
           content: '',
-          originalPostId: params.postId,
+          originalPostId: originalPost.id,
           is_repost: true
         }
       })
 
       const repostCount = await prisma.post.count({
         where: {
-          originalPostId: params.postId,
+          originalPostId: originalPost.id,
           is_repost: true
         }
       })
@@ -76,19 +87,12 @@ export async function POST(
           userId: originalPost.authorId,
           actorId: session.user.id as string,
           type: 'repost',
-          postId: params.postId
+          postId: originalPost.id
         })
       }
 
-      pusher.trigger(`post-${params.postId}`, 'repost-added', {
-        postId: params.postId,
-        userId: session.user.id,
-        repostCount
-      })
-
-      // Also trigger on a general reposts channel for new post notice
-      pusher.trigger('reposts', 'repost-added', {
-        postId: params.postId,
+      pusher.trigger(`post-${originalPost.id}`, 'repost-added', {
+        postId: originalPost.id,
         userId: session.user.id,
         repostCount
       })

@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import PostCard from './PostCard'
 import { getPusherClient } from '@/lib/pusher-client'
+import { ChevronUpIcon } from '@heroicons/react/24/outline'
+import Avatar from '../common/Avatar'
 
 interface Post {
   id: string
@@ -33,6 +35,10 @@ interface PostListProps {
 export default function PostList({ filter = 'all', parentId = null, userId, likesOnly = false, onMentionClick }: PostListProps) {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [newPosts, setNewPosts] = useState<Post[]>([]) // Track new posts that haven't been shown
+  const [showNewPostNotice, setShowNewPostNotice] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const lastSeenPostIdsRef = useRef<Set<string>>(new Set()) // Track posts that were visible when loaded
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -49,6 +55,15 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
       if (!res.ok) throw new Error('Failed to fetch posts')
       const data = await res.json()
       setPosts(data)
+      
+      // Track initial post IDs when loading
+      if (data.length > 0) {
+        lastSeenPostIdsRef.current = new Set(data.map((p: Post) => p.id))
+      }
+      
+      // Clear new posts notice when manually refreshing
+      setNewPosts([])
+      setShowNewPostNotice(false)
       setLoading(false)
     } catch (error) {
       console.error('Error fetching posts:', error)
@@ -72,14 +87,45 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
     
     const handleNewPost = (data: { post: Post }) => {
       if (!parentId) {
-        setPosts(prev => {
-          // Check if post already exists to prevent duplicates
-          const exists = prev.some(p => p.id === data.post.id)
-          if (exists) {
-            return prev
-          }
-          return [data.post, ...prev]
-        })
+        // Check if user is at the top of the page (within 200px)
+        const isAtTop = window.scrollY < 200
+        
+        // Check if this post was already seen when page loaded
+        const wasSeen = lastSeenPostIdsRef.current.has(data.post.id)
+        if (wasSeen) {
+          return
+        }
+        
+        // Mark as seen
+        lastSeenPostIdsRef.current.add(data.post.id)
+        
+        if (isAtTop) {
+          // User is at top, add post immediately
+          setPosts(prev => {
+            // Double-check it doesn't exist (prevent duplicates)
+            const exists = prev.some(p => p.id === data.post.id)
+            if (exists) {
+              return prev
+            }
+            return [data.post, ...prev]
+          })
+        } else {
+          // User has scrolled down, show notice
+          setNewPosts(prev => {
+            // Check if post already exists in new posts
+            const exists = prev.some(p => p.id === data.post.id)
+            if (exists) {
+              return prev
+            }
+            // Check if author already exists in new posts (limit to 3 unique authors)
+            const authorExists = prev.some(p => p.author.id === data.post.author.id)
+            if (authorExists || prev.length >= 3) {
+              return prev
+            }
+            return [data.post, ...prev]
+          })
+          setShowNewPostNotice(true)
+        }
       }
     }
     
@@ -99,7 +145,9 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
       parentChannel.bind('comment-added', handleNewComment)
 
       // Also subscribe to individual comment channels for likes
-      const commentChannels = posts.map(post => {
+      // Get current posts from state to avoid closure issues
+      const currentPosts = posts
+      const commentChannels = currentPosts.map(post => {
         const commentChannel = pusherClient!.subscribe(`post-${post.id}`)
         
         const handleLikeAdded = (data: { postId: string, likeCount: number }) => {
@@ -183,7 +231,7 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
         pusherClient!.unsubscribe(`post-${postId}`)
       })
     }
-  }, [posts, parentId, fetchPosts])
+  }, [parentId, fetchPosts])
 
   if (loading) {
     return (
@@ -201,8 +249,57 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
     )
   }
 
+  const handleShowNewPosts = () => {
+    // Refresh posts to show new ones at the top
+    fetchPosts()
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Clear new posts
+    setNewPosts([])
+    setShowNewPostNotice(false)
+  }
+
+  // Get unique authors from new posts (max 3)
+  const newPostAuthors = newPosts
+    .map(post => post.author)
+    .filter((author, index, self) => 
+      index === self.findIndex(a => a.id === author.id)
+    )
+    .slice(0, 3)
+
   return (
-    <div>
+    <div ref={containerRef}>
+      {/* New Post Notice */}
+      {showNewPostNotice && newPosts.length > 0 && !parentId && (
+        <div className="sticky top-16 z-20 mb-4 px-4 pt-4">
+          <button
+            onClick={handleShowNewPosts}
+            className="w-full bg-primary hover:bg-primary-hover text-white rounded-full py-3 px-4 flex items-center justify-center space-x-3 transition-colors"
+          >
+            <ChevronUpIcon className="w-5 h-5" />
+            {newPostAuthors.length > 0 && (
+              <div className="flex items-center -space-x-2">
+                {newPostAuthors.map((author, index) => (
+                  <Avatar
+                    key={author.id}
+                    src={author.avatar_url || author.image || undefined}
+                    alt={author.name || 'User'}
+                    size={24}
+                    className="border-2 border-white"
+                    style={{ zIndex: 10 - index }}
+                  />
+                ))}
+              </div>
+            )}
+            <span className="font-semibold">
+              {newPosts.length === 1 && newPostAuthors.length > 0
+                ? `${newPostAuthors[0]?.name || 'Someone'} posted`
+                : `${newPosts.length} new post${newPosts.length > 1 ? 's' : ''}`}
+            </span>
+          </button>
+        </div>
+      )}
+
       {posts.map((post) => (
         <PostCard key={post.id} post={post} onUpdate={fetchPosts} onMentionClick={onMentionClick} />
       ))}

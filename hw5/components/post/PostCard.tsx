@@ -91,19 +91,25 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
     }
 
     try {
-      const res = await fetch(`/api/posts/${post.id}/repost`, {
+      // For reposts, repost the original post, not the repost itself
+      const targetPostId = post.is_repost && post.originalPost ? post.originalPost.id : post.id
+      
+      const res = await fetch(`/api/posts/${targetPostId}/repost`, {
         method: 'POST'
       })
 
       if (!res.ok) {
-        throw new Error('Failed to repost')
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Repost error:', errorData)
+        throw new Error(errorData.error || 'Failed to repost')
       }
 
       const data = await res.json()
       if (onUpdate) onUpdate()
       toast.success(data.reposted ? 'Reposted!' : 'Unreposted')
     } catch (error) {
-      toast.error('Failed to repost')
+      console.error('Repost error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to repost')
     }
   }
 
@@ -131,15 +137,35 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
   }
 
   const handleComment = () => {
-    router.push(`/post/${post.id}`)
+    // For reposts, navigate to the original post
+    const targetPostId = post.is_repost && post.originalPost ? post.originalPost.id : post.id
+    router.push(`/post/${targetPostId}`)
   }
 
   const handlePostClick = () => {
-    router.push(`/post/${post.id}`)
+    // For reposts, navigate to the original post
+    const targetPostId = post.is_repost && post.originalPost ? post.originalPost.id : post.id
+    router.push(`/post/${targetPostId}`)
   }
 
   const displayPost = post.originalPost || post
-  const author = displayPost.author
+  
+  // Helper function to get the true original post (even if originalPost is itself a repost)
+  const getTrueOriginalPost = (p: Post): Post => {
+    if (p.originalPost && p.is_repost) {
+      return getTrueOriginalPost(p.originalPost)
+    }
+    return p
+  }
+  
+  // Get the true original post author (not the repost author)
+  const trueOriginalPost = post.is_repost && post.originalPost 
+    ? getTrueOriginalPost(post.originalPost) 
+    : null
+  
+  // For reposts, show the reposter (post.author) as the author, but display the original post content
+  // For regular posts, show the post author
+  const author = post.is_repost ? post.author : displayPost.author
 
   const isOwnPost = session?.user?.id === post.author.id && !post.is_repost
 
@@ -164,10 +190,12 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
   return (
     <div className="border-b border-border p-4 hover:bg-gray-950 transition-colors">
       {/* Repost indicator */}
-      {post.is_repost && post.originalPost && (
+      {post.is_repost && trueOriginalPost && trueOriginalPost.author && (
         <div className="text-sm text-gray-500 mb-2 flex items-center space-x-2">
           <ArrowPathIcon className="w-4 h-4" />
-          <span>{post.author.name} reposted</span>
+          <span>
+            {post.author.name || post.author.user_id} reposted from @{(trueOriginalPost.author.user_id || trueOriginalPost.author.id)}
+          </span>
         </div>
       )}
 
