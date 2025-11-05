@@ -22,7 +22,7 @@ interface PostModalProps {
   initialContent?: string
   parentPostId?: string
   onSuccess?: () => void
-  onMentionClick?: (userId: string) => void
+  onMentionClick?: (userId: string, event: React.MouseEvent) => void
 }
 
 export default function PostModal({ isOpen, onClose, initialContent = '', parentPostId, onSuccess, onMentionClick }: PostModalProps) {

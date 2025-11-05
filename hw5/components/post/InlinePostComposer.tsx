@@ -19,7 +19,7 @@ interface InlinePostComposerProps {
   parentPostId?: string
   onSuccess?: () => void
   placeholder?: string
-  onMentionClick?: (userId: string) => void
+  onMentionClick?: (userId: string, event: React.MouseEvent) => void
 }
 
 export default function InlinePostComposer({ parentPostId, onSuccess, placeholder = "What's happening?", onMentionClick }: InlinePostComposerProps) {

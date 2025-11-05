@@ -14,6 +14,7 @@ export default function HomePage() {
   const [filter, setFilter] = useState<'all' | 'following'>('all')
   const [showPostModal, setShowPostModal] = useState(false)
   const [previewUserId, setPreviewUserId] = useState<string | null>(null)
+  const [previewPosition, setPreviewPosition] = useState<{ x: number; y: number } | null>(null)
 
   useEffect(() => {
     if (searchParams.get('post') === 'true') {
@@ -21,6 +22,54 @@ export default function HomePage() {
       router.replace('/home', { scroll: false })
     }
   }, [searchParams, router])
+
+  const handleMentionClick = (userId: string, event: React.MouseEvent) => {
+    // Toggle: if clicking the same user, close the preview
+    if (previewUserId === userId) {
+      setPreviewUserId(null)
+      setPreviewPosition(null)
+      return
+    }
+    
+    const rect = event.currentTarget.getBoundingClientRect()
+    
+    // Use viewport-relative coordinates (getBoundingClientRect already gives viewport coords)
+    // Position to the right of the clicked element
+    const x = rect.right + 20 // 20px spacing to the right
+    const y = rect.top // Align with top of clicked element
+    
+    // Store position and show preview
+    setPreviewPosition({ x, y })
+    setPreviewUserId(userId)
+  }
+
+  const handleClosePreview = () => {
+    setPreviewUserId(null)
+    setPreviewPosition(null)
+  }
+
+  // Close preview when clicking outside
+  useEffect(() => {
+    if (!previewUserId) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      // Check if click is outside the preview modal and not on a mention
+      if (!target.closest('[data-profile-preview]') && !target.closest('[data-mention]')) {
+        handleClosePreview()
+      }
+    }
+
+    // Add event listener with a slight delay to avoid immediate closure
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside, true) // Use capture phase
+    }, 100)
+
+    return () => {
+      clearTimeout(timeoutId)
+      document.removeEventListener('click', handleClickOutside, true)
+    }
+  }, [previewUserId])
 
   return (
     <div className="flex max-w-6xl mx-auto min-h-screen">
@@ -56,10 +105,10 @@ export default function HomePage() {
         </div>
 
         {/* Inline Post Composer */}
-        <InlinePostComposer onMentionClick={setPreviewUserId} />
+        <InlinePostComposer onMentionClick={handleMentionClick} />
 
         {/* Post List */}
-        <PostList filter={filter} onMentionClick={setPreviewUserId} />
+        <PostList filter={filter} onMentionClick={handleMentionClick} />
 
         {/* Post Modal */}
         <PostModal
@@ -68,16 +117,29 @@ export default function HomePage() {
           onSuccess={() => {
             setShowPostModal(false)
           }}
-          onMentionClick={setPreviewUserId}
+          onMentionClick={handleMentionClick}
         />
       </div>
 
-      {/* Right Sidebar - Profile Preview */}
-      {previewUserId && (
-        <div className="hidden lg:block w-80 p-4">
+      {/* Floating Profile Preview */}
+      {previewUserId && previewPosition && (
+        <div
+          data-profile-preview
+          className="fixed z-50 w-80 pointer-events-auto"
+          style={{
+            left: typeof window !== 'undefined' 
+              ? `${Math.min(previewPosition.x, window.innerWidth - 340)}px` 
+              : `${previewPosition.x}px`,
+            top: typeof window !== 'undefined'
+              ? `${Math.max(10, Math.min(previewPosition.y, window.innerHeight - 500))}px`
+              : `${previewPosition.y}px`,
+            maxHeight: 'calc(100vh - 20px)',
+            maxWidth: 'calc(100vw - 20px)',
+          }}
+        >
           <ProfilePreview
             userId={previewUserId}
-            onClose={() => setPreviewUserId(null)}
+            onClose={handleClosePreview}
           />
         </div>
       )}

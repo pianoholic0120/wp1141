@@ -43,7 +43,7 @@ interface PostCardProps {
   post: Post
   onUpdate?: () => void
   showComments?: boolean
-  onMentionClick?: (userId: string) => void
+  onMentionClick?: (userId: string, event: React.MouseEvent) => void
 }
 
 export default function PostCard({ post, onUpdate, showComments = false, onMentionClick }: PostCardProps) {

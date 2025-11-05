@@ -27,7 +27,7 @@ interface PostListProps {
   parentId?: string | null
   userId?: string
   likesOnly?: boolean
-  onMentionClick?: (userId: string) => void
+  onMentionClick?: (userId: string, event: React.MouseEvent) => void
 }
 
 export default function PostList({ filter = 'all', parentId = null, userId, likesOnly = false, onMentionClick }: PostListProps) {

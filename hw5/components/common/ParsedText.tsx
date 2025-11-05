@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 interface ParsedTextProps {
   text: string
   className?: string
-  onMentionClick?: (userId: string) => void
+  onMentionClick?: (userId: string, event: React.MouseEvent) => void
 }
 
 export default function ParsedText({ text, className = '', onMentionClick }: ParsedTextProps) {
@@ -48,13 +48,14 @@ export default function ParsedText({ text, className = '', onMentionClick }: Par
           return (
             <span
               key={index}
+              data-mention
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 if (part.mention) {
                   if (onMentionClick) {
-                    // Show in preview instead of navigating
-                    onMentionClick(part.mention)
+                    // Show in preview instead of navigating, pass event for position
+                    onMentionClick(part.mention, e)
                   } else {
                     // Fallback to navigation if no handler provided
                     router.push(`/profile/${encodeURIComponent(part.mention)}`)
@@ -69,7 +70,13 @@ export default function ParsedText({ text, className = '', onMentionClick }: Par
                   e.preventDefault()
                   if (part.mention) {
                     if (onMentionClick) {
-                      onMentionClick(part.mention)
+                      // For keyboard navigation, use a synthetic event
+                      const syntheticEvent = {
+                        clientX: 0,
+                        clientY: 0,
+                        currentTarget: e.currentTarget
+                      } as React.MouseEvent
+                      onMentionClick(part.mention, syntheticEvent)
                     } else {
                       router.push(`/profile/${encodeURIComponent(part.mention)}`)
                     }
