@@ -45,11 +45,15 @@ export async function POST(
 
       return NextResponse.json({ liked: false, likeCount })
     } else {
-      // Get post to find author
+      // Get post to find author (for reposts, notify the repost author, not original author)
       const post = await prisma.post.findUnique({
         where: { id: params.postId },
         select: { authorId: true }
       })
+
+      if (!post) {
+        return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+      }
 
       // Like
       await prisma.like.create({
@@ -63,8 +67,8 @@ export async function POST(
         where: { postId: params.postId }
       })
 
-      // Create notification for post author
-      if (post && post.authorId !== session.user.id) {
+      // Create notification for post author (for reposts, this is the repost author)
+      if (post.authorId !== session.user.id) {
         await createNotification({
           userId: post.authorId,
           actorId: session.user.id as string,

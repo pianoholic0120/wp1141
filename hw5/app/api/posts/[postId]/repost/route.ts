@@ -15,6 +15,10 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get optional content from request body for repost with comment
+    const body = await req.json().catch(() => ({}))
+    const repostContent = body.content || ''
+
     // Find the original post (if it's a repost, get the original; otherwise use the post itself)
     let originalPost = await prisma.post.findUnique({
       where: { id: params.postId }
@@ -64,15 +68,67 @@ export async function POST(
 
       return NextResponse.json({ reposted: false, repostCount })
     } else {
+      // Parse text to extract hashtags and mentions if repost has content
+      let hashtags: string[] = []
+      let mentions: string[] = []
+      
+      if (repostContent.trim()) {
+        const { parseText } = await import('@/lib/utils/textParser')
+        const parsedText = parseText(repostContent)
+        hashtags = parsedText.filter(p => p.type === 'hashtag').map(p => p.hashtag!)
+        mentions = parsedText.filter(p => p.type === 'mention').map(p => p.mention!)
+      }
+
       // Create repost (use originalPost.id)
-      await prisma.post.create({
+      // Allow content to be provided for repost with comment
+      const repost = await prisma.post.create({
         data: {
           authorId: session.user.id as string,
-          content: '',
+          content: repostContent.trim() || '', // Use provided content or empty string
           originalPostId: originalPost.id,
-          is_repost: true
+          is_repost: true,
+          hashtags: {
+            create: await Promise.all(
+              hashtags.map(async (tag) => {
+                const hashtag = await prisma.hashtag.upsert({
+                  where: { tag: tag.toLowerCase() },
+                  create: { tag: tag.toLowerCase() },
+                  update: {}
+                })
+                return { hashtagId: hashtag.id }
+              })
+            )
+          },
+          mentions: {
+            create: (await Promise.all(
+              mentions.map(async (mentionUserId) => {
+                const mentionedUser = await prisma.user.findUnique({
+                  where: { user_id: mentionUserId }
+                })
+                if (mentionedUser) {
+                  return { userId: mentionedUser.id }
+                }
+                return null
+              })
+            )).filter(Boolean) as any[]
+          }
         }
       })
+
+      // Create notifications for mentioned users in repost comment
+      for (const mentionUserId of mentions) {
+        const mentionedUser = await prisma.user.findUnique({
+          where: { user_id: mentionUserId }
+        })
+        if (mentionedUser && mentionedUser.id !== session.user.id && mentionedUser.id !== originalPost.authorId) {
+          await createNotification({
+            userId: mentionedUser.id,
+            actorId: session.user.id as string,
+            type: 'mention',
+            postId: repost.id
+          })
+        }
+      }
 
       const repostCount = await prisma.post.count({
         where: {
@@ -82,20 +138,84 @@ export async function POST(
       })
 
       // Create notification for original post author (if not reposting own post)
+      // Use repost.id instead of originalPost.id so clicking notification goes to the repost
       if (originalPost.authorId !== session.user.id) {
         await createNotification({
           userId: originalPost.authorId,
           actorId: session.user.id as string,
           type: 'repost',
-          postId: originalPost.id
+          postId: repost.id
         })
       }
 
+      // Trigger Pusher event for repost count update
       pusher.trigger(`post-${originalPost.id}`, 'repost-added', {
         postId: originalPost.id,
         userId: session.user.id,
         repostCount
       })
+
+      // Also trigger 'new-post' event so the repost appears in the feed
+      // Fetch the repost with all necessary data
+      const repostWithData = await prisma.post.findUnique({
+        where: { id: repost.id },
+        include: {
+          author: {
+            select: {
+              id: true,
+              user_id: true,
+              name: true,
+              avatar_url: true,
+              image: true,
+            }
+          },
+          originalPost: {
+            include: {
+              author: {
+                select: {
+                  id: true,
+                  user_id: true,
+                  name: true,
+                  avatar_url: true,
+                  image: true,
+                }
+              }
+            }
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: true,
+              reposts: true,
+            }
+          }
+        }
+      })
+
+      if (repostWithData) {
+        // Check if current user has liked this repost
+        const isLiked = await prisma.like.findUnique({
+          where: {
+            userId_postId: {
+              userId: session.user.id as string,
+              postId: repost.id
+            }
+          }
+        })
+
+        pusher.trigger('posts', 'new-post', {
+          post: {
+            ...repostWithData,
+            isLiked: !!isLiked,
+            likeCount: repostWithData._count.likes,
+            commentCount: repostWithData._count.comments,
+            repostCount: repostWithData._count.reposts,
+            visibility: repostWithData.visibility || 'public',
+            replySettings: repostWithData.replySettings || 'everyone',
+            _count: undefined
+          }
+        })
+      }
 
       return NextResponse.json({ reposted: true, repostCount })
     }

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import Avatar from '../common/Avatar'
 import { useSession } from 'next-auth/react'
 import MentionAutocomplete from '../common/MentionAutocomplete'
+import HashtagAutocomplete from '../common/HashtagAutocomplete'
 
 interface User {
   id: string
@@ -28,7 +29,9 @@ export default function InlinePostComposer({ parentPostId, onSuccess, placeholde
   const [isExpanded, setIsExpanded] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showMentionAutocomplete, setShowMentionAutocomplete] = useState(false)
+  const [showHashtagAutocomplete, setShowHashtagAutocomplete] = useState(false)
   const [mentionCursorPosition, setMentionCursorPosition] = useState(0)
+  const [hashtagCursorPosition, setHashtagCursorPosition] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -40,28 +43,47 @@ export default function InlinePostComposer({ parentPostId, onSuccess, placeholde
     }
   }, [isExpanded])
 
-  // Detect @ mention trigger
+  // Detect @ mention and # hashtag triggers
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value
     const cursorPos = e.target.selectionStart
     
     setContent(newContent)
     
-    // Check if we're in a mention context (@)
     const textBeforeCursor = newContent.substring(0, cursorPos)
+    
+    // Check for hashtag (#) first
+    const lastHashIndex = textBeforeCursor.lastIndexOf('#')
     const lastAtIndex = textBeforeCursor.lastIndexOf('@')
     
-    if (lastAtIndex !== -1) {
-      // Check if there's a space or newline after @
+    // Determine which is closer to cursor
+    const hashDistance = lastHashIndex !== -1 ? cursorPos - lastHashIndex : Infinity
+    const atDistance = lastAtIndex !== -1 ? cursorPos - lastAtIndex : Infinity
+    
+    // Check if we're in a hashtag context (#)
+    if (lastHashIndex !== -1 && hashDistance < atDistance) {
+      const textAfterHash = textBeforeCursor.substring(lastHashIndex + 1)
+      if (!textAfterHash.includes(' ') && !textAfterHash.includes('\n') && !textAfterHash.includes('#')) {
+        setShowHashtagAutocomplete(true)
+        setHashtagCursorPosition(cursorPos)
+        setShowMentionAutocomplete(false)
+        return
+      }
+    }
+    
+    // Check if we're in a mention context (@)
+    if (lastAtIndex !== -1 && atDistance < hashDistance) {
       const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1)
-      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n') && !textAfterAt.includes('@')) {
         setShowMentionAutocomplete(true)
         setMentionCursorPosition(cursorPos)
+        setShowHashtagAutocomplete(false)
         return
       }
     }
     
     setShowMentionAutocomplete(false)
+    setShowHashtagAutocomplete(false)
   }
 
   const handleMentionSelect = (user: User) => {
@@ -92,10 +114,43 @@ export default function InlinePostComposer({ parentPostId, onSuccess, placeholde
     }
   }
 
+  const handleHashtagSelect = (hashtag: string) => {
+    if (!textareaRef.current) return
+    
+    const cursorPos = hashtagCursorPosition
+    const textBeforeCursor = content.substring(0, cursorPos)
+    const lastHashIndex = textBeforeCursor.lastIndexOf('#')
+    
+    if (lastHashIndex !== -1) {
+      const textAfterCursor = content.substring(cursorPos)
+      const newContent = 
+        content.substring(0, lastHashIndex) + 
+        `#${hashtag} ` +
+        textAfterCursor
+      
+      setContent(newContent)
+      setShowHashtagAutocomplete(false)
+      
+      // Set cursor position after the inserted hashtag
+      setTimeout(() => {
+        if (textareaRef.current) {
+          const newCursorPos = lastHashIndex + hashtag.length + 2 // +2 for # and space
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
+          textareaRef.current.focus()
+        }
+      }, 0)
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (showMentionAutocomplete && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab' || e.key === 'Escape')) {
       e.preventDefault()
       // Let MentionAutocomplete handle these keys
+      return
+    }
+    if (showHashtagAutocomplete && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Tab' || e.key === 'Escape')) {
+      e.preventDefault()
+      // Let HashtagAutocomplete handle these keys
       return
     }
   }
@@ -166,12 +221,33 @@ export default function InlinePostComposer({ parentPostId, onSuccess, placeholde
               if (textareaRef.current) {
                 const cursorPos = textareaRef.current.selectionStart
                 setMentionCursorPosition(cursorPos)
+                setHashtagCursorPosition(cursorPos)
                 const textBeforeCursor = content.substring(0, cursorPos)
+                const lastHashIndex = textBeforeCursor.lastIndexOf('#')
                 const lastAtIndex = textBeforeCursor.lastIndexOf('@')
-                if (lastAtIndex !== -1) {
+                
+                const hashDistance = lastHashIndex !== -1 ? cursorPos - lastHashIndex : Infinity
+                const atDistance = lastAtIndex !== -1 ? cursorPos - lastAtIndex : Infinity
+                
+                // Check for hashtag
+                if (lastHashIndex !== -1 && hashDistance < atDistance) {
+                  const textAfterHash = textBeforeCursor.substring(lastHashIndex + 1)
+                  if (!textAfterHash.includes(' ') && !textAfterHash.includes('\n') && !textAfterHash.includes('#')) {
+                    setShowHashtagAutocomplete(true)
+                    setShowMentionAutocomplete(false)
+                  } else {
+                    setShowHashtagAutocomplete(false)
+                  }
+                } else {
+                  setShowHashtagAutocomplete(false)
+                }
+                
+                // Check for mention
+                if (lastAtIndex !== -1 && atDistance < hashDistance) {
                   const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1)
-                  if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+                  if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n') && !textAfterAt.includes('@')) {
                     setShowMentionAutocomplete(true)
+                    setShowHashtagAutocomplete(false)
                   } else {
                     setShowMentionAutocomplete(false)
                   }
@@ -191,6 +267,14 @@ export default function InlinePostComposer({ parentPostId, onSuccess, placeholde
               cursorPosition={mentionCursorPosition}
               onSelect={handleMentionSelect}
               onClose={() => setShowMentionAutocomplete(false)}
+            />
+          )}
+          {showHashtagAutocomplete && (
+            <HashtagAutocomplete
+              text={content}
+              cursorPosition={hashtagCursorPosition}
+              onSelect={handleHashtagSelect}
+              onClose={() => setShowHashtagAutocomplete(false)}
             />
           )}
 

@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import DraftsModal from './DraftsModal'
 import MentionAutocomplete from '../common/MentionAutocomplete'
+import HashtagAutocomplete from '../common/HashtagAutocomplete'
 
 interface User {
   id: string
@@ -31,7 +32,9 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
   const [showDrafts, setShowDrafts] = useState(false)
   const [showMentionAutocomplete, setShowMentionAutocomplete] = useState(false)
+  const [showHashtagAutocomplete, setShowHashtagAutocomplete] = useState(false)
   const [mentionCursorPosition, setMentionCursorPosition] = useState(0)
+  const [hashtagCursorPosition, setHashtagCursorPosition] = useState(0)
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null) // Track the draft ID being edited
   const [visibility, setVisibility] = useState<'public' | 'followers' | 'mentioned'>('public')
   const [replySettings, setReplySettings] = useState<'everyone' | 'followers' | 'mentioned'>('everyone')
@@ -44,6 +47,7 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
     if (isOpen) {
       setContent(initialContent)
       setShowMentionAutocomplete(false)
+      setShowHashtagAutocomplete(false)
       setCurrentDraftId(null) // Reset draft ID when modal opens
       setVisibility('public') // Reset visibility
       setReplySettings('everyone') // Reset reply settings (will sync with visibility)
@@ -65,28 +69,47 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
 
   const charCount = calculateCharacterCount(content)
 
-  // Detect @ mention trigger
+  // Detect @ mention and # hashtag triggers
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value
     const cursorPos = e.target.selectionStart
     
     setContent(newContent)
     
-    // Check if we're in a mention context (@)
     const textBeforeCursor = newContent.substring(0, cursorPos)
+    
+    // Check for hashtag (#) first
+    const lastHashIndex = textBeforeCursor.lastIndexOf('#')
     const lastAtIndex = textBeforeCursor.lastIndexOf('@')
     
-    if (lastAtIndex !== -1) {
-      // Check if there's a space or newline after @
+    // Determine which is closer to cursor
+    const hashDistance = lastHashIndex !== -1 ? cursorPos - lastHashIndex : Infinity
+    const atDistance = lastAtIndex !== -1 ? cursorPos - lastAtIndex : Infinity
+    
+    // Check if we're in a hashtag context (#)
+    if (lastHashIndex !== -1 && hashDistance < atDistance) {
+      const textAfterHash = textBeforeCursor.substring(lastHashIndex + 1)
+      if (!textAfterHash.includes(' ') && !textAfterHash.includes('\n') && !textAfterHash.includes('#')) {
+        setShowHashtagAutocomplete(true)
+        setHashtagCursorPosition(cursorPos)
+        setShowMentionAutocomplete(false)
+        return
+      }
+    }
+    
+    // Check if we're in a mention context (@)
+    if (lastAtIndex !== -1 && atDistance < hashDistance) {
       const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1)
-      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n') && !textAfterAt.includes('@')) {
         setShowMentionAutocomplete(true)
         setMentionCursorPosition(cursorPos)
+        setShowHashtagAutocomplete(false)
         return
       }
     }
     
     setShowMentionAutocomplete(false)
+    setShowHashtagAutocomplete(false)
   }
 
   const handleMentionSelect = (user: User) => {
@@ -110,6 +133,34 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
       setTimeout(() => {
         if (textareaRef.current) {
           const newCursorPos = lastAtIndex + user.user_id!.length + 2 // @ + user_id + space
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
+          textareaRef.current.focus()
+        }
+      }, 0)
+    }
+  }
+
+  const handleHashtagSelect = (hashtag: string) => {
+    if (!textareaRef.current) return
+    
+    const cursorPos = hashtagCursorPosition
+    const textBeforeCursor = content.substring(0, cursorPos)
+    const lastHashIndex = textBeforeCursor.lastIndexOf('#')
+    
+    if (lastHashIndex !== -1) {
+      const textAfterCursor = content.substring(cursorPos)
+      const newContent = 
+        content.substring(0, lastHashIndex) + 
+        `#${hashtag} ` +
+        textAfterCursor
+      
+      setContent(newContent)
+      setShowHashtagAutocomplete(false)
+      
+      // Set cursor position after the inserted hashtag
+      setTimeout(() => {
+        if (textareaRef.current) {
+          const newCursorPos = lastHashIndex + hashtag.length + 2 // +2 for # and space
           textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
           textareaRef.current.focus()
         }
@@ -335,12 +386,33 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
                   if (textareaRef.current) {
                     const cursorPos = textareaRef.current.selectionStart
                     setMentionCursorPosition(cursorPos)
+                    setHashtagCursorPosition(cursorPos)
                     const textBeforeCursor = content.substring(0, cursorPos)
+                    const lastHashIndex = textBeforeCursor.lastIndexOf('#')
                     const lastAtIndex = textBeforeCursor.lastIndexOf('@')
-                    if (lastAtIndex !== -1) {
+                    
+                    const hashDistance = lastHashIndex !== -1 ? cursorPos - lastHashIndex : Infinity
+                    const atDistance = lastAtIndex !== -1 ? cursorPos - lastAtIndex : Infinity
+                    
+                    // Check for hashtag
+                    if (lastHashIndex !== -1 && hashDistance < atDistance) {
+                      const textAfterHash = textBeforeCursor.substring(lastHashIndex + 1)
+                      if (!textAfterHash.includes(' ') && !textAfterHash.includes('\n') && !textAfterHash.includes('#')) {
+                        setShowHashtagAutocomplete(true)
+                        setShowMentionAutocomplete(false)
+                      } else {
+                        setShowHashtagAutocomplete(false)
+                      }
+                    } else {
+                      setShowHashtagAutocomplete(false)
+                    }
+                    
+                    // Check for mention
+                    if (lastAtIndex !== -1 && atDistance < hashDistance) {
                       const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1)
-                      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+                      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n') && !textAfterAt.includes('@')) {
                         setShowMentionAutocomplete(true)
+                        setShowHashtagAutocomplete(false)
                       } else {
                         setShowMentionAutocomplete(false)
                       }
@@ -362,18 +434,28 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
                   onClose={() => setShowMentionAutocomplete(false)}
                 />
               )}
+              {showHashtagAutocomplete && (
+                <HashtagAutocomplete
+                  text={content}
+                  cursorPosition={hashtagCursorPosition}
+                  onSelect={handleHashtagSelect}
+                  onClose={() => setShowHashtagAutocomplete(false)}
+                />
+              )}
             </div>
 
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-              {/* Reply Settings Display - Left side, not clickable */}
+              {/* Visibility Display - Left side, not clickable */}
               <div className="flex items-center space-x-2 text-sm text-gray-500">
                 {!parentPostId && (
                   <>
-                    <GlobeAltIcon className="w-4 h-4" />
+                    {visibility === 'public' && <GlobeAltIcon className="w-4 h-4" />}
+                    {visibility === 'followers' && <UserGroupIcon className="w-4 h-4" />}
+                    {visibility === 'mentioned' && <AtSymbolIcon className="w-4 h-4" />}
                     <span>
-                      {replySettings === 'everyone' && 'Everyone can reply'}
-                      {replySettings === 'followers' && 'People you follow can reply'}
-                      {replySettings === 'mentioned' && 'People you mention can reply'}
+                      {visibility === 'public' && 'Everyone can see'}
+                      {visibility === 'followers' && 'People you follow can see'}
+                      {visibility === 'mentioned' && 'People you mention can see'}
                     </span>
                   </>
                 )}

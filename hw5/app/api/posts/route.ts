@@ -210,6 +210,9 @@ export async function POST(req: NextRequest) {
     const mentions = parsedText.filter(p => p.type === 'mention').map(p => p.mention!)
     console.log('[POST /api/posts] Parsed - hashtags:', hashtags, 'mentions:', mentions)
 
+    // Only set visibility and replySettings for top-level posts (not comments or reposts)
+    const isTopLevelPost = !parentPostId && !originalPostId
+
     // Create post
     console.log('[POST /api/posts] Creating post...')
     const post = await prisma.post.create({
@@ -219,8 +222,8 @@ export async function POST(req: NextRequest) {
         parentPostId: parentPostId || null,
         originalPostId: originalPostId || null,
         is_repost: !!originalPostId,
-        visibility: visibility || 'public',
-        replySettings: replySettings || 'everyone',
+        visibility: isTopLevelPost ? (visibility || 'public') : 'public',
+        replySettings: isTopLevelPost ? (replySettings || 'everyone') : 'everyone',
         hashtags: {
           create: await Promise.all(
             hashtags.map(async (tag) => {

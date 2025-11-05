@@ -35,11 +35,19 @@ export default function ParsedText({ text, className = '', onMentionClick }: Par
               key={index}
               onClick={(e) => {
                 e.preventDefault()
-                // Navigate to hashtag search page (you can implement this later)
-                // For now, just show the hashtag
+                e.stopPropagation() // Prevent triggering post click
                 router.push(`/hashtag/${encodeURIComponent(part.hashtag!)}`)
               }}
-              className="text-primary hover:underline cursor-pointer"
+              className="text-blue-500 hover:text-blue-400 hover:underline cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  router.push(`/hashtag/${encodeURIComponent(part.hashtag!)}`)
+                }
+              }}
             >
               {part.content}
             </span>

@@ -17,6 +17,7 @@ import Avatar from '../common/Avatar'
 import ParsedText from '../common/ParsedText'
 import { formatRelativeTime } from '@/lib/utils/timeFormat'
 import toast from 'react-hot-toast'
+import RepostModal from './RepostModal'
 
 interface Post {
   id: string
@@ -53,6 +54,7 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
   const [likeCount, setLikeCount] = useState(post.likeCount)
   const [showMenu, setShowMenu] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showRepostModal, setShowRepostModal] = useState(false)
 
   const handleLike = async () => {
     if (!session) {
@@ -84,33 +86,16 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
     }
   }
 
-  const handleRepost = async () => {
+  const handleRepost = () => {
     if (!session) {
       toast.error('Please login to repost')
       return
     }
-
-    try {
-      // For reposts, repost the original post, not the repost itself
-      const targetPostId = post.is_repost && post.originalPost ? post.originalPost.id : post.id
-      
-      const res = await fetch(`/api/posts/${targetPostId}/repost`, {
-        method: 'POST'
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('Repost error:', errorData)
-        throw new Error(errorData.error || 'Failed to repost')
-      }
-
-      const data = await res.json()
-      if (onUpdate) onUpdate()
-      toast.success(data.reposted ? 'Reposted!' : 'Unreposted')
-    } catch (error) {
-      console.error('Repost error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to repost')
-    }
+    
+    // Check if user already reposted - if so, unrepost directly
+    // Otherwise, show repost modal
+    // For now, always show modal for repost with comment
+    setShowRepostModal(true)
   }
 
   const handleDelete = async () => {
@@ -259,18 +244,80 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
           </div>
 
           {/* Clickable post content area */}
-          <div 
-            onClick={(e) => {
-              // Only navigate if clicking on text, not on links/mentions/hashtags
-              const target = e.target as HTMLElement
-              if (target.tagName === 'A' || target.closest('a') || target.closest('[role="button"]')) {
-                return
-              }
-              handlePostClick()
-            }}
-            className="mb-3 cursor-pointer"
-          >
-            <ParsedText text={displayPost.content} onMentionClick={onMentionClick} />
+          <div className="mb-3">
+            {/* For reposts with comment, show the comment first, then original post preview */}
+            {post.is_repost && post.content && post.content.trim() ? (
+              <>
+                {/* Repost comment - clickable to navigate to repost */}
+                <div 
+                  onClick={(e) => {
+                    // Only navigate if clicking on text, not on links/mentions/hashtags
+                    const target = e.target as HTMLElement
+                    if (target.tagName === 'A' || target.closest('a') || target.closest('[role="button"]')) {
+                      return
+                    }
+                    // Navigate to repost itself
+                    router.push(`/post/${post.id}`)
+                  }}
+                  className="mb-3 cursor-pointer"
+                >
+                  <ParsedText text={post.content} onMentionClick={onMentionClick} />
+                </div>
+                {/* Original post preview with border - clickable to navigate to original post */}
+                <div 
+                  onClick={(e) => {
+                    // Only navigate if clicking on text, not on links/mentions/hashtags
+                    const target = e.target as HTMLElement
+                    if (target.tagName === 'A' || target.closest('a') || target.closest('[role="button"]')) {
+                      return
+                    }
+                    // Navigate to original post
+                    if (displayPost.id) {
+                      router.push(`/post/${displayPost.id}`)
+                    }
+                  }}
+                  className="border border-border rounded-lg p-4 bg-gray-950/50 cursor-pointer hover:bg-gray-900/50 transition-colors"
+                >
+                  <div className="flex space-x-3">
+                    <Avatar
+                      src={displayPost.author.avatar_url || displayPost.author.image || undefined}
+                      alt={displayPost.author.name || 'User'}
+                      size={40}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-semibold">
+                          {displayPost.author.name || 'Anonymous'}
+                        </span>
+                        {displayPost.author.user_id && (
+                          <span className="text-gray-500">@{displayPost.author.user_id}</span>
+                        )}
+                        <span className="text-gray-500">·</span>
+                        <span className="text-gray-500 text-sm">
+                          {formatRelativeTime(new Date(displayPost.createdAt))}
+                        </span>
+                      </div>
+                      <ParsedText text={displayPost.content} onMentionClick={onMentionClick} />
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* Regular post or repost without comment - show original content */
+              <div 
+                onClick={(e) => {
+                  // Only navigate if clicking on text, not on links/mentions/hashtags
+                  const target = e.target as HTMLElement
+                  if (target.tagName === 'A' || target.closest('a') || target.closest('[role="button"]')) {
+                    return
+                  }
+                  handlePostClick()
+                }}
+                className="cursor-pointer"
+              >
+                <ParsedText text={displayPost.content} onMentionClick={onMentionClick} />
+              </div>
+            )}
           </div>
 
           {/* Interaction buttons - prevent navigation when clicking buttons */}
@@ -320,6 +367,17 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
           </div>
         </div>
       </div>
+      
+      <RepostModal
+        isOpen={showRepostModal}
+        onClose={() => setShowRepostModal(false)}
+        post={post}
+        onSuccess={() => {
+          setShowRepostModal(false)
+          if (onUpdate) onUpdate()
+        }}
+        onMentionClick={onMentionClick}
+      />
     </div>
   )
 }
