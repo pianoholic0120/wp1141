@@ -83,7 +83,7 @@ export default function ParsedText({ text, className = '', onMentionClick }: Par
                         clientX: 0,
                         clientY: 0,
                         currentTarget: e.currentTarget
-                      } as React.MouseEvent
+                      } as unknown as React.MouseEvent
                       onMentionClick(part.mention, syntheticEvent)
                     } else {
                       router.push(`/profile/${encodeURIComponent(part.mention)}`)
