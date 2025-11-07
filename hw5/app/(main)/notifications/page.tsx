@@ -66,7 +66,8 @@ export default function NotificationsPage() {
     const pusherClient = getPusherClient()
     if (!pusherClient) return
 
-    const channel = pusherClient.subscribe(`user-${session.user.id}`)
+    const channelName = `user-${session.user.id}`
+    const channel = pusherClient.channel(channelName) || pusherClient.subscribe(channelName)
 
     const handleNewNotification = () => {
       fetchNotifications()
@@ -88,8 +89,8 @@ export default function NotificationsPage() {
     return () => {
       channel.unbind('new-notification', handleNewNotification)
       channel.unbind('notifications-read', handleNotificationsRead)
-      pusherClient.unsubscribe(`user-${session.user.id}`)
       window.removeEventListener('notifications-read', handleCustomRead)
+      // Don't unsubscribe from the channel as Sidebar still needs it
     }
   }, [session?.user?.id])
 

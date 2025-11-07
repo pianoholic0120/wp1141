@@ -16,14 +16,10 @@ export default function MainLayout({
     // Only redirect once
     if (hasRedirected.current) return
     
-    console.log('[MainLayout] Status:', status, 'Has user_id:', !!session?.user?.user_id)
-    
     if (status === 'unauthenticated') {
-      console.log('[MainLayout] Unauthenticated, redirecting to /login')
       hasRedirected.current = true
       window.location.href = '/login'
     } else if (status === 'authenticated' && !session?.user?.user_id) {
-      console.log('[MainLayout] No user_id, redirecting to /register')
       hasRedirected.current = true
       window.location.href = '/register'
     }
@@ -46,8 +42,6 @@ export default function MainLayout({
     )
   }
 
-  console.log('[MainLayout] Rendering home with user:', session.user.user_id)
-  console.log('[MainLayout] About to render Sidebar component')
   return (
     <div className="flex min-h-screen bg-black">
       <Sidebar />

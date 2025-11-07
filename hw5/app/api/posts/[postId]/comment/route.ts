@@ -140,13 +140,15 @@ export async function POST(
       where: { parentPostId: params.postId }
     })
 
-    // Create notification for post author (if not commenting on own post)
+    // Create notification for the author of the post/comment being replied to
+    // If replying to a top-level post, notify the post author
+    // If replying to a comment, notify the comment author (not the original post author)
     if (parentPost.authorId !== session.user.id) {
       await createNotification({
         userId: parentPost.authorId,
         actorId: session.user.id as string,
         type: 'comment',
-        postId: params.postId
+        postId: comment.id // Use comment.id so clicking notification goes to the comment
       })
     }
 
