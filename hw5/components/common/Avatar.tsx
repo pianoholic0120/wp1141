@@ -5,15 +5,14 @@ interface AvatarProps {
   alt: string
   size?: number
   className?: string
-  style?: React.CSSProperties
 }
 
-export default function Avatar({ src, alt, size = 48, className = '', style }: AvatarProps) {
+export default function Avatar({ src, alt, size = 48, className = '' }: AvatarProps) {
   if (!src) {
     return (
       <div
         className={`rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold ${className}`}
-        style={{ width: size, height: size, ...style }}
+        style={{ width: size, height: size }}
       >
         {alt.charAt(0).toUpperCase()}
       </div>
@@ -21,7 +20,7 @@ export default function Avatar({ src, alt, size = 48, className = '', style }: A
   }
 
   return (
-    <div className={`rounded-full overflow-hidden ${className}`} style={{ width: size, height: size, ...style }}>
+    <div className={`rounded-full overflow-hidden ${className}`} style={{ width: size, height: size }}>
       <img
         src={src}
         alt={alt}

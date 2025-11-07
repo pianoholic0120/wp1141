@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { XMarkIcon, GlobeAltIcon, UserGroupIcon, AtSymbolIcon, LockClosedIcon, ChevronDownIcon, PhotoIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, GlobeAltIcon, UserGroupIcon, AtSymbolIcon, LockClosedIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { calculateCharacterCount } from '@/lib/utils/characterCount'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import DraftsModal from './DraftsModal'
 import MentionAutocomplete from '../common/MentionAutocomplete'
 import HashtagAutocomplete from '../common/HashtagAutocomplete'
-import Image from 'next/image'
 
 interface User {
   id: string
@@ -16,17 +15,6 @@ interface User {
   name: string | null
   avatar_url: string | null
   image: string | null
-}
-
-interface MediaFile {
-  url: string
-  type: 'image' | 'video'
-  mimeType?: string
-  size?: number
-  width?: number
-  height?: number
-  file?: File // For preview before upload
-  preview?: string // For preview URL
 }
 
 interface PostModalProps {
@@ -51,11 +39,8 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
   const [visibility, setVisibility] = useState<'public' | 'followers' | 'mentioned'>('public')
   const [replySettings, setReplySettings] = useState<'everyone' | 'followers' | 'mentioned'>('everyone')
   const [showVisibilityDropdown, setShowVisibilityDropdown] = useState(false)
-  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([])
-  const [uploadingMedia, setUploadingMedia] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -67,7 +52,6 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
       setVisibility('public') // Reset visibility
       setReplySettings('everyone') // Reset reply settings (will sync with visibility)
       setShowVisibilityDropdown(false) // Close visibility dropdown
-      setMediaFiles([]) // Reset media files
       setTimeout(() => textareaRef.current?.focus(), 100)
     }
   }, [isOpen, initialContent])
@@ -230,90 +214,13 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
     }
     
     setContent('')
-    setMediaFiles([])
     setCurrentDraftId(null)
     setShowDiscardConfirm(false)
     onClose()
   }
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-
-    // Limit to 4 media files
-    if (mediaFiles.length + files.length > 4) {
-      toast.error('Maximum 4 media files allowed')
-      return
-    }
-
-    setUploadingMedia(true)
-
-    try {
-      const uploadPromises = Array.from(files).map(async (file) => {
-        // Create preview URL for images
-        let preview: string | undefined
-        if (file.type.startsWith('image/')) {
-          preview = URL.createObjectURL(file)
-        }
-
-        // Upload file
-        const formData = new FormData()
-        formData.append('file', file)
-
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        })
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}))
-          throw new Error(errorData.error || 'Failed to upload file')
-        }
-
-        const data = await res.json()
-        return {
-          url: data.url,
-          type: data.type,
-          mimeType: data.mimeType,
-          size: data.size,
-          width: data.width,
-          height: data.height,
-          preview
-        } as MediaFile
-      })
-
-      const uploadedFiles = await Promise.all(uploadPromises)
-      setMediaFiles(prev => [...prev, ...uploadedFiles])
-      toast.success(`${uploadedFiles.length} file(s) uploaded successfully`)
-    } catch (error: any) {
-      console.error('Error uploading files:', error)
-      toast.error(error.message || 'Failed to upload files')
-    } finally {
-      setUploadingMedia(false)
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
-  }
-
-  const handleRemoveMedia = (index: number) => {
-    setMediaFiles(prev => {
-      const newFiles = [...prev]
-      // Revoke preview URL if exists
-      if (newFiles[index].preview) {
-        URL.revokeObjectURL(newFiles[index].preview)
-      }
-      newFiles.splice(index, 1)
-      return newFiles
-    })
-  }
-
   const handleSubmit = async () => {
-    if (!charCount.isValid || (!content.trim() && mediaFiles.length === 0)) {
-      if (!content.trim() && mediaFiles.length === 0) {
-        toast.error('Please add content or media')
-      }
+    if (!charCount.isValid || !content.trim()) {
       return
     }
 
@@ -321,16 +228,7 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
     try {
       const payload: any = {
         content: content.trim(),
-        parentPostId: parentPostId || undefined,
-        media: mediaFiles.map((file, index) => ({
-          url: file.url,
-          type: file.type,
-          mimeType: file.mimeType,
-          size: file.size,
-          width: file.width,
-          height: file.height,
-          order: index
-        }))
+        parentPostId: parentPostId || undefined
       }
 
       // Only set visibility and replySettings for top-level posts
@@ -370,7 +268,6 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
 
       toast.success('Post created!')
       setContent('')
-      setMediaFiles([])
       setCurrentDraftId(null)
       setVisibility('public')
       setReplySettings('everyone')
@@ -471,10 +368,10 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
             </div>
             <button
               onClick={handleSubmit}
-              disabled={(!charCount.isValid || (!content.trim() && mediaFiles.length === 0)) || isSubmitting || uploadingMedia}
+              disabled={!charCount.isValid || !content.trim() || isSubmitting}
               className="bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-2 rounded-full transition-colors"
             >
-              {isSubmitting ? 'Posting...' : 'Post'}
+              Post
             </button>
           </div>
 
@@ -524,7 +421,7 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
                     }
                   }
                 }}
-                placeholder={"What\u2019s happening?"}
+                placeholder="What's happening?"
                 className="w-full bg-transparent resize-none outline-none text-lg min-h-[200px]"
                 maxLength={charCount.isValid ? undefined : content.length}
               />
@@ -548,37 +445,10 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
             </div>
 
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-              {/* Left side: Media upload buttons and visibility display */}
-              <div className="flex items-center space-x-4">
-                {/* Media Upload Buttons */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,video/*"
-                  multiple
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingMedia || mediaFiles.length >= 4}
-                  className="p-2 hover:bg-gray-900 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Add photos/videos"
-                >
-                  <PhotoIcon className="w-5 h-5 text-primary" />
-                </button>
-                {uploadingMedia && (
-                  <span className="text-sm text-gray-500">Uploading...</span>
-                )}
-                {mediaFiles.length > 0 && (
-                  <span className="text-sm text-gray-500">
-                    {mediaFiles.length}/4 media
-                  </span>
-                )}
-                
-                {/* Visibility Display */}
+              {/* Visibility Display - Left side, not clickable */}
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
                 {!parentPostId && (
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <>
                     {visibility === 'public' && <GlobeAltIcon className="w-4 h-4" />}
                     {visibility === 'followers' && <UserGroupIcon className="w-4 h-4" />}
                     {visibility === 'mentioned' && <AtSymbolIcon className="w-4 h-4" />}
@@ -587,7 +457,7 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
                       {visibility === 'followers' && 'People you follow can see'}
                       {visibility === 'mentioned' && 'People you mention can see'}
                     </span>
-                  </div>
+                  </>
                 )}
               </div>
               <div className="text-sm text-gray-500">
@@ -605,7 +475,7 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-background border border-border rounded-2xl p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-bold mb-2">Discard post?</h3>
-            <p className="text-gray-500 mb-6">This can\u2019t be undone and you\u2019ll lose your draft.</p>
+            <p className="text-gray-500 mb-6">This can't be undone and you'll lose your draft.</p>
             <div className="flex space-x-3">
               <button
                 onClick={handleSaveDraft}
