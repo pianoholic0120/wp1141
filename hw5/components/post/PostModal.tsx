@@ -605,7 +605,7 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-background border border-border rounded-2xl p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-bold mb-2">Discard post?</h3>
-            <p className="text-gray-500 mb-6">This can't be undone and you'll lose your draft.</p>
+            <p className="text-gray-500 mb-6">This can\u2019t be undone and you\u2019ll lose your draft.</p>
             <div className="flex space-x-3">
               <button
                 onClick={handleSaveDraft}
