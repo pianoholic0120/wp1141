@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import ProfileHeader from '@/components/profile/ProfileHeader'
 import PostList from '@/components/post/PostList'
@@ -15,11 +15,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  useEffect(() => {
-    fetchUser()
-  }, [userId])
-
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const res = await fetch(`/api/users/${userId}`)
       if (!res.ok) throw new Error('Failed to fetch user')
@@ -30,7 +26,11 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    fetchUser()
+  }, [fetchUser])
 
   if (loading) {
     return (

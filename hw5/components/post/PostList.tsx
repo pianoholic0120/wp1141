@@ -254,7 +254,7 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
         pusherClient!.unsubscribe(`post-${postId}`)
       })
     }
-    }, [parentId, fetchPosts, session?.user?.id])
+    }, [parentId, fetchPosts, session?.user?.id, posts])
 
   if (loading) {
     return (

@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -60,12 +62,13 @@ export default function ProfilePreview({ userId, onClose }: ProfilePreviewProps)
 
   // Listen for real-time follow updates
   useEffect(() => {
-    if (!user || typeof window === 'undefined' || !user.id) return
+    const userIdValue = user?.id
+    if (!userIdValue || typeof window === 'undefined') return
 
     const pusherClient = getPusherClient()
     if (!pusherClient) return
 
-    const channel = pusherClient.subscribe(`user-${user.id}`)
+    const channel = pusherClient.subscribe(`user-${userIdValue}`)
 
     const handleFollowAdded = (data: { followerCount: number }) => {
       setUser(prev => prev ? { ...prev, followerCount: data.followerCount, isFollowing: true } : null)
@@ -81,7 +84,7 @@ export default function ProfilePreview({ userId, onClose }: ProfilePreviewProps)
     return () => {
       channel.unbind('follow-added', handleFollowAdded)
       channel.unbind('follow-removed', handleFollowRemoved)
-      pusherClient.unsubscribe(`user-${user.id}`)
+      pusherClient.unsubscribe(`user-${userIdValue}`)
     }
   }, [user?.id])
 

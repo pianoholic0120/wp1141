@@ -1,9 +1,11 @@
 'use client'
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
-import { update } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 
 interface User {
   id: string
@@ -22,6 +24,7 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ user, isOpen, onClose, onSuccess }: EditProfileModalProps) {
+  const { update } = useSession()
   const [name, setName] = useState(user.name || '')
   const [bio, setBio] = useState(user.bio || '')
   const [backgroundImageUrl, setBackgroundImageUrl] = useState(user.background_image_url || '')
@@ -69,12 +72,14 @@ export default function EditProfileModal({ user, isOpen, onClose, onSuccess }: E
       console.log('[EditProfile] Update successful:', updatedUser)
 
       // Refresh session to update avatar in sidebar
-      try {
-        await update()
-        console.log('[EditProfile] Session updated successfully')
-      } catch (updateError) {
-        console.error('[EditProfile] Failed to update session:', updateError)
-        // Continue anyway - profile is updated, session will refresh on next page load
+      if (update) {
+        try {
+          await update()
+          console.log('[EditProfile] Session updated successfully')
+        } catch (updateError) {
+          console.error('[EditProfile] Failed to update session:', updateError)
+          // Continue anyway - profile is updated, session will refresh on next page load
+        }
       }
 
       toast.success('Profile updated!')

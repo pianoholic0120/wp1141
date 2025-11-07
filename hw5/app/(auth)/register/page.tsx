@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 const userIdSchema = z.string().min(3).max(15).regex(/^[a-zA-Z0-9_]+$/, 'User ID can only contain letters, numbers, and underscores')
 
 export default function RegisterPage() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const router = useRouter()
   const [userId, setUserId] = useState('')
   const [isChecking, setIsChecking] = useState(false)
@@ -85,10 +85,9 @@ export default function RegisterPage() {
       toast.success('Registration complete!')
       
       // Refresh the session to get updated user_id
-      const { update } = await import('next-auth/react')
-      
-      // Trigger session update
-      await update()
+      if (update) {
+        await update()
+      }
       
       // Wait a bit longer for session to fully update
       await new Promise(resolve => setTimeout(resolve, 1000))

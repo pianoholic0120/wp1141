@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
@@ -33,11 +33,7 @@ export default function PostDetailPage() {
     return true
   }
 
-  useEffect(() => {
-    fetchPost()
-  }, [postId])
-
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     try {
       const res = await fetch(`/api/posts/${postId}`)
       if (!res.ok) throw new Error('Failed to fetch post')
@@ -48,7 +44,11 @@ export default function PostDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [postId])
+
+  useEffect(() => {
+    fetchPost()
+  }, [fetchPost])
 
   if (loading) {
     return (

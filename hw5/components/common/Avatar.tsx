@@ -1,18 +1,23 @@
 'use client'
 
+/* eslint-disable @next/next/no-img-element */
+
+import type { CSSProperties } from 'react'
+
 interface AvatarProps {
   src?: string | null
   alt: string
   size?: number
   className?: string
+  style?: CSSProperties
 }
 
-export default function Avatar({ src, alt, size = 48, className = '' }: AvatarProps) {
+export default function Avatar({ src, alt, size = 48, className = '', style }: AvatarProps) {
   if (!src) {
     return (
       <div
         className={`rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold ${className}`}
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, ...style }}
       >
         {alt.charAt(0).toUpperCase()}
       </div>
@@ -20,7 +25,7 @@ export default function Avatar({ src, alt, size = 48, className = '' }: AvatarPr
   }
 
   return (
-    <div className={`rounded-full overflow-hidden ${className}`} style={{ width: size, height: size }}>
+    <div className={`rounded-full overflow-hidden ${className}`} style={{ width: size, height: size, ...style }}>
       <img
         src={src}
         alt={alt}
