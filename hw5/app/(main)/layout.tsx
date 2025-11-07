@@ -47,6 +47,7 @@ export default function MainLayout({
   }
 
   console.log('[MainLayout] Rendering home with user:', session.user.user_id)
+  console.log('[MainLayout] About to render Sidebar component')
   return (
     <div className="flex min-h-screen bg-black">
       <Sidebar />

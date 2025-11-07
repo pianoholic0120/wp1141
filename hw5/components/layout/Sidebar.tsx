@@ -13,6 +13,8 @@ export default function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const [unreadCount, setUnreadCount] = useState(0)
+  
+  console.log('[Sidebar] Component rendered, session:', !!session, 'user_id:', session?.user?.user_id)
 
   // Fetch unread notification count
   useEffect(() => {
@@ -47,11 +49,21 @@ export default function Sidebar() {
       return
     }
 
-    console.log('[Sidebar] Subscribing to channel:', `user-${session.user.id}`)
-    const channel = pusherClient.subscribe(`user-${session.user.id}`)
+    const channelName = `user-${session.user.id}`
+    console.log('[Sidebar] Subscribing to channel:', channelName)
+    const channel = pusherClient.subscribe(channelName)
+    
+    // Log subscription state
+    channel.bind('pusher:subscription_succeeded', () => {
+      console.log('[Sidebar] ✅ Successfully subscribed to:', channelName)
+    })
+    
+    channel.bind('pusher:subscription_error', (status: any) => {
+      console.error('[Sidebar] ❌ Subscription error:', status)
+    })
     
     const handleNewNotification = (data: any) => {
-      console.log('[Sidebar] ✅ New notification received:', data)
+      console.log('[Sidebar] ✅✅✅ New notification received:', data)
       // Immediately increment unread count for instant feedback
       setUnreadCount(prev => {
         const newCount = prev + 1
@@ -59,7 +71,10 @@ export default function Sidebar() {
         return newCount
       })
       // Also fetch from server to ensure accuracy
-      fetchUnreadCount()
+      setTimeout(() => {
+        console.log('[Sidebar] Fetching unread count from server...')
+        fetchUnreadCount()
+      }, 100)
     }
     
     const handleNotificationsRead = () => {
@@ -67,10 +82,12 @@ export default function Sidebar() {
       fetchUnreadCount()
     }
     
+    console.log('[Sidebar] Binding event handlers to channel:', channelName)
     channel.bind('new-notification', handleNewNotification)
     channel.bind('notifications-read', handleNotificationsRead)
     
-    console.log('[Sidebar] Pusher channel bound:', channel.name)
+    console.log('[Sidebar] ✅ Pusher channel setup complete:', channel.name)
+    console.log('[Sidebar] All event handlers bound')
 
     // Also listen to custom events for immediate updates
     const handleCustomRead = () => {
@@ -81,9 +98,8 @@ export default function Sidebar() {
 
     return () => {
       console.log('[Sidebar] Cleaning up Pusher subscriptions')
-      channel.unbind('new-notification', handleNewNotification)
-      channel.unbind('notifications-read', handleNotificationsRead)
-      pusherClient.unsubscribe(`user-${session.user.id}`)
+      channel.unbind_all()
+      pusherClient.unsubscribe(channelName)
       window.removeEventListener('notifications-read', handleCustomRead)
     }
   }, [session?.user?.id])
