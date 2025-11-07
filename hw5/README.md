@@ -1,74 +1,77 @@
-# Vector - Social Network
+# Vector
 
-A Twitter-like social network built with Next.js, TypeScript, Prisma, PostgreSQL, and Pusher.
+Vector is a Twitter-inspired social network built with Next.js (App Router), React 18, Tailwind CSS, Prisma, PostgreSQL, and Pusher. It supports multi-provider OAuth, custom user IDs, rich posting with mentions/hashtags, and real-time notifications across the stack.
 
-## Features
+> ⚠️ **LIVE DEPLOYMENT (READ FIRST!)**  
+> Production build: **https://wp1141-orpin.vercel.app**  
+> - Use *different* email addresses for each OAuth provider. GitHub and Google accounts sharing the same email can conflict and block login because the underlying user is already linked; use another provider (e.g., Facebook) or a separate email to avoid `AccountNotLinked` errors.  
+> - The **New Post notice** is intentionally scoped: it appears only when someone posts with an `@mention` that includes you, keeping the feed focused and preventing noisy global alerts.  
+> - The **Notifications badge** depends on the browser session and deployment state. Occasionally the sidebar counter may desync; opening the full Notifications page forces a refresh and ensures you do not miss any items.  
+> Please review these behaviours before reporting an issue—they are part of the current product design.
 
-- **Authentication**: OAuth login with Google, GitHub, and Facebook via NextAuth.js
-- **Custom User IDs**: Unique user identifiers (3-15 characters, alphanumeric + underscore)
-- **Posts**: Create posts with 280 character limit, special counting for URLs, hashtags, and mentions
-- **Interactions**: Like, comment, and repost functionality
-- **Real-time Updates**: Live updates using Pusher for likes, comments, and reposts
-- **Profile Pages**: View and edit profiles with background images and bio
-- **Follow System**: Follow/unfollow users
-- **Drafts**: Save and retrieve post drafts
-- **Recursive Comments**: Navigate through nested comments
-- **Feed Filters**: View all posts or only from users you follow
+## Highlights
 
-## Tech Stack
+- **Authentication** – NextAuth.js with Google, GitHub, Facebook, and credential-based user IDs.
+- **Social graph** – Follow system, feed filters, reposts, likes, and threaded comments.
+- **Content authoring** – Drafts, mention/hashtag parsing, repost with comment, visibility controls.
+- **Realtime UX** – Pusher-driven live updates for feeds, notifications, and interaction counters.
+- **Deployment ready** – Prisma migrations, environment-driven configuration, Vercel-friendly scripts.
 
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js
-- **Real-time**: Pusher
-- **Deployment**: Vercel
-
-## Prerequisites
-
-- Node.js 18+ and npm
-- PostgreSQL database (local or hosted)
-- OAuth credentials from Google, GitHub, and/or Facebook
-- Pusher account
-
-## Setup Instructions
-
-### 1. Install Dependencies
+## Quick Start
 
 ```bash
-npm install
+git clone https://github.com/pianoholic0120/wp1141.git vector
+cd vector
+./scripts/setup.sh
+npm run dev
 ```
 
-### 2. Setup Database
+The setup script installs dependencies, scaffolds `.env.local` from `.env.example`, generates the Prisma client, and (if your database credentials are already populated) applies the schema. Update `.env.local` with real secrets before running `npm run dev`.
 
-1. Create a PostgreSQL database
-2. Copy `.env.example` to `.env.local` (if you created one) or create `.env.local` manually
-3. Add your database connection string:
+### What the script checks
+- Node.js 18+ with npm/npx available.
+- `.env.example` presence (now tracked in the repository).
+- `.env.local` creation (only if missing).
+- Optional `prisma db push` execution—skipped while database credentials still contain placeholder values.
 
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/vector?schema=public"
-```
+## Manual Setup (if you prefer step-by-step)
 
-### 3. Run Prisma Migrations
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-```bash
-npm run db:push
-npm run db:generate
-```
+2. **Configure environment variables**
+   ```bash
+   cp .env.example .env.local
+   # edit .env.local with real credentials
+   ```
 
-### 4. Configure Environment Variables
+3. **Prepare the database**
+   ```bash
+   npm run db:generate   # prisma generate
+   npm run db:push       # applies schema to DATABASE_URL
+   ```
 
-Create a `.env.local` file in the root directory with the following variables:
+4. **Start the dev server**
+   ```bash
+   npm run dev
+   ```
+   Visit `http://localhost:3000`.
+
+## Environment Variables
+
+`.env.example` lists every variable required to run Vector:
 
 ```env
 # Database
-DATABASE_URL="postgresql://user:password@localhost:5432/vector?schema=public"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
 
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here" # Generate with: openssl rand -base64 32
+NEXTAUTH_SECRET="replace-with-a-secure-random-string"
 
-# OAuth Providers (at least one required)
+# OAuth Providers
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 GITHUB_CLIENT_ID="your-github-client-id"
@@ -85,94 +88,40 @@ NEXT_PUBLIC_PUSHER_KEY="your-pusher-key"
 NEXT_PUBLIC_PUSHER_CLUSTER="your-pusher-cluster"
 ```
 
-### 5. Setup OAuth Providers
+Replace every placeholder before running migrations or deploying. For production (Vercel), ensure `NEXTAUTH_URL`, OAuth redirect URIs, and `DATABASE_URL` point to hosted services (Neon, Supabase, etc.).
 
-#### Google OAuth
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+## OAuth Provider Notes
 
-#### GitHub OAuth
-1. Go to GitHub Settings > Developer settings > OAuth Apps
-2. Create a new OAuth App
-3. Set Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
+- **Google** – Authorized redirect: `http://localhost:3000/api/auth/callback/google`
+- **GitHub** – Authorized callback: `http://localhost:3000/api/auth/callback/github`
+- **Facebook** – Valid OAuth redirect: `http://localhost:3000/api/auth/callback/facebook`
 
-#### Facebook OAuth
-1. Go to [Facebook Developers](https://developers.facebook.com/)
-2. Create a new app
-3. Add Facebook Login product
-4. Set Valid OAuth Redirect URIs: `http://localhost:3000/api/auth/callback/facebook`
+For production, mirror the same paths under your deployed domain (e.g. `https://<your-domain>/api/auth/callback/google`).
 
-### 6. Setup Pusher
-
-1. Create an account at [Pusher](https://pusher.com/)
-2. Create a new app/channel
-3. Copy the credentials to your `.env.local`
-
-### 7. Run Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Project Structure
+## Project Layout
 
 ```
-├── app/                    # Next.js app directory
-│   ├── (auth)/            # Authentication pages
-│   ├── (main)/            # Main application pages
-│   └── api/               # API routes
-├── components/            # React components
-│   ├── common/           # Shared components
-│   ├── layout/           # Layout components
-│   ├── post/             # Post-related components
-│   └── profile/          # Profile components
-├── lib/                   # Utility libraries
-│   ├── utils/            # Utility functions
-│   ├── auth.ts           # NextAuth configuration
-│   ├── prisma.ts         # Prisma client
-│   └── pusher.ts         # Pusher configuration
-├── prisma/               # Prisma schema and migrations
-└── types/                # TypeScript type definitions
+├── app/                 # Next.js app router structure
+│   ├── (auth)/          # Sign-in and registration flows
+│   ├── (main)/          # Authenticated application pages
+│   └── api/             # REST-style endpoints
+├── components/          # UI building blocks (common, layout, post, profile)
+├── lib/                 # Auth, Prisma client, Pusher client, utilities
+├── prisma/              # Schema and migration management
+├── scripts/             # Developer tooling (e.g. setup.sh)
+└── public/              # Static assets
 ```
 
-## Key Features Implementation
+## Deployment Checklist
 
-### Character Counting
-- URLs always count as 23 characters regardless of actual length
-- Hashtags (`#tag`) and mentions (`@user`) are excluded from count
-- Maximum 280 characters
+- Push your code to GitHub (this repository already contains `.env.example` and automation).
+- In Vercel:
+  - Set `NEXTAUTH_URL` to the production domain.
+  - Provide all OAuth credentials and the hosted `DATABASE_URL`.
+  - Re-run Prisma during build (`npm run build` already calls `prisma generate`).
+- Update provider dashboards with production redirect URIs.
 
-### Real-time Updates
-- Uses Pusher channels for live updates
-- Updates like counts, comment counts, and repost counts in real-time
-- No page refresh required
-
-### Post Navigation
-- Click on a post to view it with all comments
-- Click on a comment to view it with its replies
-- Back button returns to previous view
-
-### Drafts
-- Posts can be saved as drafts when closing the post modal
-- Drafts can be accessed and edited later
-- Drafts are stored per user
-
-## Deployment to Vercel
-
-1. Push your code to GitHub
-2. Import your repository in Vercel
-3. Add all environment variables in Vercel dashboard
-4. Deploy!
-
-Make sure to:
-- Update OAuth redirect URLs to your production domain
-- Update `NEXTAUTH_URL` to your production URL
-- Set up a production PostgreSQL database (Vercel Postgres or external)
+After deployment the application is accessible immediately; OAuth providers may require you to re-authorize with the new domain.
 
 ## License
 
