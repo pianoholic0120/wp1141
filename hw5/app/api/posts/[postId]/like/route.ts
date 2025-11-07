@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusher } from '@/lib/pusher'
 import { createNotification } from '@/lib/notifications'
+import { canUserSeePost } from '@/lib/postVisibility'
 
 export async function POST(
   req: NextRequest,
@@ -55,6 +56,12 @@ export async function POST(
         return NextResponse.json({ error: 'Post not found' }, { status: 404 })
       }
 
+      // Check if user can see the post (based on visibility settings)
+      const canSee = await canUserSeePost(params.postId, session.user.id as string)
+      if (!canSee) {
+        return NextResponse.json({ error: 'You cannot interact with this post' }, { status: 403 })
+      }
+
       // Like
       await prisma.like.create({
         data: {
@@ -68,6 +75,8 @@ export async function POST(
       })
 
       // Create notification for post author (for reposts, this is the repost author)
+      // Note: Notification is sent regardless of post visibility settings.
+      // If a user can see and interact with a post, the author should be notified.
       if (post.authorId !== session.user.id) {
         await createNotification({
           userId: post.authorId,

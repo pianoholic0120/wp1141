@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { pusher } from '@/lib/pusher'
 import { createNotification } from '@/lib/notifications'
+import { canUserSeePost } from '@/lib/postVisibility'
 
 export async function POST(
   req: NextRequest,
@@ -36,6 +37,13 @@ export async function POST(
       if (trueOriginalPost) {
         originalPost = trueOriginalPost
       }
+    }
+
+    // Check if user can see the original post (based on visibility settings)
+    // Use the original post ID for visibility check
+    const canSee = await canUserSeePost(originalPost.id, session.user.id as string)
+    if (!canSee) {
+      return NextResponse.json({ error: 'You cannot interact with this post' }, { status: 403 })
     }
 
     // Check if user already reposted (use originalPost.id, not params.postId)
@@ -139,6 +147,8 @@ export async function POST(
 
       // Create notification for original post author (if not reposting own post)
       // Use repost.id instead of originalPost.id so clicking notification goes to the repost
+      // Note: Notification is sent regardless of post visibility settings.
+      // If a user can see and interact with a post, the author should be notified.
       if (originalPost.authorId !== session.user.id) {
         await createNotification({
           userId: originalPost.authorId,

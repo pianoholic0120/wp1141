@@ -58,13 +58,28 @@ export default function Sidebar() {
     
     // Handle new notification
     const handleNewNotification = () => {
+      // Immediately increment unread count for instant feedback
       setUnreadCount(prev => prev + 1)
-      setTimeout(fetchUnreadCount, 100)
+      
+      // Also fetch from server to ensure accuracy
+      setTimeout(() => {
+        fetch('/api/notifications/unread-count')
+          .then(res => res.json())
+          .then(data => {
+            setUnreadCount(data.count || 0)
+          })
+          .catch(() => setUnreadCount(0))
+      }, 100)
     }
     
     // Handle notifications read
     const handleNotificationsRead = () => {
-      fetchUnreadCount()
+      fetch('/api/notifications/unread-count')
+        .then(res => res.json())
+        .then(data => {
+          setUnreadCount(data.count || 0)
+        })
+        .catch(() => setUnreadCount(0))
     }
     
     channel.bind('new-notification', handleNewNotification)
@@ -154,8 +169,11 @@ export default function Sidebar() {
             >
               <div className="relative">
                 <Icon className="w-6 h-6" />
-                {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span 
+                    className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+                    key={`badge-${item.name}-${item.badge}`}
+                  >
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}

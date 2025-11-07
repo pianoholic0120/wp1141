@@ -75,24 +75,9 @@ export async function createNotification(params: {
       }
     })
     
-    console.log('[Notification] Created notification:', {
-      id: notification.id,
-      type: notification.type,
-      userId: notification.userId,
-      actorId: notification.actorId,
-      postId: notification.postId
-    })
-
     // Trigger Pusher event for real-time notification
     try {
       const pusherChannel = `user-${params.userId}`
-      console.log('[Notification] Triggering Pusher event:', {
-        channel: pusherChannel,
-        event: 'new-notification',
-        notificationId: notification.id,
-        type: notification.type
-      })
-      
       await pusher.trigger(pusherChannel, 'new-notification', {
         notification: {
           id: notification.id,
@@ -102,10 +87,8 @@ export async function createNotification(params: {
           createdAt: notification.createdAt,
         }
       })
-      
-      console.log('[Notification] ✅ Pusher event triggered successfully')
     } catch (pusherError) {
-      console.error('[Notification] ❌ Error triggering Pusher notification:', pusherError)
+      console.error('[Notification] Error triggering Pusher notification:', pusherError)
       // Continue anyway - notification was created
     }
 

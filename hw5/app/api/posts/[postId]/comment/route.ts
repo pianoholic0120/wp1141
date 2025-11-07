@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { parseText } from '@/lib/utils/textParser'
 import { pusher } from '@/lib/pusher'
 import { createNotification } from '@/lib/notifications'
+import { canUserSeePost } from '@/lib/postVisibility'
 
 export async function POST(
   req: NextRequest,
@@ -31,6 +32,12 @@ export async function POST(
 
     if (!parentPost) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    }
+
+    // Check if user can see the post (based on visibility settings)
+    const canSee = await canUserSeePost(params.postId, session.user.id as string)
+    if (!canSee) {
+      return NextResponse.json({ error: 'You cannot interact with this post' }, { status: 403 })
     }
 
     // Check reply permissions
@@ -143,6 +150,8 @@ export async function POST(
     // Create notification for the author of the post/comment being replied to
     // If replying to a top-level post, notify the post author
     // If replying to a comment, notify the comment author (not the original post author)
+    // Note: Notification is sent regardless of post visibility settings.
+    // If a user can see and interact with a post, the author should be notified.
     if (parentPost.authorId !== session.user.id) {
       await createNotification({
         userId: parentPost.authorId,
