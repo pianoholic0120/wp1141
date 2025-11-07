@@ -237,7 +237,7 @@ export default function RepostModal({ isOpen, onClose, post, onSuccess, onMentio
                 value={content}
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
-                onSelectionChange={(e) => {
+                onSelect={(e) => {
                   if (textareaRef.current) {
                     const cursorPos = textareaRef.current.selectionStart
                     setMentionCursorPosition(cursorPos)

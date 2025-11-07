@@ -5,6 +5,7 @@ import PostCard from './PostCard'
 import { getPusherClient } from '@/lib/pusher-client'
 import { ChevronUpIcon } from '@heroicons/react/24/outline'
 import Avatar from '../common/Avatar'
+import { useSession } from 'next-auth/react'
 
 interface Post {
   id: string
@@ -22,6 +23,8 @@ interface Post {
   likeCount: number
   commentCount: number
   repostCount: number
+  visibility?: 'public' | 'followers' | 'mentioned'
+  replySettings?: 'everyone' | 'followers' | 'mentioned'
 }
 
 interface PostListProps {
@@ -33,6 +36,7 @@ interface PostListProps {
 }
 
 export default function PostList({ filter = 'all', parentId = null, userId, likesOnly = false, onMentionClick }: PostListProps) {
+  const { data: session } = useSession()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [newPosts, setNewPosts] = useState<Post[]>([]) // Track new posts that haven't been shown
@@ -85,44 +89,63 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
 
     const channel = pusherClient.subscribe('posts')
     
-    const handleNewPost = (data: { post: Post }) => {
+    const handleNewPost = async (data: { post: Post }) => {
       if (!parentId) {
+        const post = data.post
+        const postVisibility = post.visibility || 'public'
+        const currentUserId = session?.user?.id
+        const isOwnPost = currentUserId === post.author.id
+
+        // Post author can always see their own posts
+        if (isOwnPost) {
+          // Continue with normal flow
+        } else if (postVisibility === 'public') {
+          // Public posts: everyone can see
+          // Continue with normal flow
+        } else if (postVisibility === 'followers' || postVisibility === 'mentioned') {
+          // For non-public posts, we need to verify visibility on the server
+          // Re-fetch posts to get properly filtered list
+          // Use the latest fetchPosts from closure
+          fetchPosts()
+          return
+        }
+
         // Check if user is at the top of the page (within 200px)
         const isAtTop = window.scrollY < 200
         
         // Check if this post was already seen when page loaded
-        const wasSeen = lastSeenPostIdsRef.current.has(data.post.id)
+        const wasSeen = lastSeenPostIdsRef.current.has(post.id)
         if (wasSeen) {
           return
         }
         
         // Mark as seen
-        lastSeenPostIdsRef.current.add(data.post.id)
+        lastSeenPostIdsRef.current.add(post.id)
         
         if (isAtTop) {
           // User is at top, add post immediately
           setPosts(prev => {
             // Double-check it doesn't exist (prevent duplicates)
-            const exists = prev.some(p => p.id === data.post.id)
+            const exists = prev.some(p => p.id === post.id)
             if (exists) {
               return prev
             }
-            return [data.post, ...prev]
+            return [post, ...prev]
           })
         } else {
           // User has scrolled down, show notice
           setNewPosts(prev => {
             // Check if post already exists in new posts
-            const exists = prev.some(p => p.id === data.post.id)
+            const exists = prev.some(p => p.id === post.id)
             if (exists) {
               return prev
             }
             // Check if author already exists in new posts (limit to 3 unique authors)
-            const authorExists = prev.some(p => p.author.id === data.post.author.id)
+            const authorExists = prev.some(p => p.author.id === post.author.id)
             if (authorExists || prev.length >= 3) {
               return prev
             }
-            return [data.post, ...prev]
+            return [post, ...prev]
           })
           setShowNewPostNotice(true)
         }
@@ -231,7 +254,7 @@ export default function PostList({ filter = 'all', parentId = null, userId, like
         pusherClient!.unsubscribe(`post-${postId}`)
       })
     }
-  }, [parentId, fetchPosts])
+    }, [parentId, fetchPosts, session?.user?.id])
 
   if (loading) {
     return (

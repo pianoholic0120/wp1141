@@ -217,7 +217,7 @@ export default function InlinePostComposer({ parentPostId, onSuccess, placeholde
             value={content}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
-            onSelectionChange={(e) => {
+            onSelect={(e) => {
               if (textareaRef.current) {
                 const cursorPos = textareaRef.current.selectionStart
                 setMentionCursorPosition(cursorPos)

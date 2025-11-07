@@ -382,7 +382,7 @@ export default function PostModal({ isOpen, onClose, initialContent = '', parent
                 value={content}
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
-                onSelectionChange={(e) => {
+                onSelect={(e) => {
                   if (textareaRef.current) {
                     const cursorPos = textareaRef.current.selectionStart
                     setMentionCursorPosition(cursorPos)
