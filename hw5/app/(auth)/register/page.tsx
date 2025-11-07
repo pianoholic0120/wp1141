@@ -85,10 +85,7 @@ export default function RegisterPage() {
       toast.success('Registration complete!')
       
       // Refresh the session to get updated user_id
-      const { update } = await import('next-auth/react')
-      
-      // Trigger session update
-      await update()
+      await fetch('/api/auth/session?update', { method: 'POST' }).catch(() => null)
       
       // Wait a bit longer for session to fully update
       await new Promise(resolve => setTimeout(resolve, 1000))
