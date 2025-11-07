@@ -19,6 +19,16 @@ import { formatRelativeTime } from '@/lib/utils/timeFormat'
 import toast from 'react-hot-toast'
 import RepostModal from './RepostModal'
 
+interface Media {
+  id: string
+  url: string
+  type: 'image' | 'video'
+  mimeType?: string | null
+  width?: number | null
+  height?: number | null
+  order: number
+}
+
 interface Post {
   id: string
   content: string
@@ -31,6 +41,7 @@ interface Post {
     image: string | null
   }
   originalPost?: Post | null
+  media?: Media[]
   isLiked: boolean
   likeCount: number
   commentCount: number
@@ -55,6 +66,16 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
   const [showMenu, setShowMenu] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showRepostModal, setShowRepostModal] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
+  
+  const displayPost = post.originalPost || post
+  
+  // Long post support: show "Show more" if content exceeds 280 characters
+  const MAX_PREVIEW_LENGTH = 280
+  const isLongPost = displayPost.content.length > MAX_PREVIEW_LENGTH
+  const displayContent = isLongPost && !isExpanded 
+    ? displayPost.content.substring(0, MAX_PREVIEW_LENGTH) + '...'
+    : displayPost.content
 
   const handleLike = async () => {
     if (!session) {
@@ -132,8 +153,6 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
     const targetPostId = post.is_repost && post.originalPost ? post.originalPost.id : post.id
     router.push(`/post/${targetPostId}`)
   }
-
-  const displayPost = post.originalPost || post
   
   // Helper function to get the true original post (even if originalPost is itself a repost)
   const getTrueOriginalPost = (p: Post): Post => {
@@ -315,10 +334,60 @@ export default function PostCard({ post, onUpdate, showComments = false, onMenti
                 }}
                 className="cursor-pointer"
               >
-                <ParsedText text={displayPost.content} onMentionClick={onMentionClick} />
+                <ParsedText text={displayContent} onMentionClick={onMentionClick} />
+                {isLongPost && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsExpanded(!isExpanded)
+                    }}
+                    className="text-primary hover:underline mt-1"
+                  >
+                    {isExpanded ? 'Show less' : 'Show more'}
+                  </button>
+                )}
               </div>
             )}
           </div>
+          
+          {/* Media Display */}
+          {displayPost.media && displayPost.media.length > 0 && (
+            <div className={`mt-3 grid gap-2 ${
+              displayPost.media.length === 1 ? 'grid-cols-1' :
+              displayPost.media.length === 2 ? 'grid-cols-2' :
+              displayPost.media.length === 3 ? 'grid-cols-2' :
+              'grid-cols-2'
+            }`}>
+              {displayPost.media.map((media, index) => (
+                <div
+                  key={media.id}
+                  className={`relative ${
+                    displayPost.media!.length === 3 && index === 0 ? 'row-span-2' : ''
+                  }`}
+                >
+                  {media.type === 'image' ? (
+                    <img
+                      src={media.url}
+                      alt={`Media ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Open image in new tab or modal
+                        window.open(media.url, '_blank')
+                      }}
+                    />
+                  ) : (
+                    <video
+                      src={media.url}
+                      className="w-full h-full object-cover rounded-lg cursor-pointer"
+                      controls
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Interaction buttons - prevent navigation when clicking buttons */}
           <div 

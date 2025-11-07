@@ -92,6 +92,7 @@ model Post {
   hashtags        PostHashtag[]
   mentions        Mention[]
   notifications   Notification[]
+  media           PostMedia[] // Support multiple media files
   visibility      String   @default("public") // 'public' | 'followers' | 'mentioned'
   replySettings   String   @default("everyone") // 'everyone' | 'following' | 'mentioned'
   createdAt       DateTime @default(now())
@@ -102,6 +103,23 @@ model Post {
   @@index([originalPostId])
   @@index([createdAt])
   @@map("posts")
+}
+
+model PostMedia {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  url       String   @db.Text
+  type      String   // 'image' | 'video'
+  mimeType  String?  // e.g., 'image/jpeg', 'video/mp4'
+  width     Int?
+  height    Int?
+  size      Int?     // File size in bytes
+  order     Int      @default(0) // Order of media in the post
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@map("post_media")
 }
 
 model Like {

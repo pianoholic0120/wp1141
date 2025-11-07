@@ -61,6 +61,11 @@ export async function GET(req: NextRequest) {
             }
           }
         },
+        media: {
+          orderBy: {
+            order: 'asc'
+          }
+        },
         _count: {
           select: {
             likes: true,
@@ -196,11 +201,12 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     console.log('[POST /api/posts] Body:', body)
-    const { content, parentPostId, originalPostId, visibility, replySettings } = body
+    const { content, parentPostId, originalPostId, visibility, replySettings, media } = body
 
-    if (!content || content.trim().length === 0) {
-      console.log('[POST /api/posts] No content provided')
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 })
+    // Content or media is required
+    if ((!content || content.trim().length === 0) && (!media || media.length === 0)) {
+      console.log('[POST /api/posts] No content or media provided')
+      return NextResponse.json({ error: 'Content or media is required' }, { status: 400 })
     }
 
     // Parse text to extract hashtags and mentions
@@ -218,7 +224,7 @@ export async function POST(req: NextRequest) {
     const post = await prisma.post.create({
       data: {
         authorId: session.user.id as string,
-        content: content.trim(),
+        content: (content || '').trim(),
         parentPostId: parentPostId || null,
         originalPostId: originalPostId || null,
         is_repost: !!originalPostId,
@@ -249,7 +255,19 @@ export async function POST(req: NextRequest) {
               return null
             })
           )).filter(Boolean) as any[]
-        }
+        },
+        // Add media files if provided
+        media: media && media.length > 0 ? {
+          create: media.map((m: any) => ({
+            url: m.url,
+            type: m.type,
+            mimeType: m.mimeType,
+            size: m.size,
+            width: m.width,
+            height: m.height,
+            order: m.order || 0
+          }))
+        } : undefined
       },
       include: {
         author: {
