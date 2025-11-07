@@ -7,13 +7,16 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('[Unread Count] No session')
+      return NextResponse.json({ count: 0 })
     }
+
+    console.log('[Unread Count] Fetching for user:', session.user.id)
 
     try {
       // Check if notification model exists
       if (!prisma.notification) {
-        console.error('Notification model not available in Prisma Client')
+        console.error('[Unread Count] Notification model not available in Prisma Client')
         return NextResponse.json({ count: 0 })
       }
 
@@ -24,22 +27,20 @@ export async function GET(req: NextRequest) {
         }
       })
 
+      console.log('[Unread Count] Count:', count)
       return NextResponse.json({ count })
     } catch (dbError: any) {
-      console.error('Database error fetching unread count:', dbError)
+      console.error('[Unread Count] Database error:', dbError)
       // If table doesn't exist, return 0
       if (dbError.message?.includes('does not exist') || dbError.message?.includes('Unknown model')) {
-        console.log('Notification table does not exist yet, returning 0')
+        console.log('[Unread Count] Notification table does not exist yet, returning 0')
         return NextResponse.json({ count: 0 })
       }
       throw dbError
     }
   } catch (error: any) {
-    console.error('Error fetching unread count:', error)
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      message: error.message 
-    }, { status: 500 })
+    console.error('[Unread Count] Error:', error)
+    return NextResponse.json({ count: 0 })
   }
 }
 

@@ -47,6 +47,7 @@ export async function createNotification(params: {
         actorId: params.actorId,
         type: params.type,
         postId: params.postId || null,
+        read: false, // Explicitly set to false to ensure it's unread
       },
       include: {
         actor: {
@@ -84,7 +85,15 @@ export async function createNotification(params: {
 
     // Trigger Pusher event for real-time notification
     try {
-      await pusher.trigger(`user-${params.userId}`, 'new-notification', {
+      const pusherChannel = `user-${params.userId}`
+      console.log('[Notification] Triggering Pusher event:', {
+        channel: pusherChannel,
+        event: 'new-notification',
+        notificationId: notification.id,
+        type: notification.type
+      })
+      
+      await pusher.trigger(pusherChannel, 'new-notification', {
         notification: {
           id: notification.id,
           type: notification.type,
@@ -93,8 +102,10 @@ export async function createNotification(params: {
           createdAt: notification.createdAt,
         }
       })
+      
+      console.log('[Notification] ✅ Pusher event triggered successfully')
     } catch (pusherError) {
-      console.error('Error triggering Pusher notification:', pusherError)
+      console.error('[Notification] ❌ Error triggering Pusher notification:', pusherError)
       // Continue anyway - notification was created
     }
 

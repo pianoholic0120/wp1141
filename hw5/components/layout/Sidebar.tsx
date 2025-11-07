@@ -16,54 +16,75 @@ export default function Sidebar() {
 
   // Fetch unread notification count
   useEffect(() => {
-    if (!session?.user?.id) return
+    if (!session?.user?.id) {
+      console.log('[Sidebar] No session or user id, skipping notification setup')
+      return
+    }
+
+    console.log('[Sidebar] Setting up notifications for user:', session.user.id)
 
     const fetchUnreadCount = async () => {
       try {
         const res = await fetch('/api/notifications/unread-count')
         if (res.ok) {
           const data = await res.json()
+          console.log('[Sidebar] Fetched unread count:', data.count)
           setUnreadCount(data.count || 0)
         }
       } catch (error) {
-        console.error('Error fetching unread count:', error)
+        console.error('[Sidebar] Error fetching unread count:', error)
       }
     }
 
     fetchUnreadCount()
 
     // Set up real-time updates via Pusher
-    if (typeof window !== 'undefined') {
-      const { getPusherClient } = require('@/lib/pusher-client')
-      const pusherClient = getPusherClient()
-      
-      if (pusherClient && session?.user?.id) {
-        const channel = pusherClient.subscribe(`user-${session.user.id}`)
-        
-        const handleNewNotification = () => {
-          fetchUnreadCount()
-        }
-        
-        const handleNotificationsRead = () => {
-          fetchUnreadCount()
-        }
-        
-        channel.bind('new-notification', handleNewNotification)
-        channel.bind('notifications-read', handleNotificationsRead)
+    const { getPusherClient } = require('@/lib/pusher-client')
+    const pusherClient = getPusherClient()
+    
+    if (!pusherClient) {
+      console.error('[Sidebar] Pusher client not available')
+      return
+    }
 
-        // Also listen to custom events for immediate updates
-        const handleCustomRead = () => {
-          fetchUnreadCount()
-        }
-        window.addEventListener('notifications-read', handleCustomRead)
+    console.log('[Sidebar] Subscribing to channel:', `user-${session.user.id}`)
+    const channel = pusherClient.subscribe(`user-${session.user.id}`)
+    
+    const handleNewNotification = (data: any) => {
+      console.log('[Sidebar] ✅ New notification received:', data)
+      // Immediately increment unread count for instant feedback
+      setUnreadCount(prev => {
+        const newCount = prev + 1
+        console.log('[Sidebar] Updating unread count:', prev, '→', newCount)
+        return newCount
+      })
+      // Also fetch from server to ensure accuracy
+      fetchUnreadCount()
+    }
+    
+    const handleNotificationsRead = () => {
+      console.log('[Sidebar] ✅ Notifications read event received')
+      fetchUnreadCount()
+    }
+    
+    channel.bind('new-notification', handleNewNotification)
+    channel.bind('notifications-read', handleNotificationsRead)
+    
+    console.log('[Sidebar] Pusher channel bound:', channel.name)
 
-        return () => {
-          channel.unbind('new-notification', handleNewNotification)
-          channel.unbind('notifications-read', handleNotificationsRead)
-          pusherClient.unsubscribe(`user-${session.user.id}`)
-          window.removeEventListener('notifications-read', handleCustomRead)
-        }
-      }
+    // Also listen to custom events for immediate updates
+    const handleCustomRead = () => {
+      console.log('[Sidebar] Custom notifications read event received')
+      fetchUnreadCount()
+    }
+    window.addEventListener('notifications-read', handleCustomRead)
+
+    return () => {
+      console.log('[Sidebar] Cleaning up Pusher subscriptions')
+      channel.unbind('new-notification', handleNewNotification)
+      channel.unbind('notifications-read', handleNotificationsRead)
+      pusherClient.unsubscribe(`user-${session.user.id}`)
+      window.removeEventListener('notifications-read', handleCustomRead)
     }
   }, [session?.user?.id])
 
