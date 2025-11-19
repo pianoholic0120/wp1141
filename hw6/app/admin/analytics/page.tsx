@@ -1,21 +1,21 @@
-async function fetchStats() {
-  // 在 server component 中，优先使用 VERCEL_URL（Vercel 自动提供）
-  // 如果没有，则使用 NEXT_PUBLIC_APP_URL 或 localhost
-  const baseUrl = process.env.VERCEL_URL 
-    ? `https://${process.env.VERCEL_URL}` 
-    : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  
-  const res = await fetch(`${baseUrl}/api/admin/stats`, {
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    throw new Error('Failed to load stats');
-  }
-  return res.json();
-}
+import { calculateStats } from '@/services/analytics.service';
 
 export default async function AnalyticsPage() {
-  const stats = await fetchStats();
+  let stats;
+  try {
+    stats = await calculateStats();
+  } catch (error) {
+    console.error('Failed to load stats:', error);
+    // 返回默认值以避免页面崩溃
+    stats = {
+      totalConversations: 0,
+      totalMessages: 0,
+      activeConversations: 0,
+      last24hMessages: 0,
+      last24hConversations: 0,
+      avgMessagesPerConversation: 0,
+    };
+  }
 
   return (
     <div>
