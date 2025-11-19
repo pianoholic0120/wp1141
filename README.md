@@ -1,6 +1,6 @@
 # Web Programming Course Portfolio
 
-This repository documents the assignments completed for the NTU Web Programming course. It captures a progression from foundational web development to full-stack applications. Assignments HW1 through HW5 are complete; later assignments and the final project will be added as they are delivered.
+This repository documents the assignments completed for the NTU Web Programming course. It captures a progression from foundational web development to full-stack applications and intelligent chatbot systems. Assignments HW1 through HW6 are complete; later assignments and the final project will be added as they are delivered.
 
 ## Assignments at a Glance
 
@@ -11,7 +11,7 @@ This repository documents the assignments completed for the NTU Web Programming 
 | HW3 | Complete | React 19, TypeScript, Tailwind, shadcn/ui | Course registration workflow with live data updates |
 | HW4 | Complete | React 18, TypeScript, Node.js, Express, SQLite, Google Maps API | Rental property platform with map integration |
 | HW5 | Complete | Next.js (App Router), React 18, Tailwind, Prisma, PostgreSQL, Pusher | Social network with OAuth, real-time feed, and notifications |
-| HW6 | Planned | TBD | To be announced |
+| HW6 | Complete | Next.js 14, TypeScript, MongoDB, LINE Messaging API, OpenAI, Google Gemini | Intelligent LINE chatbot for concert ticket booking with admin dashboard |
 | HW7 | Planned | TBD | To be announced |
 | Final Project | Planned | TBD | To be announced |
 
@@ -45,6 +45,14 @@ This repository documents the assignments completed for the NTU Web Programming 
 - Supports threaded conversations, reposts, mentions, hashtags, drafts, visibility settings, and real-time counters.
 - Includes production-ready tooling: setup scripts, environment scaffolding, Prisma migrations, and Vercel deployment notes.
 
+### HW6 Opentix Concert Ticket Booking Assistant
+- Production-ready LINE chatbot system built with Next.js 14, TypeScript, and MongoDB Atlas.
+- Integrates LINE Messaging API for webhook-based message handling with signature validation and secure request processing.
+- Features multi-LLM support with automatic fallback between OpenAI GPT and Google Gemini models for resilient service delivery.
+- Implements intelligent event search, multilingual support (Traditional Chinese and English), context-aware conversations, and interactive Flex Message carousels.
+- Includes comprehensive admin dashboard with real-time conversation monitoring, advanced search and filtering, analytics, and database health checks.
+- Delivers graceful error handling, conversation persistence, session management, and production deployment on Vercel with MongoDB Atlas integration.
+
 ## Skill Progression
 
 - **Foundations (HW1):** Semantic HTML, responsive CSS, TypeScript fundamentals, accessibility principles.
@@ -52,7 +60,8 @@ This repository documents the assignments completed for the NTU Web Programming 
 - **Complex Client Applications (HW3):** State orchestration with Context API, live data pipelines, design system implementation.
 - **Full-Stack Development (HW4):** API design, authentication, database modeling, third-party API integration.
 - **Scalable Web Apps (HW5):** Next.js server components, real-time communication, OAuth, infrastructure automation.
-- **Future Work (HW6–Final):** Advanced topics will be documented upon completion.
+- **Intelligent Chatbot Systems (HW6):** LINE Messaging API integration, LLM orchestration, conversation management, webhook security, and real-time monitoring dashboards.
+- **Future Work (HW7–Final):** Advanced topics will be documented upon completion.
 
 ## Development Environment
 
