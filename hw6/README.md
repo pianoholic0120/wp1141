@@ -1,212 +1,377 @@
-# Line AI Chatbot (HW6)
+# Opentix Concert Ticket Booking Assistant
 
-A Next.js 14 + TypeScript project for a Line chatbot powered by LLM with MongoDB persistence and a simple Admin UI.
+A production-ready LINE chatbot system built with Next.js 14, TypeScript, and MongoDB. This intelligent customer service bot assists users in searching for concerts, querying ticket prices, and answering booking-related questions.
 
-## 🚀 快速部署到 Vercel
+## Deployment Links
 
-**想要快速部署？** 查看 [QUICK_DEPLOY.md](./QUICK_DEPLOY.md)
+### LINE Bot
 
-**详细部署指南：** 查看 [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
+- **Production URL**: [https://wp1141-openlinebot.vercel.app](https://wp1141-openlinebot.vercel.app)
+- **QR Code**: ![LINE Bot QR Code](./LINE_QR_CODE.png)
 
----
+Users can scan the QR code above or search for the official LINE account to start using the bot.
 
-## Getting Started
+### Admin Dashboard
 
-1. Install dependencies (pick ONE):
-   - pnpm:
-     ```bash
-     pnpm install
-     ```
-   - npm:
-     ```bash
-     npm install
-     ```
-   - yarn:
-     ```bash
-     yarn install
-     ```
+- **Production URL**: [https://wp1141-openlinebot.vercel.app/admin](https://wp1141-openlinebot.vercel.app/admin)
 
-2. Set environment variables (create `.env.local` in project root):
+The admin dashboard provides comprehensive management features including:
+
+- Real-time conversation monitoring
+- Message history and search
+- Analytics and statistics
+- System configuration and status
+
+## Source Code
+
+The complete source code is available on GitHub:
+
+**Repository**: Please update with your actual GitHub repository URL
+
+All sensitive information has been excluded from the repository:
+
+- Environment variables (`.env.local`, `.env`)
+- API keys and secrets
+- Log files
+- Build artifacts (`.next/`, `node_modules/`)
+- Personal configuration files
+
+Refer to `.gitignore` for the complete list of excluded files and directories.
+
+## Prerequisites
+
+Before setting up the project, ensure you have the following:
+
+- **Node.js** 18.x or later
+- **npm**, **yarn**, or **pnpm** package manager
+- **MongoDB Atlas** account (free tier available)
+- **LINE Developers** account with a Messaging API channel
+- **LLM Provider** account (OpenAI or Google Gemini API key)
+
+## Environment Configuration
+
+### Local Development Setup
+
+1. **Clone the repository**:
 
    ```bash
-   # Line Messaging API
+   git clone <your-repository-url>
+   cd hw6
+   ```
+2. **Install dependencies**:
+
+   ```bash
+   npm install
+   # or
+   pnpm install
+   # or
+   yarn install
+   ```
+3. **Create environment file**:
+   Create a `.env.local` file in the project root with the following variables:
+
+   ```bash
+   # LINE Messaging API Configuration
    LINE_CHANNEL_ACCESS_TOKEN=your_channel_access_token
    LINE_CHANNEL_SECRET=your_channel_secret
 
-   # LLM Providers (at least one required)
-   OPENAI_API_KEY=your_openai_key
-   GOOGLE_API_KEY=your_google_gemini_key
-   LLM_PROVIDER=gemini  # or 'openai', defaults to gemini if GOOGLE_API_KEY is set
-   GOOGLE_MODEL=gemini-2.5-flash  # optional, defaults to gemini-2.5-flash
+   # LLM Provider Configuration (at least one required)
+   # Option 1: OpenAI
+   OPENAI_API_KEY=your_openai_api_key
 
-   # Database
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/line-chatbot
+   # Option 2: Google Gemini (recommended)
+   GOOGLE_API_KEY=your_google_gemini_api_key
+   LLM_PROVIDER=gemini
+   GOOGLE_MODEL=gemini-2.0-flash-exp
 
-   # Application
+   # Database Configuration
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database-name
+
+   # Application Configuration
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    NODE_ENV=development
    ```
-
-3. Import event data (optional but recommended):
+4. **Import event data** (optional but recommended):
 
    ```bash
-   # First, ensure you have event data in output_site/pages/ directory
-   # Then run:
    npm run import-events
-   # or: pnpm import-events
-   # or: yarn import-events
    ```
 
-   This will parse and import all event markdown files from `output_site/pages/` into MongoDB.
-
-4. Run dev:
+   This command imports event data from `output_site/pages/` into MongoDB.
+5. **Start the development server**:
 
    ```bash
-   pnpm dev
-   # or: npm run dev
-   # or: yarn dev
+   npm run dev
    ```
 
-5. Configure Line webhook:
-   - **本地开发 (ngrok)**:
-     - 运行 `ngrok http 3000`
-     - 在 LINE Developers console 设置 Webhook URL: `https://your-ngrok-url.ngrok.io/api/webhook`
-   - **生产环境 (Vercel)**:
-     - 部署到 Vercel 后，设置 Webhook URL: `https://your-project.vercel.app/api/webhook`
-   - 确保 Channel access token 和 Channel secret 与对应环境匹配。
+   The application will be available at `http://localhost:3000`.
+6. **Configure LINE Webhook for local development**:
 
-6. Verify health:
-   - Visit http://localhost:3000/api/health → should return `{ ok: true }`.
-   - Visit http://localhost:3000/api/admin/db → should return database connection status.
+   - Install and start [ngrok](https://ngrok.com/): `ngrok http 3000`
+   - Copy the ngrok HTTPS URL (e.g., `https://xxxx.ngrok.io`)
+   - In LINE Developers Console, set the Webhook URL to: `https://xxxx.ngrok.io/api/webhook`
+   - Click "Verify" to confirm the webhook is working
+7. **Verify the setup**:
 
-## Structure
+   - Health check: `http://localhost:3000/api/health` should return `{ "ok": true }`
+   - Database status: `http://localhost:3000/api/admin/db` should show connection status
+   - Admin dashboard: `http://localhost:3000/admin`
 
-- `app/api/webhook/route.ts` — Line webhook endpoint
-- `app/api/admin/*` — Admin API endpoints (conversations, stats, db health)
-- `lib/line/*` — Line helpers (signature, client, templates)
-- `lib/llm/*` — LLM factory and providers (OpenAI, Gemini)
-- `lib/db/mongodb.ts` — MongoDB connection
-- `models/*` — Mongoose models (Conversation, Message, Event, Analytics)
-- `services/*` — Business logic (chat, llm, event search)
-- `app/admin/*` — Admin UI (dashboard, conversations, analytics, settings)
-- `scripts/import-events.ts` — Event data import script
-- `output_site/` — Scraped Opentix website data (markdown files)
+### Production Deployment (Vercel)
 
-## Scripts
+1. **Prepare your repository**:
 
-- `dev` — start Next.js dev server
-- `build` — build production
-- `start` — start production server
-- `lint` — run Next.js ESLint
-- `lint:fix` — run ESLint and auto-fix issues
-- `format` — format code with Prettier
-- `format:check` — check code formatting
-- `import-events` — import event data from `output_site/pages/` to MongoDB
+   - Ensure all code is committed and pushed to GitHub/GitLab/Bitbucket
+   - Verify `.gitignore` excludes sensitive files (`.env.local`, `.env`, etc.)
+2. **Deploy to Vercel**:
 
-## 部署到 Vercel
+   - Visit [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "Add New Project"
+   - Import your Git repository
+   - Vercel will auto-detect Next.js configuration
+3. **Configure environment variables in Vercel**:
+   In Project Settings → Environment Variables, add the following:
 
-详细的部署指南请参考 [DEPLOYMENT.md](./DEPLOYMENT.md)
+   **Required Variables**:
 
-### 快速部署步骤
+   ```bash
+   LINE_CHANNEL_ACCESS_TOKEN=your_production_channel_access_token
+   LINE_CHANNEL_SECRET=your_production_channel_secret
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database-name
+   OPENAI_API_KEY=your_openai_api_key
+   # or
+   GOOGLE_API_KEY=your_google_gemini_api_key
+   LLM_PROVIDER=gemini
+   ```
 
-1. 将代码推送到 Git 仓库（GitHub/GitLab/Bitbucket）
-2. 在 [Vercel Dashboard](https://vercel.com/dashboard) 导入项目
-3. 配置环境变量（LINE_CHANNEL_ACCESS_TOKEN, LINE_CHANNEL_SECRET, MONGODB_URI 等）
-4. 部署后更新 LINE Developers Console 中的 Webhook URL
+   **Optional Variables**:
 
-## Notes
+   ```bash
+   NEXT_PUBLIC_APP_URL=https://your-project.vercel.app
+   NODE_ENV=production
+   GOOGLE_MODEL=gemini-2.0-flash-exp
+   ```
 
-- Remember to set webhook URL in Line Developers console to `/api/webhook`.
-- 生产环境使用 Vercel 部署，本地开发可以使用 ngrok。
-- MongoDB Atlas: 生产环境建议将 IP 白名单设置为 `0.0.0.0/0`（允许所有 IP）或添加 Vercel 的 IP 地址。
+   Important: Select "Production" environment for all variables. Do not use development/test channel tokens in production.
+4. **Configure MongoDB Atlas Network Access**:
 
-## Admin UI
+   - Log in to [MongoDB Atlas](https://cloud.mongodb.com/)
+   - Navigate to Network Access
+   - Add IP address: `0.0.0.0/0` (Allow Access from Anywhere)
+   - This is required because Vercel Functions use dynamic IP addresses
+5. **Update LINE Webhook URL**:
 
-- Home/Dashboard: http://localhost:3000/admin
-- Conversations: http://localhost:3000/admin/conversations (polling every 5s, with search & filter)
-- Analytics: http://localhost:3000/admin/analytics (statistics dashboard)
-- Settings: http://localhost:3000/admin/settings
+   - Deploy the project and note your Vercel URL (e.g., `https://your-project.vercel.app`)
+   - In LINE Developers Console → Messaging API tab
+   - Set Webhook URL to: `https://your-project.vercel.app/api/webhook`
+   - Click "Verify" to confirm
+   - Enable "Use webhook" toggle
+   - Disable "Auto-reply messages" (optional, as we handle replies programmatically)
+6. **Verify deployment**:
+
+   - Health check: `https://your-project.vercel.app/api/health`
+   - Database status: `https://your-project.vercel.app/api/admin/db`
+   - Admin dashboard: `https://your-project.vercel.app/admin`
+   - Test LINE bot by sending a message
+
+### Environment Variables Reference
+
+#### LINE Messaging API
+
+- `LINE_CHANNEL_ACCESS_TOKEN`: Channel access token from LINE Developers Console
+- `LINE_CHANNEL_SECRET`: Channel secret for webhook signature validation
+
+#### LLM Providers
+
+- `OPENAI_API_KEY`: OpenAI API key (optional, if using OpenAI)
+- `GOOGLE_API_KEY`: Google Gemini API key (optional, if using Gemini)
+- `LLM_PROVIDER`: Default LLM provider (`openai` or `gemini`). Defaults to `gemini` if `GOOGLE_API_KEY` is set
+- `GOOGLE_MODEL`: Gemini model to use (default: `gemini-2.0-flash-exp`)
+
+#### Database
+
+- `MONGODB_URI`: MongoDB Atlas connection string in the format: `mongodb+srv://username:password@cluster.mongodb.net/database-name`
+
+#### Application
+
+- `NEXT_PUBLIC_APP_URL`: Public URL of the application (automatically set by Vercel in production)
+- `NODE_ENV`: Environment mode (`development` or `production`)
+
+## Project Structure
+
+```
+hw6/
+├── app/
+│   ├── api/
+│   │   ├── webhook/          # LINE webhook endpoint
+│   │   ├── admin/            # Admin API endpoints
+│   │   └── health/           # Health check endpoint
+│   ├── admin/                # Admin dashboard UI
+│   │   ├── conversations/    # Conversation management
+│   │   ├── analytics/        # Analytics dashboard
+│   │   └── settings/         # System settings
+│   ├── layout.tsx
+│   └── page.tsx
+├── lib/
+│   ├── db/                   # MongoDB connection utilities
+│   ├── i18n/                 # Internationalization
+│   ├── line/                 # LINE API helpers
+│   ├── llm/                  # LLM provider implementations
+│   ├── utils/                # Utility functions
+│   └── validators/           # Zod validation schemas
+├── models/                   # Mongoose models
+├── services/                 # Business logic services
+├── scripts/                  # Utility scripts
+├── types/                    # TypeScript type definitions
+├── output_site/              # Scraped event data
+├── .env.local                # Local environment variables (not in repo)
+├── .gitignore
+├── next.config.mjs
+├── package.json
+└── README.md
+```
+
+## Available Scripts
+
+- `npm run dev`: Start development server
+- `npm run build`: Build production bundle
+- `npm run start`: Start production server
+- `npm run lint`: Run ESLint
+- `npm run lint:fix`: Run ESLint and auto-fix issues
+- `npm run format`: Format code with Prettier
+- `npm run format:check`: Check code formatting
+- `npm run import-events`: Import event data from `output_site/pages/` to MongoDB
 
 ## Features
 
-### 主題
+### LINE Bot Features
 
-**Opentix 演唱會購票智能客服系統** - 協助使用者搜尋演出、查詢票價、解答購票疑問的 Line Bot
+- **Welcome Message**: Automatic welcome message with Quick Reply buttons when users add the bot
+- **Multi-language Support**: Traditional Chinese and English with language switching
+- **Intelligent Event Search**: Search concerts by artist name or keywords
+- **Popular Events Carousel**: Interactive Flex Message carousel for popular concerts
+- **Purchase Guide & Refund Policy**: Structured responses for common questions
+- **Context-aware Conversations**: Maintains conversation context using the last 10 messages
+- **Quick Reply Buttons**: 80% of interactions can be completed via buttons
+- **Graceful Fallback**: Provides friendly responses when LLM services fail
 
-### Line Bot Features
+### Admin Dashboard Features
 
-- ✅ **Welcome message with Quick Reply** - 新增好友自動顯示歡迎訊息 + 5 個快速按鈕
-- ✅ **多語言支援** - 繁體中文、English，可隨時切換
-- ✅ **Event search by artist name or keywords** - 智能搜尋演出資訊
-- ✅ **Popular events carousel (Flex Message)** - 熱門演出卡片輪播
-- ✅ **Purchase guide & refund policy** - 規則式回覆 + LLM 智能回答
-- ✅ **Context-aware conversations** - 保留最近 10 則訊息作為上下文
-- ✅ **優化的按鈕流程** - 80% 操作可透過按鈕完成，減少打字需求
-- ✅ **Quick Reply 智能顯示** - 搜尋結果、FAQ 回覆後自動顯示相關操作按鈕
-- ✅ **Buttons Template** - 支援快速操作按鈕
-- ✅ **Graceful fallback** - LLM 失敗時提供友善降級回覆
-
-### Admin Features
-
-- ✅ Real-time conversation list (auto-refresh every 5s)
-- ✅ Search conversations by userId
-- ✅ Filter by status (active/resolved/archived)
-- ✅ Analytics dashboard (total conversations, messages, active users)
-- ✅ Database health check endpoint
+- **Real-time Conversation Monitoring**: Auto-refreshing conversation list (every 5 seconds)
+- **Advanced Search & Filter**: Search by user ID, message content, and filter by status
+- **Analytics Dashboard**: Comprehensive statistics including total conversations, messages, active users, and error rates
+- **Database Health Check**: Monitor MongoDB connection status
+- **System Configuration**: View and manage system settings and environment status
 
 ### Technical Features
 
-- ✅ **MongoDB Atlas integration** with Mongoose
-- ✅ **Multi-LLM support** (OpenAI, Gemini) with automatic fallback
-- ✅ **Event database** with full-text search (過濾已下架節目)
-- ✅ **ESLint + Prettier** - 程式碼品質與格式檢查
-- ✅ **Tailwind CSS** - 現代化 UI 樣式
-- ✅ **Error handling & logging** - 完整的錯誤處理與日誌
-- ✅ **Webhook signature validation** - 安全的 webhook 驗證
-- ✅ **Markdown 清理** - 自動清理 LLM 回覆中的 Markdown 格式
+- **MongoDB Atlas Integration**: Persistent storage using Mongoose ODM
+- **Multi-LLM Support**: Supports OpenAI GPT and Google Gemini with automatic fallback
+- **Full-text Event Search**: Efficient event search with filtering of discontinued events
+- **Webhook Signature Validation**: Secure LINE webhook request validation
+- **Error Handling & Logging**: Comprehensive error handling and logging system
+- **Markdown Cleanup**: Automatic removal of Markdown formatting from LLM responses
+- **Code Quality Tools**: ESLint and Prettier for consistent code style
+
+## Security Considerations
+
+### Environment Variables
+
+- Never commit `.env.local` or `.env` files to version control
+- Use different API keys for development and production environments
+- Regularly rotate API keys and tokens
+
+### LINE Channel Configuration
+
+- Use separate channels for development and production
+- Keep channel secrets secure and never expose them publicly
+- Regularly review webhook logs for suspicious activity
+
+### Database Security
+
+- Use strong passwords for MongoDB Atlas accounts
+- Restrict database user permissions to minimum required
+- Enable MongoDB Atlas automatic backups
+- Monitor database access logs
+
+### API Security
+
+- All LINE webhook requests are validated using signature verification
+- API endpoints use appropriate HTTP methods and status codes
+- Sensitive operations require proper authentication (future enhancement)
+
+## Troubleshooting
+
+### Webhook Verification Fails
+
+- Ensure webhook URL uses HTTPS (required by LINE)
+- Verify `LINE_CHANNEL_SECRET` matches your channel configuration
+- Check deployment status in Vercel dashboard
+- Review Vercel function logs for errors
+
+### MongoDB Connection Issues
+
+- Verify `MONGODB_URI` is correct and properly formatted
+- Check MongoDB Atlas IP whitelist includes `0.0.0.0/0` (for Vercel)
+- Ensure database user has appropriate permissions
+- Review MongoDB Atlas connection logs
+
+### LLM API Failures
+
+- Verify API keys are correct and have sufficient quota
+- Check `LLM_PROVIDER` setting matches available API keys
+- Review function logs for detailed error messages
+- Ensure API provider service is operational
+
+### Build Failures
+
+- Review build logs in Vercel dashboard
+- Ensure all required environment variables are set
+- Check for TypeScript compilation errors
+- Verify Node.js version compatibility
 
 ## Code Quality
 
-### ESLint + Prettier
-
-專案已配置 ESLint 和 Prettier 確保程式碼品質：
+The project uses ESLint and Prettier for code quality and consistency:
 
 ```bash
-# 檢查程式碼
+# Check code quality
 npm run lint
 
-# 自動修復 ESLint 問題
+# Auto-fix ESLint issues
 npm run lint:fix
 
-# 格式化程式碼
+# Format code
 npm run format
 
-# 檢查格式
+# Check formatting
 npm run format:check
 ```
 
-### Tailwind CSS
+## Testing
 
-專案使用 Tailwind CSS 進行樣式管理：
+### Health Check Endpoints
 
-- 配置檔案：`tailwind.config.ts`
-- 全域樣式：`app/globals.css`
-- 自訂顏色主題：Primary colors (50-900)
+- Health: `GET /api/health` - Returns application health status
+- Database: `GET /api/admin/db` - Returns database connection status
 
-## 功能列表與使用流程
+## License
 
-### 主要功能
+This project is private and proprietary. All rights reserved.
 
-1. **🎵 熱門演出** - 查看熱門演出 Carousel
-2. **📅 本週演唱會** - 查看本週演出
-3. **💳 如何購票** - 購票流程說明
-4. **📋 退票政策** - 退票政策說明
-5. **🌐 語言設定** - 切換語言（繁體中文/English）
+## Support
 
-### 使用流程優化
+For issues or questions:
 
-- ✅ **歡迎訊息**：自動顯示 5 個主要功能按鈕
-- ✅ **搜尋結果後**：自動顯示相關操作按鈕（搜尋其他、熱門演出、前往 Opentix、如何購票、幫助）
-- ✅ **FAQ 回覆後**：自動顯示主選單按鈕
-- ✅ **章節回覆後**：自動顯示主選單按鈕 + Carousel（如果是熱門演出）
-- ✅ **減少打字**：80% 的操作可透過按鈕完成
+1. Review the troubleshooting section above
+2. Check Vercel deployment logs
+3. Review LINE Developers Console webhook logs
+4. Check MongoDB Atlas connection logs
+
+## Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- Deployed on [Vercel](https://vercel.com/)
+- Database hosted on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+- LLM powered by [OpenAI](https://openai.com/) and [Google Gemini](https://deepmind.google/technologies/gemini/)
+- Messaging platform: [LINE Messaging API](https://developers.line.biz/en/docs/messaging-api/)
