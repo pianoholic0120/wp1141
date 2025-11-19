@@ -777,11 +777,15 @@ export async function handleUserMessageWithStateMachine(params: {
     
     // 檢查是否是收藏相關命令（優先處理）
     // 支持中英文命令
-    if (params.message.startsWith('收藏:') || params.message.startsWith('Favorite:')) {
+    // 檢查添加收藏命令（支持全角和半角冒號）
+    const addFavoritePrefixes = ['收藏:', '收藏：', 'Favorite:'];
+    if (addFavoritePrefixes.some(prefix => params.message.startsWith(prefix))) {
       return await handleAddFavorite(params.message, params.userId, userLocale);
     }
     
-    if (params.message.startsWith('取消收藏:') || params.message.startsWith('Remove:') || params.message.startsWith('Unfavorite:')) {
+    // 檢查取消收藏命令（支持全角和半角冒號）
+    const removeFavoritePrefixes = ['取消收藏:', '取消收藏：', 'Remove:', 'Unfavorite:'];
+    if (removeFavoritePrefixes.some(prefix => params.message.startsWith(prefix))) {
       return await handleRemoveFavorite(params.message, params.userId, userLocale);
     }
     
@@ -879,8 +883,11 @@ export async function handleUserMessageWithStateMachine(params: {
 async function handleAddFavorite(message: string, userId: string, userLocale: Locale) {
   const isZh = userLocale === 'zh-TW';
   
-  // 提取 eventId（支持中英文命令）
-  const eventId = message.replace('收藏:', '').replace('Favorite:', '').trim();
+  // 提取 eventId（支持中英文命令，支持全角和半角冒號）
+  const eventId = message
+    .replace(/^收藏[:：]/, '')  // 移除中文前缀（全角和半角冒號）
+    .replace(/^Favorite:/, '')
+    .trim();
   
   if (!eventId) {
     return {
@@ -988,8 +995,12 @@ async function handleAddFavorite(message: string, userId: string, userLocale: Lo
 async function handleRemoveFavorite(message: string, userId: string, userLocale: Locale) {
   const isZh = userLocale === 'zh-TW';
   
-  // 提取參數（可能是編號或 eventId，支持中英文命令）
-  let param = message.replace('取消收藏:', '').replace('Remove:', '').replace('Unfavorite:', '').trim();
+  // 提取參數（可能是編號或 eventId，支持中英文命令，支持全角和半角冒號）
+  let param = message
+    .replace(/^取消收藏[:：]/, '')  // 移除中文前缀（全角和半角冒號）
+    .replace(/^Remove:/, '')
+    .replace(/^Unfavorite:/, '')
+    .trim();
   
   if (!param) {
     return {
@@ -1122,8 +1133,8 @@ async function handleShowFavorites(userId: string, userLocale: Locale) {
     // 添加取消收藏說明（使用編號，根據語言使用不同命令）
     if (isZh) {
       reply += `💡 取消收藏方式：\n`;
-      reply += `請鍵入「取消收藏:編號」\n`;
-      reply += `例如：取消收藏:1`;
+      reply += `請鍵入「取消收藏:編號」或「取消收藏：編號」\n`;
+      reply += `例如：取消收藏:1 或 取消收藏：1`;
     } else {
       reply += `💡 To remove a favorite:\n`;
       reply += `Type "Remove:number"\n`;
