@@ -174,6 +174,11 @@ async function handleAction(
       };
       
     case 'GENERAL_QUESTION':
+      // 檢查是否為職責範圍外的問題
+      if (action.data?.isOutOfScope) {
+        console.log('[Chat Handler] Returning out-of-scope message');
+        return await handleOutOfScopeMessage(userLocale);
+      }
       return await handleGeneralQuestion(message, session, userLocale);
       
     case 'CLEAR_SESSION':
@@ -927,6 +932,23 @@ async function handleAnswerEventQuestion(
       quickReply: buildQuickReplies(userLocale),
     };
   }
+}
+
+/**
+ * 處理職責範圍外的問題
+ */
+async function handleOutOfScopeMessage(
+  userLocale: Locale
+): Promise<{ reply: string; quickReply?: any }> {
+  const isZh = userLocale === 'zh-TW';
+  const reply = isZh
+    ? '我是 OPENTIX 音樂演出諮詢小幫手，專精於音樂演出資訊與 OPENTIX 平台服務。我可以協助您搜尋演出、查詢演出詳情、提供購票連結，以及回答 OPENTIX 相關問題。其他主題請使用其他服務。'
+    : 'I am the OPENTIX Music Event Information Assistant, specializing in music event information and OPENTIX platform services. I can help you search for events, query event details, provide ticket links, and answer OPENTIX-related questions. For other topics, please use other services.';
+  
+  return {
+    reply,
+    quickReply: buildQuickReplies(userLocale),
+  };
 }
 
 /**

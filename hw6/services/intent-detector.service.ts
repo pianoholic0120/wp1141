@@ -38,6 +38,12 @@ export class IntentDetector {
       return { type: 'QUICK_REPLY', data: this.parseQuickReply(message) };
     }
     
+    // 2.5. 檢查是否為職責範圍外的問題（優先於搜尋，避免誤觸發搜尋）
+    if (this.isOutOfScopeQuery(message)) {
+      console.log('[Intent Detector] Detected out-of-scope query:', message);
+      return { type: 'GENERAL', data: { message, isOutOfScope: true } };
+    }
+    
     // 3. 檢查是否為 FAQ（優先於後續問題，因為 FAQ 問題不應該被當作後續問題）
     // 先檢查是否是明確的 FAQ 問題（如"如何購票"、"退票政策"等）
     const faq = this.matchFAQ(message);
@@ -308,6 +314,59 @@ export class IntentDetector {
     return detailKeywords.some(keyword => message.toLowerCase().includes(keyword));
   }
   
+  /**
+   * 檢查是否為職責範圍外的問題（如天氣、新聞、一般知識等）
+   */
+  private isOutOfScopeQuery(message: string): boolean {
+    const lower = message.toLowerCase();
+    
+    // 職責範圍外的關鍵字（不包括演出相關的上下文）
+    const outOfScopeKeywords = [
+      // 天氣相關
+      '下雨', '天氣', 'weather', 'rain', 'snow', 'sunny', 'cloudy', 'temperature', '氣溫', '溫度',
+      // 新聞相關
+      '新聞', 'news', '最新消息', 'breaking news',
+      // 一般知識問題（不包含演出相關）
+      '數學', 'math', '歷史', 'history', '地理', 'geography',
+      '股價', 'stock', '匯率', 'exchange rate',
+      '時間', '幾點', 'what time', '現在幾點', // 但如果是"演出時間"則不算
+    ];
+    
+    // 演出相關的上下文關鍵字（如果有這些關鍵字，則不是職責範圍外）
+    const eventContextKeywords = [
+      '演出', '表演', '音樂會', '演唱會', '節目', 'event', 'show', 'concert', 'recital',
+      '購票', 'ticket', '票', '票價', 'price', '場館', 'venue', '藝人', 'artist',
+      'opentix', '兩廳院', '國家音樂廳', '國家戲劇院',
+    ];
+    
+    // 檢查是否包含職責範圍外的關鍵字
+    const hasOutOfScopeKeyword = outOfScopeKeywords.some(keyword => lower.includes(keyword));
+    
+    // 如果沒有演出相關的上下文，且有職責範圍外的關鍵字，則是職責範圍外
+    const hasEventContext = eventContextKeywords.some(keyword => lower.includes(keyword));
+    
+    // 特殊處理："明天會下雨嗎"這種問題
+    // 如果問題只包含日期/時間 + 天氣/其他非演出關鍵字，且沒有演出相關關鍵字，則是職責範圍外
+    if (hasOutOfScopeKeyword && !hasEventContext) {
+      // 檢查是否只是日期/時間 + 非演出問題
+      const dateTimeKeywords = ['今天', '明天', '後天', '本週', '下週', '這個月', '下個月', 
+                                 'today', 'tomorrow', 'this week', 'next week', 'this month', 'next month'];
+      const hasDateTimeKeyword = dateTimeKeywords.some(keyword => lower.includes(keyword));
+      
+      // 如果是日期 + 非演出問題（如"明天會下雨嗎"），則是職責範圍外
+      if (hasDateTimeKeyword && !hasEventContext) {
+        return true;
+      }
+      
+      // 如果只是天氣/新聞等問題，沒有演出相關關鍵字，則是職責範圍外
+      if (!hasDateTimeKeyword && !hasEventContext) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
   /**
    * 檢查是否包含搜尋關鍵字
    */

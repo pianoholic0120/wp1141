@@ -26,27 +26,55 @@ let faqDatabase: FAQ[] | null = null;
 
 /**
  * 獲取 FAQ 知識庫文件路徑
+ * 文件位於 public/ 目錄中，使用 process.cwd() 指向專案根目錄來讀取
  */
 function getFAQKnowledgeBasePath(): string {
   // 在 Next.js 中，process.cwd() 通常指向專案根目錄
-  // 嘗試多種路徑（支持開發和生產環境）
+  // 文件位於 public/ 目錄中
   const basePath = process.cwd();
+  
+  // 構建所有可能的路徑（支持開發和生產環境）
   const possiblePaths = [
-    path.join(basePath, 'OPENTIX-FAQ-Knowledge-Base.md'),
-    // 如果在 Next.js 構建後的 .next 目錄中運行
-    path.join(basePath, '..', 'OPENTIX-FAQ-Knowledge-Base.md'),
+    // 1. 專案根目錄下的 public/ 目錄（主要路徑）
+    path.join(basePath, 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
+    // 2. 如果在 Next.js 構建後的 .next 目錄中運行（從 .next/server 向上查找）
+    path.join(basePath, '..', 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
+    path.join(basePath, '..', '..', 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
+    // 3. Vercel 部署環境可能的路徑
+    path.join('/var/task', 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
+    path.join('/var/task', 'hw6', 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
   ];
 
+  console.log(`[FAQ Service] Searching for FAQ file. CWD: ${basePath}`);
+  console.log(`[FAQ Service] Trying ${possiblePaths.length} possible paths...`);
+
   for (const possiblePath of possiblePaths) {
-    if (fs.existsSync(possiblePath)) {
-      console.log(`[FAQ Service] Found FAQ file at: ${possiblePath}`);
-      return possiblePath;
+    try {
+      const normalizedPath = path.resolve(possiblePath);
+      if (fs.existsSync(normalizedPath)) {
+        console.log(`[FAQ Service] ✅ Found FAQ file at: ${normalizedPath}`);
+        return normalizedPath;
+      }
+    } catch (err) {
+      // 忽略路徑檢查錯誤，繼續嘗試下一個路徑
+      continue;
     }
   }
 
-  // 返回默認路徑（即使不存在，讓調用者處理錯誤）
-  const defaultPath = path.join(basePath, 'OPENTIX-FAQ-Knowledge-Base.md');
-  console.warn(`[FAQ Service] FAQ file not found in any of these paths: ${possiblePaths.join(', ')}`);
+  // 如果所有路徑都失敗，記錄詳細信息
+  console.warn(`[FAQ Service] ❌ FAQ file not found in any of these paths:`);
+  possiblePaths.forEach((p, i) => {
+    try {
+      const normalizedPath = path.resolve(p);
+      console.warn(`  ${i + 1}. ${normalizedPath}`);
+    } catch {
+      console.warn(`  ${i + 1}. ${p} (invalid path)`);
+    }
+  });
+  console.warn(`[FAQ Service] Current working directory: ${basePath}`);
+  
+  // 返回第一個可能的路徑（即使不存在，讓調用者處理錯誤）
+  const defaultPath = path.resolve(path.join(basePath, 'public', 'OPENTIX-FAQ-Knowledge-Base.md'));
   return defaultPath;
 }
 

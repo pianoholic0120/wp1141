@@ -167,6 +167,18 @@ export class ConversationStateMachine {
     
     // 檢查是否為一般問題（非搜尋意圖）
     if (intent.type === 'GENERAL') {
+      // 檢查是否為職責範圍外的問題（優先處理，避免誤觸發搜尋）
+      if (intent.data?.isOutOfScope) {
+        console.log('[State Machine] Handling out-of-scope question:', message);
+        return {
+          nextState: ConversationState.IDLE,
+          action: {
+            type: 'GENERAL_QUESTION',
+            data: { message, isOutOfScope: true },
+          },
+        };
+      }
+      
       // 判斷是否真的像搜尋查詢（包含藝人名、場館名、演出類型等）
       const looksLikeSearch = this.looksLikeSearchQuery(message);
       if (looksLikeSearch) {
@@ -261,6 +273,18 @@ export class ConversationStateMachine {
     message: string,
     intent: Intent
   ): StateTransition {
+    // **優先檢查：是否為職責範圍外的問題（避免誤觸發後續問題處理）**
+    if (intent.type === 'GENERAL' && intent.data?.isOutOfScope) {
+      console.log('[State Machine] Handling out-of-scope question in EVENT_SELECTED state:', message);
+      return {
+        nextState: ConversationState.IDLE,
+        action: {
+          type: 'GENERAL_QUESTION',
+          data: { message, isOutOfScope: true },
+        },
+      };
+    }
+    
     const event = session.context.selectedEvent;
     
     if (!event) {
@@ -326,6 +350,18 @@ export class ConversationStateMachine {
     message: string,
     intent: Intent
   ): StateTransition {
+    // **優先檢查：是否為職責範圍外的問題（避免誤觸發後續問題處理）**
+    if (intent.type === 'GENERAL' && intent.data?.isOutOfScope) {
+      console.log('[State Machine] Handling out-of-scope question in EVENT_LIST state:', message);
+      return {
+        nextState: ConversationState.IDLE,
+        action: {
+          type: 'GENERAL_QUESTION',
+          data: { message, isOutOfScope: true },
+        },
+      };
+    }
+    
     const results = session.context.lastSearchResults || [];
     
     // 檢查是否選擇了某個演出（例如：用戶輸入 "1" 或 "第一個"）
