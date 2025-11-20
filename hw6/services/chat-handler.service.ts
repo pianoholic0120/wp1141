@@ -119,8 +119,8 @@ async function handleAction(
   if (searchGuide.isMainMenu) {
     return {
       reply: userLocale === 'zh-TW'
-        ? '🎵 歡迎來到 Opentix 音樂演出諮詢小幫手！\n\n我可以協助您：\n✓ 搜尋音樂演出資訊（藝人、場館、類型）\n✓ 查詢演出詳情（地點、主辦單位、演出時長等）\n✓ 提供 Opentix 購票連結\n✓ 回答演出相關問題\n\n請直接告訴我您想找什麼演出，或選擇下方功能！'
-        : '🎵 Welcome to Opentix Music Event Information Assistant!\n\nI can help you:\n✓ Search for music events (artists, venues, categories)\n✓ Query event details (venue, organizer, duration, etc.)\n✓ Provide Opentix ticket purchase links\n✓ Answer event-related questions\n\nPlease tell me what event you\'re looking for, or select a function below!',
+        ? '🎵 歡迎來到 OPENTIX 音樂演出諮詢小幫手！\n\n我可以協助您：\n✓ 搜尋音樂演出資訊（藝人、場館、類型）\n✓ 查詢演出詳情（地點、主辦單位、演出時長等）\n✓ 提供 OPENTIX 購票連結\n✓ 回答 OPENTIX 平台常見問題（會員、購票、退票、取票等）\n✓ 回答演出相關問題\n\n請直接告訴我您想找什麼演出，或選擇下方功能！'
+        : '🎵 Welcome to OPENTIX Music Event Information Assistant!\n\nI can help you:\n✓ Search for music events (artists, venues, categories)\n✓ Query event details (venue, organizer, duration, etc.)\n✓ Provide OPENTIX ticket purchase links\n✓ Answer OPENTIX platform FAQs (membership, ticketing, refunds, etc.)\n✓ Answer event-related questions\n\nPlease tell me what event you\'re looking for, or select a function below!',
       quickReply: buildQuickReplies(userLocale),
     };
   }
@@ -163,13 +163,13 @@ async function handleAction(
       return await handleShowEventList(action.data, userLocale);
       
     case 'SHOW_FAQ':
-      return await handleShowFAQ(action.data, userLocale);
+      return await handleShowFAQ(action.data, userLocale, session.userId);
       
     case 'SHOW_MAIN_MENU':
       return {
         reply: userLocale === 'zh-TW'
-          ? '🎵 歡迎來到 Opentix 音樂演出諮詢小幫手！\n\n我可以協助您：\n✓ 搜尋音樂演出資訊（藝人、場館、類型）\n✓ 查詢演出詳情（地點、主辦單位、演出時長等）\n✓ 提供 Opentix 購票連結\n✓ 回答演出相關問題\n\n請直接告訴我您想找什麼演出，或選擇下方功能！'
-          : '🎵 Welcome to Opentix Music Event Information Assistant!\n\nI can help you:\n✓ Search for music events (artists, venues, categories)\n✓ Query event details (venue, organizer, duration, etc.)\n✓ Provide Opentix ticket purchase links\n✓ Answer event-related questions\n\nPlease tell me what event you\'re looking for, or select a function below!',
+          ? '🎵 歡迎來到 OPENTIX 音樂演出諮詢小幫手！\n\n我可以協助您：\n✓ 搜尋音樂演出資訊（藝人、場館、類型）\n✓ 查詢演出詳情（地點、主辦單位、演出時長等）\n✓ 提供 OPENTIX 購票連結\n✓ 回答 OPENTIX 平台常見問題（會員、購票、退票、取票等）\n✓ 回答演出相關問題\n\n請直接告訴我您想找什麼演出，或選擇下方功能！'
+          : '🎵 Welcome to OPENTIX Music Event Information Assistant!\n\nI can help you:\n✓ Search for music events (artists, venues, categories)\n✓ Query event details (venue, organizer, duration, etc.)\n✓ Provide OPENTIX ticket purchase links\n✓ Answer OPENTIX platform FAQs (membership, ticketing, refunds, etc.)\n✓ Answer event-related questions\n\nPlease tell me what event you\'re looking for, or select a function below!',
         quickReply: buildQuickReplies(userLocale),
       };
       
@@ -241,7 +241,120 @@ async function handleSearchAction(
     searchResult = await searchEvents(searchQuery, 5);
   }
 
-  const foundEvents = searchResult.events || [];
+  let foundEvents = searchResult.events || [];
+  
+  // **改進：驗證搜索結果的相關性，過濾掉不相關的結果**
+  // 如果搜索的是具體的藝人/演出名稱（如"蔡依林演唱會"），但返回的結果不相關，應該過濾掉
+  // **重要：由於 searchEventsByArtist 已經通過了 isEventRelevantToArtist 檢查，這裡不需要再次驗證**
+  // **但如果沒有結果，可能是因為搜索條件太嚴格，這裡應該信任 searchEventsByArtist 的結果**
+  if (foundEvents.length > 0 && parsedQuery.queryType === 'artist' && parsedQuery.artists && parsedQuery.artists.length > 0) {
+    // **改進：由於 searchEventsByArtist 已經做了嚴格的相关性检查，這裡應該信任結果**
+    // **只有在明顯不相關的情況下才過濾（例如標題完全不包含任何相關詞）**
+    const searchArtist = parsedQuery.artists[0].toLowerCase();
+    const searchArtistOriginal = parsedQuery.artists[0];
+    
+    // 獲取中文名稱（如果有的話）
+    let chineseNames: string[] = [];
+    if (parsedQuery.artistInfo?.aliases && Array.isArray(parsedQuery.artistInfo.aliases)) {
+      chineseNames = parsedQuery.artistInfo.aliases.filter((alias: string) => /[\u4e00-\u9fa5]/.test(alias));
+    }
+    
+    // 建立搜索詞列表（英文名、中文名）
+    const allSearchTerms = [searchArtist, searchArtistOriginal, ...chineseNames.map(n => n.toLowerCase()), ...chineseNames];
+    
+    // **改進：只檢查明顯不相關的情況（標題、副標題、藝人列表都不包含任何搜索詞）**
+    // **由於 searchEventsByArtist 已經做了嚴格檢查，這裡只做基本的驗證**
+    const hasRelevantResult = foundEvents.some((event: any) => {
+      const title = (event.title || '').toLowerCase();
+      const subtitle = (event.subtitle || '').toLowerCase();
+      const titleOriginal = event.title || '';
+      const subtitleOriginal = event.subtitle || '';
+      const artists = Array.isArray(event.artists) 
+        ? event.artists.map((a: string) => a.toLowerCase()).join(' ')
+        : '';
+      const artistsOriginal = Array.isArray(event.artists) 
+        ? event.artists.join(' ')
+        : '';
+      
+      // 檢查是否包含任何搜索詞（英文名或中文名）
+      const containsSearchTerm = allSearchTerms.some(term => {
+        const termLower = term.toLowerCase();
+        return title.includes(termLower) || 
+               subtitle.includes(termLower) ||
+               titleOriginal.includes(term) ||
+               subtitleOriginal.includes(term) ||
+               artists.includes(termLower) ||
+               artistsOriginal.includes(term);
+      });
+      
+      if (containsSearchTerm) {
+        console.log('[Search Action] ✅ Found relevant result:', {
+          title: event.title?.substring(0, 50),
+          searchTerms: allSearchTerms,
+          matched: true,
+        });
+      } else {
+        console.log('[Search Action] ⚠️ Result might not be relevant:', {
+          title: event.title?.substring(0, 50),
+          searchTerms: allSearchTerms,
+          titleContent: title.substring(0, 50),
+          subtitleContent: subtitle.substring(0, 50),
+        });
+      }
+      
+      return containsSearchTerm;
+    });
+    
+    // **改進：如果 searchEventsByArtist 返回了結果但驗證不通過，記錄但不一定過濾**
+    // **因為 searchEventsByArtist 已經做了嚴格檢查，這裡只是額外的安全檢查**
+    if (!hasRelevantResult && foundEvents.length > 0) {
+      console.log('[Search Action] ⚠️ Validation failed but keeping results (searchEventsByArtist already validated):', {
+        searchTerms: allSearchTerms,
+        resultCount: foundEvents.length,
+        sampleTitle: foundEvents[0]?.title,
+      });
+      // **不改為過濾結果，因為 searchEventsByArtist 已經做了嚴格檢查**
+      // **只有在明顯不相關的情況下才過濾**
+    }
+  }
+  
+  // **改進：對於general查詢，如果結果的相關性太低（只有模糊匹配），也應該過濾掉**
+  // 檢查是否有精確匹配（標題、副標題或藝人完全匹配），如果沒有，可能需要更嚴格的過濾
+  if (foundEvents.length > 0 && parsedQuery.queryType === 'general') {
+    const queryLower = query.toLowerCase();
+    // 提取查詢中的關鍵字（去除常見詞）
+    const searchKeywords = queryLower
+      .replace(/(演唱會|音樂會|演出|表演|concert|show|音樂|music)/g, '')
+      .trim()
+      .split(/\s+/)
+      .filter(w => w.length >= 2);
+    
+    // 如果查詢包含具體的關鍵字（不是通用詞），檢查結果是否相關
+    if (searchKeywords.length > 0) {
+      const hasExactMatch = foundEvents.some((event: any) => {
+        const title = (event.title || '').toLowerCase();
+        const subtitle = (event.subtitle || '').toLowerCase();
+        const artists = Array.isArray(event.artists) 
+          ? event.artists.map((a: string) => a.toLowerCase()).join(' ')
+          : '';
+        // 檢查是否至少有一個關鍵字出現在標題、副標題或藝人列表中
+        return searchKeywords.some(keyword => 
+          title.includes(keyword) || subtitle.includes(keyword) || artists.includes(keyword)
+        );
+      });
+      
+      // 如果沒有精確匹配且結果的相關性分數都太低（< 100），過濾掉
+      if (!hasExactMatch && foundEvents.length > 0) {
+        const allLowRelevance = foundEvents.every((event: any) => (event.relevanceScore || 0) < 100);
+        if (allLowRelevance) {
+          console.log('[Search Action] All results have low relevance for query:', query);
+          foundEvents = [];
+          searchResult.events = [];
+          searchResult.total = 0;
+        }
+      }
+    }
+  }
   
   // 【重要】立即儲存搜尋結果到 session，確保後續問題能使用最新的搜尋結果
   // 即使後面檢測到"沒有找到"，也會在那時清除 session
@@ -252,6 +365,31 @@ async function handleSearchAction(
       eventCount: foundEvents.length,
       firstEventTitle: foundEvents[0]?.title,
     });
+  }
+  
+  // **特殊處理：時間查詢（如"這個月有什麼演出？"）**
+  // 如果查詢包含時間關鍵字但沒有找到結果，給出明確的引導
+  const timeKeywords = ['這個月', '下個月', '本週', '下週', '今天', '明天', 
+                        'this month', 'next month', 'this week', 'next week', 'today', 'tomorrow'];
+  const isTimeQuery = timeKeywords.some(keyword => query.toLowerCase().includes(keyword.toLowerCase()));
+  
+  // 如果是時間查詢且沒有找到結果，給出明確的引導
+  if (isTimeQuery && foundEvents.length === 0 && parsedQuery.queryType !== 'date') {
+    // 清除 session，因為沒有找到結果
+    if (userId) {
+      await sessionManager.clearSession(userId);
+      console.log('[Session] Cleared session due to time query with no results');
+    }
+    
+    const timeQueryReply = userLocale === 'zh-TW'
+      ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的演出時間和場次資訊。\n\n建議您：\n1. 前往 Opentix 官網查看最新的演出資訊：https://www.opentix.life/\n2. 或使用更具體的搜尋關鍵字（如藝人名稱、場館名稱等）\n\n例如：「Eric Lu」、「國家音樂廳」、「鋼琴獨奏會」等`
+      : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time show schedules.\n\nSuggestions:\n1. Visit Opentix website for latest event information: https://www.opentix.life/\n2. Or use more specific search keywords (artist name, venue name, etc.)\n\nFor example: "Eric Lu", "National Concert Hall", "piano recital", etc.`;
+    
+    return {
+      reply: timeQueryReply,
+      quickReply: buildSearchGuideQuickReply(userLocale),
+      events: [],
+    };
   }
   
   // 生成回應
@@ -300,7 +438,7 @@ async function handleSearchAction(
     });
     
     // 如果回覆明確表示"沒有找到"，清除 session context
-    if (hasNoResultKeywords && userId) {
+    if ((hasNoResultKeywords || foundEvents.length === 0) && userId) {
       await sessionManager.clearSession(userId);
       console.log('[Session] Cleared session due to no results (Structured)');
     }
@@ -419,130 +557,328 @@ async function handleAnswerEventQuestion(
   message: string
 ): Promise<{ reply: string; quickReply?: any }> {
   try {
+    // **改進：檢查是否有序數（第一、第二、第三等）或複數問題（它們分別）**
+    const ordinalPattern = /(第一|第二|第三|第四|第五|第一個|第二個|第三個|第四個|第五個|\d+)(?:個|的|的演出)/;
+    const ordinalMatch = message.match(ordinalPattern);
+    const ordinalNumber = ordinalMatch ? (() => {
+      const match = ordinalMatch[1];
+      const chineseNumbers: { [key: string]: number } = {
+        '第一': 1, '第二': 2, '第三': 3, '第四': 4, '第五': 5,
+        '第一個': 1, '第二個': 2, '第三個': 3, '第四個': 4, '第五個': 5,
+      };
+      if (chineseNumbers[match]) return chineseNumbers[match];
+      const num = parseInt(match, 10);
+      return isNaN(num) ? null : num;
+    })() : null;
+    
+    // **檢查是否是複數問題（它們分別）**
+    const isPluralQuestion = /它們分別|它們|分別|each|all|both/.test(message);
+    
+    // 從 session context 獲取搜索結果列表（用於序數和複數問題）
+    let searchResults: any[] = [];
+    if (session.context?.lastSearchResults && session.context.lastSearchResults.length > 0) {
+      searchResults = session.context.lastSearchResults;
+    } else if (session.userId) {
+      const conversation = await ConversationModel.findOne({ userId: session.userId }).lean();
+      if (conversation?.metadata?.lastSearchResults) {
+        searchResults = conversation.metadata.lastSearchResults as any[];
+      }
+    }
+    
+    // **處理複數問題（它們分別在哪裡演出？）**
+    if (isPluralQuestion && searchResults.length > 1) {
+      const questionType = data.questionType || data.intent;
+      if (questionType === 'ask_venue' || questionType === 'ASK_VENUE') {
+        // 返回所有演出的地點
+        let answer = userLocale === 'zh-TW' ? '它們的演出地點分別是：\n\n' : 'Their venues are:\n\n';
+        searchResults.slice(0, 5).forEach((event: any, idx: number) => {
+          const formattedEvent = formatEventForDisplay(event, { keepFullDescription: false });
+          const eventTitle = formattedEvent.title || event.title || `${idx + 1}`;
+          const venue = formattedEvent.venue || event.venue || (userLocale === 'zh-TW' ? '資訊未提供' : 'Information not available');
+          answer += `${idx + 1}. 「${eventTitle}」：${venue}\n`;
+        });
+        return {
+          reply: answer.trim(),
+          quickReply: buildQuickReplies(userLocale),
+        };
+      }
+    }
+    
+    // **處理序數問題（第二個的票價）**
+    if (ordinalNumber && ordinalNumber > 0 && searchResults.length >= ordinalNumber) {
+      // 使用指定索引的事件（ordinalNumber - 1 因為索引從0開始）
+      const selectedEvent = searchResults[ordinalNumber - 1];
+      console.log('[Event Question] Using ordinal selection:', ordinalNumber, selectedEvent.title);
+      
+      const formattedEvent = formatEventForDisplay(selectedEvent, { keepFullDescription: false });
+      const questionType = data.questionType || data.intent;
+      
+      if (questionType === 'ask_price' || questionType === 'ASK_PRICE') {
+        const ticketUrl = formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/';
+        const answer = userLocale === 'zh-TW'
+          ? `「${formattedEvent.title}」很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的票價資訊。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${ticketUrl}`
+          : `"${formattedEvent.title}" Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time ticket pricing. Please visit the ticket page: ${ticketUrl}`;
+        return {
+          reply: answer,
+          quickReply: buildQuickReplies(userLocale),
+        };
+      } else if (questionType === 'ask_venue' || questionType === 'ASK_VENUE') {
+        const venue = formattedEvent.venue || selectedEvent.venue || (userLocale === 'zh-TW' ? '資訊未提供' : 'Information not available');
+        const answer = userLocale === 'zh-TW'
+          ? `「${formattedEvent.title}」的演出地點：${venue}`
+          : `"${formattedEvent.title}" venue: ${venue}`;
+        return {
+          reply: answer,
+          quickReply: buildQuickReplies(userLocale),
+        };
+      } else if (questionType === 'ask_time' || questionType === 'ASK_TIME') {
+        const ticketUrl = formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/';
+        const answer = userLocale === 'zh-TW'
+          ? `「${formattedEvent.title}」很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的場次時間和剩餘票數。建議您前往購票頁面查看：${ticketUrl}`
+          : `"${formattedEvent.title}" Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time show times. Please visit: ${ticketUrl}`;
+        return {
+          reply: answer,
+          quickReply: buildQuickReplies(userLocale),
+        };
+      }
+      // 如果沒有匹配的問題類型，繼續使用選中的事件作為單一事件處理
+      // 這裡會繼續執行到後面的單一事件處理邏輯
+      
+      // 使用 LLM 回答問題
+      const recentMessages = await MessageModel.find({
+        conversationId: session.conversationId,
+      })
+        .sort({ timestamp: -1 })
+        .limit(3)
+        .lean();
+      
+      const contextForLLM = recentMessages
+        .reverse()
+        .map((m: any) => ({ role: m.role, content: m.content }));
+      
+      const { generateAssistantReply } = await import('./llm.service');
+      const { cleanMarkdown } = await import('@/lib/utils/format');
+      const answer = await generateAssistantReply(contextForLLM, message, {
+        foundEvents: [event],
+        userLocale: userLocale,
+      });
+      return {
+        reply: cleanMarkdown(answer),
+        quickReply: buildQuickReplies(userLocale),
+      };
+    }
+    
+    // **處理單一事件問題（原有邏輯）**
     // 優先使用 data 中的 event
     let event = data.event;
   
-  // 如果沒有，從最近的對話消息中提取事件信息
-  if (!event && session.conversationId) {
-    const recentMessages = await MessageModel.find({
-      conversationId: session.conversationId,
-    })
-      .sort({ timestamp: -1 })
-      .limit(10) // 擴大範圍，確保能找到最近的事件
-      .lean();
-    
-    // 從最近的助手消息中查找事件 URL 或事件信息
-    // 優先查找包含事件列表的消息（通常是最新的搜索結果）
-    // 只查找第一條助手消息（最新的），避免找到舊的事件
-    for (const msg of recentMessages) {
-      if (msg.role === 'assistant' && msg.content) {
-        // 嘗試從消息中提取所有事件 URL
-        const urlMatches = Array.from(msg.content.matchAll(/https:\/\/www\.opentix\.life\/event\/(\d+)/g));
-        const eventIds: string[] = [];
-        for (const match of urlMatches) {
-          eventIds.push(match[1]);
-        }
-        
-        // 如果找到事件 URL，優先使用第一個（通常是最相關的）
-        if (eventIds.length > 0) {
-          const eventId = eventIds[0]; // 使用第一個事件 ID
-          // 從資料庫中查找該事件
-          const { EventModel } = await import('@/models/Event');
-          const foundEvent = await EventModel.findOne({ 
-            $or: [
-              { opentixId: eventId },
-              { opentixUrl: { $regex: eventId } },
-              { url: { $regex: eventId } }
-            ]
-          }).lean();
-          if (foundEvent) {
-            event = foundEvent;
-            console.log('[Event Question] Found event from recent message:', foundEvent.title, 'URL:', foundEvent.opentixUrl || foundEvent.url);
-            break; // 找到第一個匹配的事件就停止
+    // 如果沒有，從最近的對話消息中提取事件信息
+    if (!event && session.conversationId) {
+      const recentMessages = await MessageModel.find({
+        conversationId: session.conversationId,
+      })
+        .sort({ timestamp: -1 })
+        .limit(10) // 擴大範圍，確保能找到最近的事件
+        .lean();
+      
+      // 從最近的助手消息中查找事件 URL 或事件信息
+      // 優先查找包含事件列表的消息（通常是最新的搜索結果）
+      // 只查找第一條助手消息（最新的），避免找到舊的事件
+      for (const msg of recentMessages) {
+        if (msg.role === 'assistant' && msg.content) {
+          // 嘗試從消息中提取所有事件 URL
+          const urlMatches = Array.from(msg.content.matchAll(/https:\/\/www\.opentix\.life\/event\/(\d+)/g));
+          const eventIds: string[] = [];
+          for (const match of urlMatches) {
+            eventIds.push(match[1]);
           }
-        }
-        
-        // 如果沒有找到 URL，嘗試從消息中提取事件標題
-        // 通常助手消息的格式是：1. 事件標題\n   場館: ...\n   購票: ...
-        if (!event) {
-          const titleMatch = msg.content.match(/^\d+\.\s*([^\n]+)/m);
-          if (titleMatch) {
-            const eventTitle = titleMatch[1].trim();
+          
+          // 如果找到事件 URL，優先使用第一個（通常是最相關的）
+          if (eventIds.length > 0) {
+            const eventId = eventIds[0]; // 使用第一個事件 ID
             // 從資料庫中查找該事件
             const { EventModel } = await import('@/models/Event');
             const foundEvent = await EventModel.findOne({ 
-              title: { $regex: eventTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
+              $or: [
+                { opentixId: eventId },
+                { opentixUrl: { $regex: eventId } },
+                { url: { $regex: eventId } }
+              ]
             }).lean();
             if (foundEvent) {
               event = foundEvent;
-              console.log('[Event Question] Found event from title:', foundEvent.title);
-              break;
+              console.log('[Event Question] Found event from recent message:', foundEvent.title, 'URL:', foundEvent.opentixUrl || foundEvent.url);
+              break; // 找到第一個匹配的事件就停止
             }
           }
-        }
-        
-        // 如果找到事件，就停止搜索（只使用最新的助手消息）
-        if (event) {
-          break;
+          
+          // 如果沒有找到 URL，嘗試從消息中提取事件標題
+          // 通常助手消息的格式是：1. 事件標題\n   場館: ...\n   購票: ...
+          if (!event) {
+            const titleMatch = msg.content.match(/^\d+\.\s*([^\n]+)/m);
+            if (titleMatch) {
+              const eventTitle = titleMatch[1].trim();
+              // 從資料庫中查找該事件
+              const { EventModel } = await import('@/models/Event');
+              const foundEvent = await EventModel.findOne({ 
+                title: { $regex: eventTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
+              }).lean();
+              if (foundEvent) {
+                event = foundEvent;
+                console.log('[Event Question] Found event from title:', foundEvent.title);
+                break;
+              }
+            }
+          }
+          
+          // 如果找到事件，就停止搜索（只使用最新的助手消息）
+          if (event) {
+            break;
+          }
         }
       }
     }
-  }
+    
+    // 如果還是沒有，從 session context 獲取（優先使用第一個）
+    if (!event && session.userId) {
+      event = await sessionManager.getContextEvent(session.userId);
+      console.log('[Event Question] Got event from session context:', event?.title);
+    }
+    if (!event && session.context) {
+      event = session.context.selectedEvent || session.context.lastSearchResults?.[0];
+      console.log('[Event Question] Got event from session.context:', event?.title);
+    }
+    
+    if (!event) {
+      console.log('[Event Question] No event found, userId:', session.userId);
+      return {
+        reply: userLocale === 'zh-TW'
+          ? '很抱歉，我無法找到相關的演出資訊。請重新搜尋。'
+          : 'Sorry, I cannot find the related event information. Please search again.',
+        quickReply: buildQuickReplies(userLocale),
+      };
+    }
+    
+    console.log('[Event Question] Using event:', event.title);
+    
+    // 格式化事件資訊
+    const formattedEvent = formatEventForDisplay(event, { keepFullDescription: false });
+    
+    // 根據問題類型生成回應
+    const questionType = data.questionType || data.intent;
+    let answer = '';
   
-  // 如果還是沒有，從 session context 獲取
-  if (!event && session.userId) {
-    event = await sessionManager.getContextEvent(session.userId);
-    console.log('[Event Question] Got event from session context:', event?.title);
-  }
-  if (!event && session.context) {
-    event = session.context.selectedEvent || session.context.lastSearchResults?.[0];
-    console.log('[Event Question] Got event from session.context:', event?.title);
-  }
-  
-  if (!event) {
-    console.log('[Event Question] No event found, userId:', session.userId);
-    return {
-      reply: userLocale === 'zh-TW'
-        ? '很抱歉，我無法找到相關的演出資訊。請重新搜尋。'
-        : 'Sorry, I cannot find the related event information. Please search again.',
-      quickReply: buildQuickReplies(userLocale),
-    };
-  }
-  
-  console.log('[Event Question] Using event:', event.title);
-  
-  // 格式化事件資訊
-  const formattedEvent = formatEventForDisplay(event, { keepFullDescription: false });
-  
-  // 根據問題類型生成回應
-  const questionType = data.questionType || data.intent;
-  let answer = '';
-  
-  if (questionType === 'ask_time' || questionType === 'ASK_TIME') {
-    // 由於 Opentix 平台的資料安全機制，無法直接顯示即時的場次時間和剩餘票數
-    // 統一返回資料安全說明，引導使用者前往購票頁面查看
-    const ticketUrl = formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/';
+    if (questionType === 'ask_time' || questionType === 'ASK_TIME') {
+      // 由於 Opentix 平台的資料安全機制，無法直接顯示即時的場次時間和剩餘票數
+      // 統一返回資料安全說明，引導使用者前往購票頁面查看
+      const ticketUrl = formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/';
+        answer = userLocale === 'zh-TW'
+        ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的場次時間和剩餘票數。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${ticketUrl}`
+        : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time show times and remaining tickets. Please visit the ticket page to view the latest prices, show times, and remaining tickets: ${ticketUrl}`;
+    } else if (questionType === 'ask_price' || questionType === 'ASK_PRICE') {
       answer = userLocale === 'zh-TW'
-      ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的場次時間和剩餘票數。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${ticketUrl}`
-      : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time show times and remaining tickets. Please visit the ticket page to view the latest prices, show times, and remaining tickets: ${ticketUrl}`;
-  } else if (questionType === 'ask_price' || questionType === 'ASK_PRICE') {
-    answer = userLocale === 'zh-TW'
-      ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的票價資訊。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/'}`
-      : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time ticket pricing. Please visit the ticket page to view the latest prices, show times, and remaining tickets: ${formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/'}`;
-  } else if (questionType === 'ask_venue' || questionType === 'ASK_VENUE') {
-    const eventTitle = formattedEvent.title || event.title || 'This event';
-    const venue = formattedEvent.venue || event.venue || (userLocale === 'zh-TW' ? '資訊未提供' : 'Information not available');
-    answer = userLocale === 'zh-TW'
-      ? `「${eventTitle}」的演出地點：${venue}`
-      : `"${eventTitle}" venue: ${venue}`;
-    console.log('[Event Question] ASK_VENUE response:', { eventTitle, venue, userLocale, answer });
-  } else if (questionType === 'ask_artist' || questionType === 'ASK_ARTIST') {
-    const artists = formattedEvent.artists?.slice(0, 3).join(', ') || '資訊未提供';
-    answer = userLocale === 'zh-TW'
-      ? `「${formattedEvent.title}」的演出者：${artists}`
-      : `"${formattedEvent.title}" performers: ${artists}`;
-  } else {
-    // 使用 LLM 回答一般問題
+        ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的票價資訊。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/'}`
+        : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time ticket pricing. Please visit the ticket page to view the latest prices, show times, and remaining tickets: ${formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/'}`;
+    } else if (questionType === 'ask_venue' || questionType === 'ASK_VENUE') {
+      const eventTitle = formattedEvent.title || event.title || 'This event';
+      const venue = formattedEvent.venue || event.venue || (userLocale === 'zh-TW' ? '資訊未提供' : 'Information not available');
+      answer = userLocale === 'zh-TW'
+        ? `「${eventTitle}」的演出地點：${venue}`
+        : `"${eventTitle}" venue: ${venue}`;
+      console.log('[Event Question] ASK_VENUE response:', { eventTitle, venue, userLocale, answer });
+    } else if (questionType === 'ask_artist' || questionType === 'ASK_ARTIST') {
+      const artists = formattedEvent.artists?.slice(0, 3).join(', ') || '資訊未提供';
+      answer = userLocale === 'zh-TW'
+        ? `「${formattedEvent.title}」的演出者：${artists}`
+        : `"${formattedEvent.title}" performers: ${artists}`;
+    } else if (!questionType || questionType === 'FOLLOW_UP_QUESTION' || questionType === 'GENERAL') {
+      // **改進：如果用户只是输入事件名称（没有明确的问题类型），显示事件详情**
+      // 检查消息是否主要包含事件名称（而不是其他问题）
+      const messageLower = message.toLowerCase();
+      const eventTitleLower = (event.title || '').toLowerCase();
+      const eventSubtitleLower = (event.subtitle || '').toLowerCase();
+      
+      // 如果消息主要包含事件名称，显示事件详情
+      const isEventNameQuery = 
+        messageLower.includes(eventTitleLower) ||
+        eventTitleLower.includes(messageLower) ||
+        messageLower.includes(eventSubtitleLower) ||
+        eventSubtitleLower.includes(messageLower);
+      
+      if (isEventNameQuery) {
+        // 显示事件详情
+        const { formatEventForDisplay } = await import('@/lib/utils/event-formatter');
+        const eventDetails = formatEventForDisplay(event, { keepFullDescription: false });
+        
+        let detailText = userLocale === 'zh-TW' ? `「${eventDetails.title}」\n\n` : `"${eventDetails.title}"\n\n`;
+        
+        if (eventDetails.artists && eventDetails.artists.length > 0) {
+          detailText += userLocale === 'zh-TW' 
+            ? `演出者：${eventDetails.artists.slice(0, 3).join('、')}\n`
+            : `Artists: ${eventDetails.artists.slice(0, 3).join(', ')}\n`;
+        }
+        
+        if (eventDetails.venue) {
+          detailText += userLocale === 'zh-TW' 
+            ? `場館：${eventDetails.venue}\n`
+            : `Venue: ${eventDetails.venue}\n`;
+        }
+        
+        if (eventDetails.category) {
+          detailText += userLocale === 'zh-TW' 
+            ? `類型：${eventDetails.category}\n`
+            : `Category: ${eventDetails.category}\n`;
+        }
+        
+        if (eventDetails.url || eventDetails.opentixUrl) {
+          detailText += userLocale === 'zh-TW' 
+            ? `購票：${eventDetails.url || eventDetails.opentixUrl}\n`
+            : `Tickets: ${eventDetails.url || eventDetails.opentixUrl}\n`;
+        }
+        
+        return {
+          reply: detailText.trim(),
+          quickReply: buildQuickReplies(userLocale),
+        };
+      }
+    } else {
+    // 檢查是否是 FAQ 問題（優先處理 FAQ，即使有事件上下文）
+    // 如果問題明顯是關於 OPENTIX 平台（如會員、購票、退票等），優先使用 FAQ
+    const { searchFAQ, isFAQQuery } = await import('@/services/opentix-faq.service');
+    let faqResults: any[] | undefined;
+    
+    // 檢查是否是明確的 FAQ 問題（優先檢查）
+    const platformFAQKeywords = [
+      '會員', '註冊', '登入', '密碼', '帳號', '綁定', '國家兩廳院',
+      '購票', '買票', '訂票', '折扣', '優惠', '無法使用',
+      '取票', '領票', '電子票', '代碼', '忘記',
+      '退票', '退款', '取消',
+      '付款', '支付', '信用卡',
+    ];
+    
+    const hasPlatformFAQKeyword = platformFAQKeywords.some(keyword => 
+      message.toLowerCase().includes(keyword.toLowerCase())
+    );
+    
+    // 檢查是否有明確指向事件的指示詞
+    const hasEventReference = /^(這個|那個|它|他|她|該|此|本)/.test(message) || 
+                             /(這個|那個|它|他|她|該|此|本)\s*(表演|演出|音樂會|演唱會|節目|活動)/.test(message);
+    
+    // 如果有平台 FAQ 關鍵字且沒有明確指向事件的指示詞，優先作為 FAQ 處理
+    if (hasPlatformFAQKeyword && !hasEventReference) {
+      faqResults = await searchFAQ(message, 3);
+      console.log('[Event Question] Detected platform FAQ, searching FAQ:', message);
+      console.log('[Event Question] FAQ results:', faqResults.length, 'found');
+      
+      if (faqResults.length > 0) {
+        console.log('[Event Question] Top FAQ match:', faqResults[0].faq.question, 'score:', faqResults[0].score);
+      }
+    } else if (isFAQQuery(message) && !hasEventReference) {
+      // 如果是一般的 FAQ 問題且沒有指向事件，也搜索 FAQ
+      faqResults = await searchFAQ(message, 3);
+    }
+    
+    // 使用 LLM 回答問題
     const recentMessages = await MessageModel.find({
       conversationId: session.conversationId,
     })
@@ -556,9 +892,14 @@ async function handleAnswerEventQuestion(
     
     let llmMetadata: { latency?: number; error?: string; llmProvider?: string } = {};
     try {
+      // 如果有高相關性的 FAQ，優先使用 FAQ（清除事件上下文）
+      // 如果 FAQ 相關性不高或沒有 FAQ，使用事件上下文 + FAQ（如果有的話）
+      const shouldPrioritizeFAQ = faqResults && faqResults.length > 0 && faqResults[0].score > 50;
+      
       answer = await generateAssistantReply(contextForLLM, message, {
-        foundEvents: [event],
+        foundEvents: shouldPrioritizeFAQ ? undefined : [event], // 高相關性 FAQ 時清除事件上下文
         userLocale: userLocale,
+        faqResults: faqResults,
       });
       llmMetadata = extractLLMMetadata(answer);
       answer = cleanMarkdown(answer);
@@ -636,8 +977,16 @@ async function handleGeneralQuestion(
     const { generateAssistantReply } = await import('./llm.service');
     const { cleanMarkdown } = await import('@/lib/utils/format');
     
+    // 檢測是否為 FAQ 相關問題
+    const { searchFAQ, isFAQQuery } = await import('@/services/opentix-faq.service');
+    let faqResults: any[] | undefined;
+    if (isFAQQuery(message)) {
+      faqResults = await searchFAQ(message, 3);
+    }
+    
     let answer = await generateAssistantReply(contextForLLM, message, {
       userLocale: userLocale,
+      faqResults: faqResults,
     });
     answer = cleanMarkdown(answer);
     
@@ -653,8 +1002,8 @@ async function handleGeneralQuestion(
     if (isOutOfScope) {
       // 禮貌地引導回職責範圍
       const guidance = userLocale === 'zh-TW'
-        ? '\n\n💡 我是 Opentix 音樂演出諮詢小幫手，主要協助您搜尋和查詢音樂演出相關資訊。如需其他協助，請選擇下方功能！'
-        : '\n\n💡 I am the Opentix Music Event Information Assistant, specializing in helping you search and query music event information. For other assistance, please select a function below!';
+        ? '\n\n💡 我是 OPENTIX 音樂演出諮詢小幫手，主要協助您搜尋和查詢音樂演出相關資訊，以及回答 OPENTIX 平台常見問題。如需其他協助，請選擇下方功能！'
+        : '\n\n💡 I am the OPENTIX Music Event Information Assistant, specializing in helping you search and query music event information, and answer OPENTIX platform FAQs. For other assistance, please select a function below!';
       answer = answer + guidance;
     }
     
@@ -721,13 +1070,55 @@ async function handleShowEventList(
  */
 async function handleShowFAQ(
   data: any,
-  userLocale: Locale
+  userLocale: Locale,
+  userId?: string
 ): Promise<{ reply: string; quickReply?: any }> {
-  // 這個功能應該由 section.service 處理
-  return {
-    reply: userLocale === 'zh-TW' ? 'FAQ 功能' : 'FAQ feature',
-    quickReply: buildQuickReplies(userLocale),
-  };
+  const question = data?.question || '';
+  const isZh = userLocale === 'zh-TW';
+  
+  try {
+    // **重要：清除搜索上下文，確保FAQ回答後不會影響後續搜索**
+    if (userId) {
+      await sessionManager.clearSession(userId);
+      console.log('[FAQ] Cleared search context after FAQ question');
+    }
+    
+    // 使用 FAQ 服務搜尋相關問題
+    const { searchFAQ } = await import('@/services/opentix-faq.service');
+    const faqResults = await searchFAQ(question || '如何購票', 3);
+    
+    if (faqResults.length > 0) {
+      // 使用 LLM 整合 FAQ 知識庫回答問題
+      const { generateAssistantReply } = await import('./llm.service');
+      const { cleanMarkdown } = await import('@/lib/utils/format');
+      
+      const answer = await generateAssistantReply([], question, {
+        userLocale: userLocale,
+        faqResults: faqResults,
+      });
+      
+      return {
+        reply: cleanMarkdown(answer),
+        quickReply: buildPurchaseFAQQuickReply(userLocale),
+      };
+    } else {
+      // 沒有找到相關 FAQ，提供一般回應
+      return {
+        reply: isZh
+          ? '很抱歉，目前無法找到相關的常見問題。建議您可以：\n1. 嘗試使用不同的關鍵字搜尋\n2. 前往 OPENTIX 官網查看：https://www.opentix.life/\n3. 聯繫客服中心：(02)3393-9888'
+          : 'Sorry, I couldn\'t find relevant FAQs. You can:\n1. Try different keywords\n2. Visit OPENTIX website: https://www.opentix.life/\n3. Contact customer service: (02)3393-9888',
+        quickReply: buildQuickReplies(userLocale),
+      };
+    }
+  } catch (error) {
+    console.error('[FAQ] Error:', error);
+    return {
+      reply: isZh
+        ? '很抱歉，處理您的問題時發生錯誤。請稍後再試或直接前往 OPENTIX 官網：https://www.opentix.life/'
+        : 'Sorry, an error occurred while processing your question. Please try again later or visit OPENTIX website: https://www.opentix.life/',
+      quickReply: buildQuickReplies(userLocale),
+    };
+  }
 }
 
 /**
@@ -777,14 +1168,44 @@ export async function handleUserMessageWithStateMachine(params: {
     
     // 檢查是否是收藏相關命令（優先處理）
     // 支持中英文命令
-    // 檢查添加收藏命令（支持全角和半角冒號）
-    const addFavoritePrefixes = ['收藏:', '收藏：', 'Favorite:'];
+    // 檢查添加收藏命令（支持全角和半角冒號，以及自然語言表達）
+    const addFavoritePrefixes = ['收藏:', '收藏：', 'Favorite:', 'Favorite：'];
+    const normalizedMessage = params.message.trim().toLowerCase();
+    
+    // **改進：支持自然語言表達（如"加入第一個表演到我的收藏"、"Add first performance to my favorites"）**
+    const addFavoritePatterns = [
+      /^(?:加入|添加|加)(?:第)?([一二三四五六七八九十\d]+)(?:個|个|項|项)?(?:表演|演出|節目|節目|event|performance|show)?(?:到|至|到我的)?(?:收藏|favorite|favorites)/i,
+      /^(?:加入|添加|加).*?(?:第)?([一二三四五六七八九十\d]+)(?:個|个|項|项)?.*?(?:收藏|favorite)/i,
+      /^add\s*(?:the\s*)?(?:first|second|third|fourth|fifth|1st|2nd|3rd|4th|5th|\d+).*?(?:to\s*(?:my\s*)?(?:favorite|favorites)|as\s*(?:favorite|a\s*favorite))/i,
+      /^add.*?(?:first|second|third|fourth|fifth|\d+).*?(?:to|as).*?(?:favorite|favorites)/i,
+    ];
+    
+    // 檢查是否匹配自然語言模式
+    let matchedPattern: RegExpMatchArray | null = null;
+    for (const pattern of addFavoritePatterns) {
+      const match = params.message.match(pattern);
+      if (match) {
+        matchedPattern = match;
+        break;
+      }
+    }
+    
+    // 如果是自然語言表達，提取序數並處理
+    if (matchedPattern) {
+      const ordinalMatch = matchedPattern[1]; // 提取序數
+      if (ordinalMatch) {
+        console.log('[Add Favorite] Detected natural language add favorite command:', params.message, 'ordinal:', ordinalMatch);
+        return await handleAddFavoriteByOrdinal(ordinalMatch, params.userId, session, userLocale);
+      }
+    }
+    
+    // 檢查是否匹配傳統命令格式
     if (addFavoritePrefixes.some(prefix => params.message.startsWith(prefix))) {
       return await handleAddFavorite(params.message, params.userId, userLocale);
     }
     
     // 檢查取消收藏命令（支持全角和半角冒號）
-    const removeFavoritePrefixes = ['取消收藏:', '取消收藏：', 'Remove:', 'Unfavorite:'];
+    const removeFavoritePrefixes = ['取消收藏:', '取消收藏：', 'Remove:', 'Remove：', 'Unfavorite:', 'Unfavorite：'];
     if (removeFavoritePrefixes.some(prefix => params.message.startsWith(prefix))) {
       return await handleRemoveFavorite(params.message, params.userId, userLocale);
     }
@@ -886,7 +1307,7 @@ async function handleAddFavorite(message: string, userId: string, userLocale: Lo
   // 提取 eventId（支持中英文命令，支持全角和半角冒號）
   const eventId = message
     .replace(/^收藏[:：]/, '')  // 移除中文前缀（全角和半角冒號）
-    .replace(/^Favorite:/, '')
+    .replace(/^Favorite[:：]/, '') // 移除英文前缀（全角和半角冒號）
     .trim();
   
   if (!eventId) {
@@ -998,8 +1419,8 @@ async function handleRemoveFavorite(message: string, userId: string, userLocale:
   // 提取參數（可能是編號或 eventId，支持中英文命令，支持全角和半角冒號）
   let param = message
     .replace(/^取消收藏[:：]/, '')  // 移除中文前缀（全角和半角冒號）
-    .replace(/^Remove:/, '')
-    .replace(/^Unfavorite:/, '')
+    .replace(/^Remove[:：]/, '')    // 移除英文前缀（全角和半角冒號）
+    .replace(/^Unfavorite[:：]/, '') // 移除英文前缀（全角和半角冒號）
     .trim();
   
   if (!param) {
@@ -1089,6 +1510,166 @@ async function handleRemoveFavorite(message: string, userId: string, userLocale:
 }
 
 /**
+ * 處理按序數添加收藏（如"加入第一個表演到我的收藏"）
+ */
+async function handleAddFavoriteByOrdinal(
+  ordinalStr: string,
+  userId: string,
+  session: any,
+  userLocale: Locale
+): Promise<{ replyText: string; quickReply?: any }> {
+  const isZh = userLocale === 'zh-TW';
+  
+  try {
+    // 解析序數（支持中文數字和阿拉伯數字）
+    const chineseNumbers: { [key: string]: number } = {
+      '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+      '第一': 1, '第二': 2, '第三': 3, '第四': 4, '第五': 5,
+      '第一個': 1, '第二個': 2, '第三個': 3, '第四個': 4, '第五個': 5,
+    };
+    
+    let ordinalNumber: number;
+    if (chineseNumbers[ordinalStr]) {
+      ordinalNumber = chineseNumbers[ordinalStr];
+    } else if (/^\d+$/.test(ordinalStr)) {
+      ordinalNumber = parseInt(ordinalStr, 10);
+    } else {
+      // 嘗試從英文序數提取
+      const englishOrdinals: { [key: string]: number } = {
+        'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
+        '1st': 1, '2nd': 2, '3rd': 3, '4th': 4, '5th': 5,
+      };
+      ordinalNumber = englishOrdinals[ordinalStr.toLowerCase()] || parseInt(ordinalStr, 10);
+    }
+    
+    if (isNaN(ordinalNumber) || ordinalNumber < 1) {
+      return {
+        replyText: isZh 
+          ? '收藏失敗：無法識別編號，請使用數字（如：1、2、3）' 
+          : 'Failed: Cannot identify number. Please use a number (e.g., 1, 2, 3)',
+        quickReply: buildQuickReplies(userLocale),
+      };
+    }
+    
+    // 從 session context 獲取搜索結果列表
+    let searchResults: any[] = [];
+    if (session.context?.lastSearchResults && session.context.lastSearchResults.length > 0) {
+      searchResults = session.context.lastSearchResults;
+    } else if (session.userId) {
+      const conversation = await ConversationModel.findOne({ userId: session.userId }).lean();
+      if (conversation?.metadata?.lastSearchResults) {
+        searchResults = conversation.metadata.lastSearchResults as any[];
+      }
+    }
+    
+    // 如果沒有搜索結果，嘗試從最近的對話消息中獲取
+    if (searchResults.length === 0 && session.conversationId) {
+      const recentMessages = await MessageModel.find({
+        conversationId: session.conversationId,
+      })
+        .sort({ timestamp: -1 })
+        .limit(5)
+        .lean();
+      
+      // 從最近的助手消息中查找事件列表
+      for (const msg of recentMessages) {
+        if (msg.role === 'assistant' && msg.content) {
+          // 嘗試從消息中提取所有事件 URL
+          const urlMatches = Array.from(msg.content.matchAll(/https:\/\/www\.opentix\.life\/event\/(\d+)/g));
+          if (urlMatches.length > 0) {
+            const { EventModel } = await import('@/models/Event');
+            const { connectMongo } = await import('@/lib/db/mongodb');
+            await connectMongo();
+            
+            for (const match of urlMatches) {
+              const eventId = match[1];
+              const event = await EventModel.findOne({ 
+                $or: [
+                  { opentixId: eventId },
+                  { opentixUrl: { $regex: eventId } },
+                  { url: { $regex: eventId } }
+                ]
+              }).lean();
+              if (event) {
+                searchResults.push(event);
+              }
+            }
+            if (searchResults.length > 0) break;
+          }
+        }
+      }
+    }
+    
+    if (searchResults.length === 0) {
+      return {
+        replyText: isZh
+          ? '收藏失敗：找不到最近的搜索結果。請先搜尋演出，然後再添加收藏。'
+          : 'Failed: No recent search results found. Please search for events first, then add to favorites.',
+        quickReply: buildQuickReplies(userLocale),
+      };
+    }
+    
+    if (ordinalNumber > searchResults.length) {
+      return {
+        replyText: isZh
+          ? `收藏失敗：找不到第 ${ordinalNumber} 個演出。目前只有 ${searchResults.length} 個結果。`
+          : `Failed: Cannot find the ${ordinalNumber}${getOrdinalSuffix(ordinalNumber)} event. There are only ${searchResults.length} results.`,
+        quickReply: buildQuickReplies(userLocale),
+      };
+    }
+    
+    // 使用指定索引的事件（ordinalNumber - 1 因為索引從0開始）
+    const selectedEvent = searchResults[ordinalNumber - 1];
+    console.log('[Add Favorite By Ordinal] Selected event:', {
+      ordinalNumber,
+      eventTitle: selectedEvent.title,
+      eventId: selectedEvent.eventId || selectedEvent._id,
+    });
+    
+    // 調用 handleAddFavorite 處理添加收藏
+    const eventId = selectedEvent.eventId || selectedEvent._id?.toString();
+    if (!eventId) {
+      return {
+        replyText: isZh
+          ? '收藏失敗：無法識別演出ID'
+          : 'Failed: Cannot identify event ID',
+        quickReply: buildQuickReplies(userLocale),
+      };
+    }
+    
+    return await handleAddFavorite(`Favorite:${eventId}`, userId, userLocale);
+  } catch (error) {
+    console.error('[handleAddFavoriteByOrdinal] Error:', error);
+    const isZh = userLocale === 'zh-TW';
+    return {
+      replyText: isZh 
+        ? '收藏失敗，請稍後再試。' 
+        : 'Failed to add favorite. Please try again.',
+      quickReply: buildQuickReplies(userLocale),
+    };
+  }
+}
+
+/**
+ * 獲取英文序數後綴（1st, 2nd, 3rd, 4th, etc.）
+ */
+function getOrdinalSuffix(num: number): string {
+  const lastDigit = num % 10;
+  const lastTwoDigits = num % 100;
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+    return 'th';
+  }
+  
+  switch (lastDigit) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
+/**
  * 處理顯示收藏列表
  */
 async function handleShowFavorites(userId: string, userLocale: Locale) {
@@ -1137,8 +1718,8 @@ async function handleShowFavorites(userId: string, userLocale: Locale) {
       reply += `例如：取消收藏:1 或 取消收藏：1`;
     } else {
       reply += `💡 To remove a favorite:\n`;
-      reply += `Type "Remove:number"\n`;
-      reply += `Example: Remove:1`;
+      reply += `Type "Remove:number" or "Remove：number"\n`;
+      reply += `Example: Remove:1 or Remove：1`;
     }
     
     return {

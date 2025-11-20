@@ -158,7 +158,7 @@ export async function parseQuery(query: string): Promise<ParsedQuery> {
   }
 
   // **特殊處理2：「有沒有...的表演/演出」模式**
-  // 提取藝人名稱（如「有沒有魏德曼的表演」→「魏德曼」）
+  // 提取藝人名稱或類型（如「有沒有魏德曼的表演」→「魏德曼」，「有鋼琴的嗎」→「鋼琴」）
   // 擴展支持：演奏、獨奏、協奏、演唱等
   // 注意：必須從句首開始匹配，避免誤匹配（如「理查克萊德門」中的「查」、「查理布朗」中的「查」）
   // 移除單獨的「查」，只保留「查一下」、「查看看」等完整短語
@@ -167,11 +167,30 @@ export async function parseQuery(query: string): Promise<ParsedQuery> {
     let extractedName = hasPatternMatch[1].trim();
     // 移除可能殘留的助詞
     extractedName = extractedName.replace(/^(一下|看看|給我|跟我|幫我)\s*/, '');
-    // 排除太短、明顯不是名字的、或是演出類型詞彙
+    // 排除太短、明顯不是名字的、或是演出類型詞彙（但保留類型關鍵字如"鋼琴"、"音樂"等）
     if (extractedName.length >= 2 && extractedName.length <= 20 && 
-        !/^(的|嗎|吗|？|有|沒|没|沒有|没有|表演|演出|演奏|獨奏|独奏|協奏|协奏|演唱|音樂會|音乐会|演唱會|演唱会|節目|节目)$/.test(extractedName)) {
+        !/^(的|嗎|吗|？|有|沒|没|沒有|没有)$/.test(extractedName)) {
       console.log('[Query Parser] Detected "有沒有...的表演/演出/演奏" pattern, extracted:', extractedName);
-      // 直接用提取的名稱繼續解析
+      // 直接用提取的名稱繼續解析（可能是藝人名稱或類型關鍵字）
+      // 如果是類型關鍵字（如"鋼琴"、"音樂"），應該使用類型搜索
+      const categoryKeywords = ['鋼琴', '小提琴', '大提琴', '音樂', '音樂會', '演唱會', 'piano', 'violin', 'cello', 'music', 'concert'];
+      const isCategoryKeyword = categoryKeywords.some(keyword => 
+        extractedName === keyword || extractedName.includes(keyword) || keyword.includes(extractedName)
+      );
+      
+      if (isCategoryKeyword) {
+        // 如果是類型關鍵字，設置為類型查詢
+        const parsed = await parseQuery(extractedName);
+        // 如果解析後沒有類型，手動添加
+        if (!parsed.categories || parsed.categories.length === 0) {
+          parsed.categories = [extractedName];
+        }
+        parsed.queryType = 'category';
+        console.log('[Query Parser] Set query type to category for:', extractedName);
+        return parsed;
+      }
+      
+      // 不是類型關鍵字，繼續正常解析（可能是藝人名稱）
       return parseQuery(extractedName);
     }
   }
@@ -419,18 +438,59 @@ export async function parseQuery(query: string): Promise<ParsedQuery> {
   } else if (result.artists!.length > 0 && result.venues!.length === 0 && result.categories!.length === 0) {
     result.queryType = 'artist';
   } else if (result.categories!.length > 0 && result.artists!.length === 0 && result.venues!.length === 0) {
-    // 特殊處理：如果查詢字串很長（>= 8 個字符），可能是完整的演出名稱而不是單純的類型查詢
-    // 例如：「永恆迴響」2025逢甲管樂定期音樂會 應該是全文搜尋，而不是類型搜尋
-    const isLongQuery = query.length >= 8;
-    const hasSubstantialContent = result.keywords && result.keywords.length > 0;
+    // 特殊處理：如果查詢包含藝人名稱 + 類型（如"蔡依林演唱會"），應該視為藝人搜索
+    // 優先檢查是否有藝人名稱模式（中文2-6字 + 類型，或英文全名 + 類型）
+    const artistNamePattern = /([\u4e00-\u9fa5]{2,6})|(\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b)/;
+    const artistNameMatch = query.match(artistNamePattern);
     
-    if (isLongQuery && hasSubstantialContent) {
-      // 查詢較長且包含其他關鍵字，視為一般搜尋而不是類型搜尋
-      result.queryType = 'general';
-      console.log('[Query Parser] Long query with category keyword, treating as general search');
+    if (artistNameMatch) {
+      // 檢查是否同時包含類型關鍵字（演唱會、音樂會等）
+      const hasCategoryKeyword = /(演唱會|音樂會|演出|表演|concert|show)/.test(query);
+      if (hasCategoryKeyword) {
+        // 提取藝人名稱
+        const artistName = artistNameMatch[1] || artistNameMatch[2];
+        // 排除類型關鍵字本身
+        const categoryWords = ['演唱會', '音樂會', '演出', '表演', 'concert', 'show'];
+        const isCategoryWord = categoryWords.includes(artistName);
+        
+        if (!isCategoryWord && artistName.length >= 2) {
+          console.log('[Query Parser] Detected artist name in category query, extracted:', artistName);
+          result.artists = [artistName];
+          result.categories = []; // 清除類型，優先使用藝人搜索
+          result.queryType = 'artist';
+        } else {
+          // 如果提取的是類型關鍵字本身，繼續使用類型搜索
+          const isLongQuery = query.length >= 8;
+          const hasSubstantialContent = result.keywords && result.keywords.length > 0;
+          
+          if (isLongQuery && hasSubstantialContent) {
+            result.queryType = 'general';
+          } else {
+            result.queryType = 'category';
+          }
+        }
+      } else {
+        // 沒有類型關鍵字，使用類型搜索
+        const isLongQuery = query.length >= 8;
+        const hasSubstantialContent = result.keywords && result.keywords.length > 0;
+        
+        if (isLongQuery && hasSubstantialContent) {
+          result.queryType = 'general';
+        } else {
+          result.queryType = 'category';
+        }
+      }
     } else {
-      // 查詢較短或只包含類型關鍵字，視為類型搜尋
-      result.queryType = 'category';
+      // 沒有藝人名稱模式，使用類型搜索
+      const isLongQuery = query.length >= 8;
+      const hasSubstantialContent = result.keywords && result.keywords.length > 0;
+      
+      if (isLongQuery && hasSubstantialContent) {
+        result.queryType = 'general';
+        console.log('[Query Parser] Long query with category keyword, treating as general search');
+      } else {
+        result.queryType = 'category';
+      }
     }
   } else if (result.artists!.length > 0 || result.venues!.length > 0 || result.categories!.length > 0) {
     result.queryType = 'mixed';

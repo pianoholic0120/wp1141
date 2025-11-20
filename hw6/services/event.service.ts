@@ -89,12 +89,15 @@ export async function searchEvents(query: string, limit = 5): Promise<SearchEven
     results = [...results, ...uniqueFuzzy];
   }
 
-  // 添加相關性評分並排序（改進版：更精確的匹配）
+  // 添加相關性評分並排序（改進版：更精確的匹配，避免不相關結果）
   results = results.map((event: any) => {
     let relevanceScore = 0;
     const lowerSearchTerm = searchTerm.toLowerCase();
     const lowerTitle = (event.title || '').toLowerCase();
     const lowerSubtitle = (event.subtitle || '').toLowerCase();
+    const lowerArtists = Array.isArray(event.artists) 
+      ? event.artists.map((a: string) => a.toLowerCase()).join(' ')
+      : '';
     
     // 提取搜尋詞中的關鍵字（去除常見詞）
     // 先按分隔符分割，然後進一步分割數字和文字
@@ -107,9 +110,9 @@ export async function searchEvents(query: string, limit = 5): Promise<SearchEven
       })
       .filter(w => {
         // 過濾條件：長度 >= 2 且不是常見詞或組合詞
-        const commonWords = ['獨奏會', '音樂會', '演唱會', '演出', '表演', '鋼琴', '小提琴', '大提琴', 
-                            '音樂', '會', '鋼琴獨奏會', '小提琴獨奏會', '音樂會', 
-                            'concert', 'recital', 'show', 'piano', 'violin', 'music'];
+        const commonWords = ['獨奏會', '音樂會', '演唱會', '演出', '表演', 
+                            '音樂', '會', 
+                            'concert', 'recital', 'show', 'music'];
         // 也過濾掉包含通用詞的組合（如「鋼琴獨奏會」）
         const hasCommonWord = commonWords.some(common => w.includes(common) || common.includes(w));
         return w.length >= 2 && !hasCommonWord;
@@ -118,10 +121,20 @@ export async function searchEvents(query: string, limit = 5): Promise<SearchEven
     // 計算標題中包含的搜尋關鍵字數量
     const titleKeywordMatches = searchKeywords.filter(keyword => lowerTitle.includes(keyword)).length;
     const subtitleKeywordMatches = searchKeywords.filter(keyword => lowerSubtitle.includes(keyword)).length;
+    const artistKeywordMatches = searchKeywords.filter(keyword => lowerArtists.includes(keyword)).length;
+    
+    // **提高精确匹配的权重，降低模糊匹配的权重**
     
     // 標題完全匹配（最高分）
     if (lowerTitle === lowerSearchTerm || lowerSubtitle === lowerSearchTerm) {
       relevanceScore += 1000;
+    }
+    // 藝人完全匹配（高分段）
+    else if (Array.isArray(event.artists) && event.artists.some((a: string) => {
+      const lowerArtist = a.toLowerCase();
+      return lowerArtist === lowerSearchTerm || lowerSearchTerm === lowerArtist;
+    })) {
+      relevanceScore += 800;
     }
     // 標題包含完整搜尋詞（高分）
     else if (lowerTitle.includes(lowerSearchTerm)) {
@@ -131,30 +144,55 @@ export async function searchEvents(query: string, limit = 5): Promise<SearchEven
     else if (lowerSubtitle.includes(lowerSearchTerm)) {
       relevanceScore += 300;
     }
-    // 標題包含多個搜尋關鍵字（按匹配數量加分）
-    else if (titleKeywordMatches > 0) {
-      relevanceScore += 200 + (titleKeywordMatches * 50);
+    // 藝人包含完整搜尋詞（中高分）
+    else if (Array.isArray(event.artists) && event.artists.some((a: string) => a.toLowerCase().includes(lowerSearchTerm))) {
+      relevanceScore += 200;
+    }
+    // 標題包含多個搜尋關鍵字（按匹配數量加分，但降低分數）
+    else if (titleKeywordMatches > 0 && titleKeywordMatches === searchKeywords.length) {
+      // 只有當所有關鍵字都匹配時，才給高分
+      relevanceScore += 150 + (titleKeywordMatches * 30);
     }
     // 副標題包含多個搜尋關鍵字
-    else if (subtitleKeywordMatches > 0) {
-      relevanceScore += 150 + (subtitleKeywordMatches * 30);
+    else if (subtitleKeywordMatches > 0 && subtitleKeywordMatches === searchKeywords.length) {
+      relevanceScore += 100 + (subtitleKeywordMatches * 20);
     }
-    // 藝人匹配（中分）
-    else if (Array.isArray(event.artists) && event.artists.some((a: string) => a.toLowerCase().includes(lowerSearchTerm))) {
-      relevanceScore += 100;
+    // 藝人包含搜尋關鍵字（降低分數，因為可能是模糊匹配）
+    else if (artistKeywordMatches > 0 && artistKeywordMatches === searchKeywords.length) {
+      relevanceScore += 80 + (artistKeywordMatches * 15);
     }
-    // 場館匹配（中低分）
+    // 場館匹配（中低分，降低權重）
     else if ((event.venue || '').toLowerCase().includes(lowerSearchTerm)) {
-      relevanceScore += 50;
+      relevanceScore += 30;
     }
-    // 描述匹配（最低分）
+    // 類型匹配（降低分數，因為可能不精確）
+    else if ((event.category || '').toLowerCase().includes(lowerSearchTerm)) {
+      relevanceScore += 20;
+    }
+    // 描述匹配（最低分，降低權重）
     else if ((event.description || '').toLowerCase().includes(lowerSearchTerm) || 
              (event.discountInfo || '').toLowerCase().includes(lowerSearchTerm)) {
-      relevanceScore += 10;
+      relevanceScore += 5;
     }
     
     return { ...event, relevanceScore };
-  }).sort((a: any, b: any) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+  })
+  // **重要：過濾掉相關性太低的结果（分數 < 50），避免不相關結果**
+  // 但對於只包含數字或無意義字符的查詢（如"不存在的藝人123"），應該更嚴格地過濾
+  const isMeaninglessQuery = /^\d+$/.test(searchTerm) || /^[^a-zA-Z\u4e00-\u9fa5]+$/.test(searchTerm);
+  const relevanceThreshold = isMeaninglessQuery ? 200 : 50; // 無意義查詢使用更高的閾值
+  
+  const filteredResults = results
+    .filter((event: any) => (event.relevanceScore || 0) >= relevanceThreshold)
+    .sort((a: any, b: any) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+  
+  // 如果過濾後結果為空，返回空結果（不要返回不相關的結果）
+  if (filteredResults.length === 0 && results.length > 0) {
+    console.log('[Event Search] All results filtered out due to low relevance, returning empty result');
+    return { events: [], total: 0, query: searchTerm };
+  }
+  
+  results = filteredResults;
 
   console.log('[Event Search] Results with relevance scores:', results.slice(0, 3).map((e: any) => ({
     title: e.title,
@@ -238,13 +276,17 @@ export async function searchEventsByArtist(
   await connectMongo();
 
   // 正規化搜尋詞：去除多餘空格，轉小寫用於匹配
-  const normalized = artistName.trim().toLowerCase();
-  const words = normalized.split(/\s+/).filter((w) => w.length >= 2);
+  // **改進：支持大小寫變體（如"Eric Lu"、"ERIC LU"、"eric lu"）**
+  const normalized = artistName.trim();
+  const normalizedLower = normalized.toLowerCase();
+  const words = normalizedLower.split(/\s+/).filter((w) => w.length >= 2);
   
   // 建立多種搜尋模式
-  // 1. 完整匹配（允許空格變為任意字符）
-  const fullMatchRegex = new RegExp(normalized.replace(/\s+/g, '.*'), 'i');
-  // 2. 單詞匹配（每個單詞都要出現，使用單詞邊界確保完整單詞匹配）
+  // 1. 完整匹配（允許空格變為任意字符，支持大小寫變體）
+  const fullMatchRegex = new RegExp(normalizedLower.replace(/\s+/g, '.*'), 'i');
+  // 2. 原始格式匹配（支持原始大小寫，如"Eric Lu"）
+  const originalMatchRegex = new RegExp(normalized.replace(/\s+/g, '.*'), 'i');
+  // 3. 單詞匹配（每個單詞都要出現，使用單詞邊界確保完整單詞匹配）
   // 避免 "Lang Lang" 匹配到 "Klangbrücke"
   const wordMatchRegex = words.length > 0 ? new RegExp(
     words.map(w => `\\b${w}\\b`).join('|'), 'i'
@@ -273,11 +315,19 @@ export async function searchEventsByArtist(
       'i'
     );
     searchConditions.push({ artists: { $regex: strictRegex } });
-    // 也嘗試完整匹配
+    // 也嘗試完整匹配（大小寫不敏感）
     searchConditions.push({ artists: { $regex: fullMatchRegex } });
+    // **改進：嘗試原始格式匹配（支持大小寫變體）**
+    if (originalMatchRegex.toString() !== fullMatchRegex.toString()) {
+      searchConditions.push({ artists: { $regex: originalMatchRegex } });
+    }
   } else {
     // 單個單詞：直接匹配
     searchConditions.push({ artists: { $regex: fullMatchRegex } });
+    // **改進：也嘗試原始格式匹配**
+    if (originalMatchRegex.toString() !== fullMatchRegex.toString()) {
+      searchConditions.push({ artists: { $regex: originalMatchRegex } });
+    }
   }
   
   // 2. 在標題中搜尋（次優先級）
@@ -289,6 +339,10 @@ export async function searchEventsByArtist(
     searchConditions.push({ title: { $regex: strictRegex } });
   }
   searchConditions.push({ title: { $regex: fullMatchRegex } });
+  // **改進：也嘗試原始格式匹配**
+  if (originalMatchRegex.toString() !== fullMatchRegex.toString()) {
+    searchConditions.push({ title: { $regex: originalMatchRegex } });
+  }
   
   // 3. 在 subtitle 中搜尋
   if (words.length > 1) {
@@ -299,10 +353,18 @@ export async function searchEventsByArtist(
     searchConditions.push({ subtitle: { $regex: strictRegex } });
   }
   searchConditions.push({ subtitle: { $regex: fullMatchRegex } });
+  // **改進：也嘗試原始格式匹配**
+  if (originalMatchRegex.toString() !== fullMatchRegex.toString()) {
+    searchConditions.push({ subtitle: { $regex: originalMatchRegex } });
+  }
   
   // 4. 在描述中搜尋（最低優先級，包括藝人名稱搜尋）
   // Eric Lu 等藝人可能只出現在描述中
   searchConditions.push({ description: { $regex: fullMatchRegex } });
+  // **改進：也嘗試原始格式匹配**
+  if (originalMatchRegex.toString() !== fullMatchRegex.toString()) {
+    searchConditions.push({ description: { $regex: originalMatchRegex } });
+  }
 
   console.log('[Event Search] Total search conditions:', searchConditions.length, 'for artist:', artistName);
 
@@ -340,16 +402,26 @@ export async function searchEventsByArtist(
       const desc = (event.description || '').toLowerCase();
       if (title.includes('已下架') || title.includes('下架') ||
           desc.includes('已下架') || desc.includes('下架')) {
+        console.log('[Event Search] Filtered out event (discontinued):', event.title);
         return false;
       }
       
       // 相關性檢查：確保事件真的與藝人相關
+      // **改進：添加詳細日誌以便調試**
       const isRelevant = isEventRelevantToArtist(event, artistName);
       if (!isRelevant) {
         console.log('[Event Search] Filtered out event (not relevant):', {
           title: event.title,
-          artists: event.artists,
+          artists: event.artists?.slice(0, 3),
+          subtitle: event.subtitle?.substring(0, 50),
+          searchArtist: artistName,
           reason: 'isEventRelevantToArtist returned false',
+        });
+      } else {
+        console.log('[Event Search] ✅ Relevant event found:', {
+          title: event.title,
+          artists: event.artists?.slice(0, 3),
+          searchArtist: artistName,
         });
       }
       return isRelevant;

@@ -145,83 +145,174 @@ async function handleEvent(event: z.infer<typeof LineEventSchema>) {
       return;
     }
 
-    // 3. 章節系統：偵測是否命中章節關鍵字
-    const section = detectSection(text);
-    if (section) {
-      try {
-        // 重新獲取 locale，確保使用最新的語言設定
-        let currentLocale: Locale;
-        try {
-          // 先嘗試從資料庫獲取最新的 locale
-          currentLocale = await getUserLocale(userId);
-          logger.info(`[Section] Fetched locale from DB: ${currentLocale} for section: ${section}`);
-        } catch (err) {
-          logger.warn('Failed to get locale for section, using cached:', err);
-          // 如果資料庫獲取失敗，使用當前 locale（可能已經在語言切換時更新）
-          currentLocale = locale;
-        }
-        const sectionResponse = await getSectionResponse(section, currentLocale);
-        logger.info(`[Section] Section response text: "${sectionResponse.text}", locale: ${currentLocale}`);
-        const messages: any[] = [];
-
-        if (sectionResponse.text) {
-          messages.push(textMessage(sectionResponse.text));
-        }
-
-        // 如果是 popularEvents/thisWeek，追加 Carousel
-        if (sectionResponse.hasCarousel && sectionResponse.flexMessage) {
-          messages.push(sectionResponse.flexMessage);
-          logger.info(
-            `Sending Carousel for section: ${section}, messages count: ${messages.length}`
-          );
-        }
-
-        // Quick Reply 必須附加在最後一個訊息上
-        // 根據章節類型選擇對應的 Quick Reply
-        const { textMessageWithQuickReply } = await import('@/lib/line/templates');
-        let sectionQuickReply;
+    // 3. FAQ 知識庫檢查（優先於章節系統，因為 FAQ 提供更精確的答案）
+    // 使用新的 opentix-faq.service 檢查是否是 FAQ 問題
+    const { searchFAQ, isFAQQuery } = await import('@/services/opentix-faq.service');
+    let faqResults: any[] | undefined;
+    let shouldUseFAQ = false;
+    
+    // 檢查是否是明確的 FAQ 問題
+    const platformFAQKeywords = [
+      '會員', '註冊', '登入', '密碼', '帳號', '綁定', '國家兩廳院',
+      '購票', '買票', '訂票', '折扣', '優惠', '無法使用',
+      '取票', '領票', '電子票', '代碼', '更改', '忘記',
+      '退票', '退款', '取消',
+      '付款', '支付', '信用卡',
+      '怎麼辦', '如何', '怎麼', '是否', '能否', '可以',
+    ];
+    
+    const hasPlatformFAQKeyword = platformFAQKeywords.some(keyword => 
+      text.toLowerCase().includes(keyword.toLowerCase())
+    );
+    
+    if (hasPlatformFAQKeyword || isFAQQuery(text)) {
+      // 如果是 FAQ 問題，搜索 FAQ 知識庫
+      faqResults = await searchFAQ(text, 3);
+      logger.info(`[FAQ] Searching FAQ for: "${text}", found ${faqResults.length} results`);
+      
+      if (faqResults.length > 0) {
+        logger.info(`[FAQ] Top FAQ match: "${faqResults[0].faq.question}", score: ${faqResults[0].score}`);
         
-        if (section === 'popularEvents' || section === 'thisWeek') {
-          // 熱門演出/本週演唱會：提供搜尋、其他演出選項
-          const { buildPopularEventsQuickReply } = await import('@/lib/line/templates');
-          sectionQuickReply = buildPopularEventsQuickReply(currentLocale);
-        } else {
-          // 其他章節（如何購票、退票政策等）：使用主選單
-          const { buildQuickReplies } = await import('@/lib/line/templates');
-          sectionQuickReply = buildQuickReplies(currentLocale);
+        // 如果找到高相關性的 FAQ（分數 > 50），優先使用 FAQ
+        if (faqResults[0].score > 50) {
+          shouldUseFAQ = true;
+          logger.info(`[FAQ] Using FAQ answer (score: ${faqResults[0].score})`);
+          
+          // 使用 LLM 整合 FAQ 知識庫回答問題
+          const { generateAssistantReply } = await import('@/services/llm.service');
+          const { cleanMarkdown } = await import('@/lib/utils/format');
+          const { ConversationModel } = await import('@/models/Conversation');
+          const { MessageModel } = await import('@/models/Message');
+          
+          try {
+            // 獲取最近的對話歷史
+            const conversation = await ConversationModel.findOne({ userId }).sort({ createdAt: -1 });
+            let recentMessages: any[] = [];
+            
+            if (conversation) {
+              recentMessages = await MessageModel.find({
+                conversationId: conversation._id,
+              })
+                .sort({ timestamp: -1 })
+                .limit(3)
+                .lean();
+            }
+            
+            const contextForLLM = recentMessages
+              .reverse()
+              .map((m: any) => ({ role: m.role, content: m.content }));
+            
+            // 使用 LLM 整合 FAQ 生成回答
+            let answer = await generateAssistantReply(contextForLLM, text, {
+              userLocale: locale,
+              faqResults: faqResults,
+            });
+            answer = cleanMarkdown(answer);
+            
+            // 保存到資料庫
+            try {
+              await saveFAQMessage(userId, text, answer);
+            } catch (err) {
+              logger.warn('Failed to save FAQ message (non-critical):', err);
+            }
+            
+            // 根據 FAQ 類型選擇對應的 Quick Reply
+            const { textMessageWithQuickReply } = await import('@/lib/line/templates');
+            const { buildPurchaseFAQQuickReply } = await import('@/lib/line/templates');
+            const faqQuickReply = buildPurchaseFAQQuickReply(locale);
+            
+            const faqMsg = textMessageWithQuickReply(answer, faqQuickReply);
+            await lineClient.replyMessage(replyToken, [faqMsg]);
+            return;
+          } catch (err) {
+            logger.error('[FAQ] Error generating FAQ answer:', err);
+            // 降級：繼續處理其他邏輯
+            shouldUseFAQ = false;
+          }
         }
-        
-        if (sectionResponse.hasCarousel && sectionResponse.flexMessage) {
-          // 有 Carousel 的情況：在 Carousel 之後追加一個帶有 Quick Reply 的文字訊息
-          const quickReplyText = currentLocale === 'zh-TW' 
-            ? '💡 需要其他協助嗎？請選擇下方功能：'
-            : '💡 Need more help? Please select a function below:';
-          messages.push(textMessageWithQuickReply(quickReplyText, sectionQuickReply));
-        } else if (sectionResponse.text) {
-          // 沒有 Carousel 的情況：將文字訊息替換為帶有 Quick Reply 的版本
-          messages[0] = textMessageWithQuickReply(sectionResponse.text, sectionQuickReply);
-        }
-
-        // 儲存到資料庫（失敗不影響回覆）
-        try {
-          await saveFAQMessage(userId, text, sectionResponse.text || '');
-        } catch (err) {
-          logger.warn('Failed to save section message (non-critical):', err);
-        }
-
-        if (messages.length > 0) {
-          await lineClient.replyMessage(replyToken, messages);
-          return;
-        }
-      } catch (err) {
-        logger.warn('Failed to get section response:', err);
-        // 降級：繼續處理其他邏輯
       }
     }
 
-    // 4. FAQ 規則式回覆（購票流程、退票政策等）
+    // 4. 章節系統：偵測是否命中章節關鍵字（如果沒有使用 FAQ）
+    // 如果已經決定使用 FAQ，跳過章節檢測，避免返回通用流程
+    if (!shouldUseFAQ) {
+      const section = detectSection(text);
+      if (section) {
+        try {
+          // 重新獲取 locale，確保使用最新的語言設定
+          let currentLocale: Locale;
+          try {
+            // 先嘗試從資料庫獲取最新的 locale
+            currentLocale = await getUserLocale(userId);
+            logger.info(`[Section] Fetched locale from DB: ${currentLocale} for section: ${section}`);
+          } catch (err) {
+            logger.warn('Failed to get locale for section, using cached:', err);
+            // 如果資料庫獲取失敗，使用當前 locale（可能已經在語言切換時更新）
+            currentLocale = locale;
+          }
+          const sectionResponse = await getSectionResponse(section, currentLocale);
+          logger.info(`[Section] Section response text: "${sectionResponse.text}", locale: ${currentLocale}`);
+          const messages: any[] = [];
+
+          if (sectionResponse.text) {
+            messages.push(textMessage(sectionResponse.text));
+          }
+
+          // 如果是 popularEvents/thisWeek，追加 Carousel
+          if (sectionResponse.hasCarousel && sectionResponse.flexMessage) {
+            messages.push(sectionResponse.flexMessage);
+            logger.info(
+              `Sending Carousel for section: ${section}, messages count: ${messages.length}`
+            );
+          }
+
+          // Quick Reply 必須附加在最後一個訊息上
+          // 根據章節類型選擇對應的 Quick Reply
+          const { textMessageWithQuickReply } = await import('@/lib/line/templates');
+          let sectionQuickReply;
+          
+          if (section === 'popularEvents' || section === 'thisWeek') {
+            // 熱門演出/本週演唱會：提供搜尋、其他演出選項
+            const { buildPopularEventsQuickReply } = await import('@/lib/line/templates');
+            sectionQuickReply = buildPopularEventsQuickReply(currentLocale);
+          } else {
+            // 其他章節（如何購票、退票政策等）：使用主選單
+            const { buildQuickReplies } = await import('@/lib/line/templates');
+            sectionQuickReply = buildQuickReplies(currentLocale);
+          }
+          
+          if (sectionResponse.hasCarousel && sectionResponse.flexMessage) {
+            // 有 Carousel 的情況：在 Carousel 之後追加一個帶有 Quick Reply 的文字訊息
+            const quickReplyText = currentLocale === 'zh-TW' 
+              ? '💡 需要其他協助嗎？請選擇下方功能：'
+              : '💡 Need more help? Please select a function below:';
+            messages.push(textMessageWithQuickReply(quickReplyText, sectionQuickReply));
+          } else if (sectionResponse.text) {
+            // 沒有 Carousel 的情況：將文字訊息替換為帶有 Quick Reply 的版本
+            messages[0] = textMessageWithQuickReply(sectionResponse.text, sectionQuickReply);
+          }
+
+          // 儲存到資料庫（失敗不影響回覆）
+          try {
+            await saveFAQMessage(userId, text, sectionResponse.text || '');
+          } catch (err) {
+            logger.warn('Failed to save section message (non-critical):', err);
+          }
+
+          if (messages.length > 0) {
+            await lineClient.replyMessage(replyToken, messages);
+            return;
+          }
+        } catch (err) {
+          logger.warn('Failed to get section response:', err);
+          // 降級：繼續處理其他邏輯
+        }
+      }
+    }
+
+    // 5. FAQ 規則式回覆（舊的 checkFAQ，作為備用）
     const faqResponse = checkFAQ(text, locale);
-    if (faqResponse) {
+    if (faqResponse && !shouldUseFAQ) {
       try {
         await saveFAQMessage(userId, text, faqResponse.text);
       } catch (err) {

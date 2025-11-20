@@ -27,7 +27,7 @@ export class IntentDetector {
   /**
    * 檢測使用者意圖
    */
-  detect(message: string, context: SessionContext, currentState: ConversationState): Intent {
+  async detect(message: string, context: SessionContext, currentState: ConversationState): Promise<Intent> {
     // 1. 檢查是否為全域指令 (優先權最高)
     if (this.isGlobalCommand(message)) {
       return { type: 'GLOBAL_COMMAND', data: this.parseCommand(message) };
@@ -38,7 +38,48 @@ export class IntentDetector {
       return { type: 'QUICK_REPLY', data: this.parseQuickReply(message) };
     }
     
-    // 3. 如果在 EVENT_SELECTED 或 EVENT_LIST 狀態，優先檢查是否為後續問題
+    // 3. 檢查是否為 FAQ（優先於後續問題，因為 FAQ 問題不應該被當作後續問題）
+    // 先檢查是否是明確的 FAQ 問題（如"如何購票"、"退票政策"等）
+    const faq = this.matchFAQ(message);
+    if (faq) {
+      return { type: 'FAQ', data: { question: faq } };
+    }
+    
+    // 檢查是否是 FAQ 相關問題（包含 FAQ 關鍵字）
+    // 使用動態導入，避免循環依賴
+    const faqServiceModule = await import('@/services/opentix-faq.service');
+    const isFAQ = faqServiceModule.isFAQQuery(message);
+    
+    // 如果沒有明確的指示詞指向事件，且是 FAQ 問題，優先作為 FAQ 處理
+    if (isFAQ) {
+      const hasReferenceWord = /^(這個|那個|它|他|她|該|此|本)/.test(message) || 
+                              /(這個|那個|它|他|她|該|此|本)\s*(表演|演出|音樂會|演唱會|節目|活動)/.test(message);
+      
+      // 只有在沒有明確指示詞的情況下，才優先作為 FAQ 處理
+      if (!hasReferenceWord) {
+        // 檢查是否是明確關於平台的 FAQ（如"會員"、"購票"、"退票"等）
+        const platformFAQKeywords = [
+          '會員', '註冊', '登入', '密碼', '帳號', '綁定',
+          '購票', '買票', '訂票', '折扣', '優惠',
+          '取票', '領票', '電子票', '代碼', '更改',
+          '退票', '退款', '取消',
+          '付款', '支付', '信用卡',
+          'opentix', 'member', 'register', 'login', 'password',
+          'ticket', 'buy', 'purchase', 'refund', 'cancel',
+          'pickup', 'payment', 'credit',
+        ];
+        
+        const hasPlatformFAQKeyword = platformFAQKeywords.some(keyword => 
+          message.toLowerCase().includes(keyword.toLowerCase())
+        );
+        
+        if (hasPlatformFAQKeyword) {
+          return { type: 'FAQ', data: { question: message } };
+        }
+      }
+    }
+    
+    // 4. 如果在 EVENT_SELECTED 或 EVENT_LIST 狀態，檢查是否為後續問題
     // 包含指示詞（這個、那個）或明確的後續問題關鍵字的，必定是後續問題
     if (currentState === ConversationState.EVENT_SELECTED || currentState === ConversationState.EVENT_LIST) {
       const hasReferenceWord = /^(這個|那個|它|他|她|該|此|本)/.test(message) || 
@@ -57,21 +98,15 @@ export class IntentDetector {
       }
     }
     
-    // 4. 檢查是否為新搜尋
+    // 5. 檢查是否為新搜尋
     // 只有在不是後續問題的情況下才檢查搜尋
     if (this.hasSearchKeywords(message)) {
       return { type: 'SEARCH', data: { query: message } };
     }
     
-    // 5. 再次檢查後續問題（針對沒有 EVENT 上下文的情況）
+    // 6. 再次檢查後續問題（針對沒有 EVENT 上下文的情況）
     if (currentState === ConversationState.EVENT_SELECTED || currentState === ConversationState.EVENT_LIST) {
       return this.detectFollowUpIntent(message, context);
-    }
-    
-    // 6. 檢查是否為 FAQ
-    const faq = this.matchFAQ(message);
-    if (faq) {
-      return { type: 'FAQ', data: { question: faq } };
     }
     
     // 7. 一般對話
@@ -240,9 +275,14 @@ export class IntentDetector {
    */
   private isAboutVenue(message: string): boolean {
     const venueKeywords = [
-      '地點', '在哪裡', '場館', '位置',
+      '地點', '在哪裡', '場館', '位置', '演出', '演出地點',
       'where', 'location', 'venue', 'place',
     ];
+    // 檢查是否是複數問題（它們分別）
+    const isPlural = /它們分別|它們|分別|each|all|both/.test(message);
+    if (isPlural && venueKeywords.some(keyword => message.toLowerCase().includes(keyword))) {
+      return true;
+    }
     return venueKeywords.some(keyword => message.toLowerCase().includes(keyword));
   }
   

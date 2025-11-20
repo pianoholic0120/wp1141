@@ -36,7 +36,7 @@ export class ConversationStateMachine {
     const currentState = session.state;
     
     // 檢測意圖
-    const intent = intentDetector.detect(message, session.context, currentState);
+    const intent = await intentDetector.detect(message, session.context, currentState);
     
     // 檢查全域指令 (優先權最高)
     if (intent.type === 'GLOBAL_COMMAND') {
@@ -341,6 +341,68 @@ export class ConversationStateMachine {
           },
         },
       };
+    }
+    
+    // **改進：檢查消息是否匹配搜索结果中的事件名称（優先於新搜索）**
+    // 如果用户输入完整的演出名称（如"「永恆迴響」2025逢甲管樂定期音樂會 Eternal Echoes"），
+    // 应该视为对搜索结果中事件的查询，而不是新的搜索
+    if (results.length > 0) {
+      const messageNormalized = message.trim().toLowerCase();
+      
+      // 檢查消息是否匹配任何搜索結果的標題或副標題
+      for (let i = 0; i < results.length; i++) {
+        const event = results[i];
+        const eventTitle = (event.title || '').toLowerCase().trim();
+        const eventSubtitle = (event.subtitle || '').toLowerCase().trim();
+        const eventFullName = `${eventTitle} ${eventSubtitle}`.trim();
+        
+        // 提取事件名稱的關鍵部分（去除標點符號和空格）
+        const extractKeyWords = (text: string): string[] => {
+          return text
+            .replace(/[【】《》「」『』（）\(\)\[\]{}]/g, '') // 移除中文標點
+            .replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ' ') // 將其他字符替換為空格
+            .split(/\s+/)
+            .filter(w => w.length >= 2) // 至少2個字符
+            .slice(0, 5); // 只取前5個關鍵詞
+        };
+        
+        const messageKeywords = extractKeyWords(messageNormalized);
+        const eventKeywords = extractKeyWords(eventFullName);
+        
+        // 檢查是否有足夠的關鍵詞匹配（至少匹配2個關鍵詞，或者消息完全包含在事件名稱中）
+        const matchingKeywords = messageKeywords.filter(kw => 
+          eventKeywords.some(ekw => ekw.includes(kw) || kw.includes(ekw))
+        );
+        
+        const isEventNameMatch = 
+          messageNormalized.includes(eventTitle) ||
+          eventTitle.includes(messageNormalized) ||
+          messageNormalized.includes(eventSubtitle) ||
+          eventSubtitle.includes(messageNormalized) ||
+          (messageKeywords.length >= 2 && matchingKeywords.length >= 2) ||
+          (messageKeywords.length >= 3 && matchingKeywords.length >= Math.min(2, messageKeywords.length));
+        
+        if (isEventNameMatch) {
+          console.log('[Event List State] Message matches event from search results:', {
+            message,
+            matchedEventTitle: event.title,
+            matchedIndex: i,
+          });
+          
+          // 如果匹配，視為選擇該事件並回答問題
+          return {
+            nextState: ConversationState.EVENT_SELECTED,
+            action: {
+              type: 'ANSWER_EVENT_QUESTION',
+              data: {
+                event: event,
+                question: message,
+                intent: intent.type,
+              },
+            },
+          };
+        }
+      }
     }
     
     // 檢查是否為新搜尋
