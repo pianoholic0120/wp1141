@@ -66,7 +66,7 @@ export async function generateAssistantReply(
     ]);
 
     latency = Date.now() - startTime;
-    llmProvider = process.env.LLM_PROVIDER || (process.env.GOOGLE_API_KEY ? 'gemini' : 'openai');
+    llmProvider = process.env.LLM_PROVIDER || (process.env.OPENAI_API_KEY ? 'openai' : (process.env.GOOGLE_API_KEY ? 'gemini' : 'openai'));
 
     logger.info('[LLM] LLM response received', {
       length: output.length,
@@ -88,7 +88,7 @@ export async function generateAssistantReply(
   } catch (err) {
     latency = Date.now() - startTime;
     error = err instanceof Error ? err.message : String(err);
-    llmProvider = process.env.LLM_PROVIDER || (process.env.GOOGLE_API_KEY ? 'gemini' : 'openai');
+    llmProvider = process.env.LLM_PROVIDER || (process.env.OPENAI_API_KEY ? 'openai' : (process.env.GOOGLE_API_KEY ? 'gemini' : 'openai'));
     
     logger.error('[LLM] Failed to generate reply:', {
       error,

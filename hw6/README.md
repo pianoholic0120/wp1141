@@ -76,13 +76,15 @@ Before setting up the project, ensure you have the following:
    LINE_CHANNEL_SECRET=your_channel_secret
 
    # LLM Provider Configuration (at least one required)
-   # Option 1: OpenAI
+   # Option 1: OpenAI (recommended, default)
    OPENAI_API_KEY=your_openai_api_key
+   LLM_PROVIDER=openai
+   OPENAI_MODEL=gpt-4o-mini
 
-   # Option 2: Google Gemini (recommended)
+   # Option 2: Google Gemini (alternative)
    GOOGLE_API_KEY=your_google_gemini_api_key
    LLM_PROVIDER=gemini
-   GOOGLE_MODEL=gemini-2.0-flash-exp
+   GOOGLE_MODEL=gemini-1.5-flash
 
    # Database Configuration
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database-name
@@ -139,9 +141,12 @@ Before setting up the project, ensure you have the following:
    LINE_CHANNEL_SECRET=your_production_channel_secret
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database-name
    OPENAI_API_KEY=your_openai_api_key
-   # or
+   LLM_PROVIDER=openai
+   OPENAI_MODEL=gpt-4o-mini
+   # or (alternative)
    GOOGLE_API_KEY=your_google_gemini_api_key
    LLM_PROVIDER=gemini
+   GOOGLE_MODEL=gemini-1.5-flash
    ```
 
    **Optional Variables**:
@@ -149,7 +154,6 @@ Before setting up the project, ensure you have the following:
    ```bash
    NEXT_PUBLIC_APP_URL=https://your-project.vercel.app
    NODE_ENV=production
-   GOOGLE_MODEL=gemini-2.0-flash-exp
    ```
 
    Important: Select "Production" environment for all variables. Do not use development/test channel tokens in production.
@@ -183,10 +187,11 @@ Before setting up the project, ensure you have the following:
 
 #### LLM Providers
 
-- `OPENAI_API_KEY`: OpenAI API key (optional, if using OpenAI)
+- `OPENAI_API_KEY`: OpenAI API key (required if using OpenAI, recommended as default)
+- `OPENAI_MODEL`: OpenAI model to use (default: `gpt-4o-mini`)
 - `GOOGLE_API_KEY`: Google Gemini API key (optional, if using Gemini)
-- `LLM_PROVIDER`: Default LLM provider (`openai` or `gemini`). Defaults to `gemini` if `GOOGLE_API_KEY` is set
-- `GOOGLE_MODEL`: Gemini model to use (default: `gemini-2.0-flash-exp`)
+- `GOOGLE_MODEL`: Gemini model to use (default: `gemini-1.5-flash`)
+- `LLM_PROVIDER`: Default LLM provider (`openai` or `gemini`). Defaults to `openai` if `LLM_PROVIDER` is not set
 
 #### Database
 

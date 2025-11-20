@@ -482,14 +482,14 @@ export async function parseQuery(query: string): Promise<ParsedQuery> {
       }
     } else {
       // 沒有藝人名稱模式，使用類型搜索
-      const isLongQuery = query.length >= 8;
-      const hasSubstantialContent = result.keywords && result.keywords.length > 0;
-      
-      if (isLongQuery && hasSubstantialContent) {
-        result.queryType = 'general';
-        console.log('[Query Parser] Long query with category keyword, treating as general search');
-      } else {
-        result.queryType = 'category';
+    const isLongQuery = query.length >= 8;
+    const hasSubstantialContent = result.keywords && result.keywords.length > 0;
+    
+    if (isLongQuery && hasSubstantialContent) {
+      result.queryType = 'general';
+      console.log('[Query Parser] Long query with category keyword, treating as general search');
+    } else {
+      result.queryType = 'category';
       }
     }
   } else if (result.artists!.length > 0 || result.venues!.length > 0 || result.categories!.length > 0) {

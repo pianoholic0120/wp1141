@@ -343,13 +343,13 @@ export default function ConversationsPage() {
               </span>
             </div>
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-              >
-                清除所有篩選
-              </button>
-            )}
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                >
+                  清除所有篩選
+                </button>
+              )}
           </div>
 
           {/* Active Filters Display */}
@@ -453,17 +453,17 @@ export default function ConversationsPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="px-4 py-3 text-left">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
                       checked={selectedIds.size === items.length && items.length > 0}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                    />
+                onChange={toggleSelectAll}
+                className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+              />
                     <span className="text-xs font-medium text-gray-700 uppercase">
                       {selectedIds.size === items.length ? '取消全選' : '全選'}
-                    </span>
-                  </label>
+              </span>
+            </label>
                 </th>
                 <th scope="col" className="px-4 py-3 text-left">
                   <button
@@ -521,26 +521,26 @@ export default function ConversationsPage() {
                 </tr>
               ) : (
                 items.map((item) => {
-                  const isSelected = selectedIds.has(item._id);
-                  return (
+          const isSelected = selectedIds.has(item._id);
+          return (
                     <tr
-                      key={item._id}
+              key={item._id}
                       className={`hover:bg-gray-50 transition-colors ${
                         isSelected ? 'bg-primary-50' : ''
-                      }`}
-                    >
+              }`}
+            >
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleSelect(item._id)}
-                          onClick={(e) => e.stopPropagation()}
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleSelect(item._id)}
+                  onClick={(e) => e.stopPropagation()}
                           className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                        />
+                />
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <Link
-                          href={`/admin/conversations/${item._id}`}
+                <Link
+                  href={`/admin/conversations/${item._id}`}
                           className="text-sm font-medium text-gray-900 hover:text-primary-600 transition-colors"
                         >
                           {item.userId}
@@ -560,21 +560,21 @@ export default function ConversationsPage() {
                         <div className="text-sm text-gray-900">{item.messageCount}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span
+                      <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            item.status === 'active'
-                              ? 'bg-green-100 text-green-800'
-                              : item.status === 'resolved'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {item.status === 'active'
-                            ? '進行中'
+                          item.status === 'active'
+                            ? 'bg-green-100 text-green-800'
                             : item.status === 'resolved'
-                              ? '已結束'
-                              : '封存'}
-                        </span>
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {item.status === 'active'
+                          ? '進行中'
+                          : item.status === 'resolved'
+                            ? '已結束'
+                            : '封存'}
+                      </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <Link
@@ -590,7 +590,7 @@ export default function ConversationsPage() {
               )}
             </tbody>
           </table>
-        </div>
+                    </div>
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
@@ -599,7 +599,7 @@ export default function ConversationsPage() {
               顯示第 {(pagination.page - 1) * pagination.limit + 1} -{' '}
               {Math.min(pagination.page * pagination.limit, pagination.total)} 筆，共{' '}
               {pagination.total} 筆
-            </div>
+                  </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}

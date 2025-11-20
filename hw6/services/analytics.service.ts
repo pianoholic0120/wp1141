@@ -25,7 +25,7 @@ export interface AnalyticsStats {
  */
 export async function calculateStats(): Promise<AnalyticsStats> {
   try {
-    await connectMongo();
+  await connectMongo();
   } catch (error) {
     console.error('Failed to connect to MongoDB:', error);
     throw new Error('Database connection failed');
@@ -35,24 +35,24 @@ export async function calculateStats(): Promise<AnalyticsStats> {
   const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   try {
-    const [
-      totalConversations,
-      totalMessages,
-      activeConversations,
-      last24hMessages,
-      last24hConversations,
-    ] = await Promise.all([
+  const [
+    totalConversations,
+    totalMessages,
+    activeConversations,
+    last24hMessages,
+    last24hConversations,
+  ] = await Promise.all([
       ConversationModel.countDocuments().catch(() => 0),
       MessageModel.countDocuments().catch(() => 0),
       ConversationModel.countDocuments({ status: 'active' }).catch(() => 0),
       MessageModel.countDocuments({ timestamp: { $gte: last24h } }).catch(() => 0),
       ConversationModel.countDocuments({ lastMessageAt: { $gte: last24h } }).catch(() => 0),
-    ]);
+  ]);
 
-    const avgMessagesPerConversation =
-      totalConversations > 0 ? Math.round((totalMessages / totalConversations) * 10) / 10 : 0;
+  const avgMessagesPerConversation =
+    totalConversations > 0 ? Math.round((totalMessages / totalConversations) * 10) / 10 : 0;
 
-    // 計算回應時間和錯誤率
+  // 計算回應時間和錯誤率
     let assistantMessages: any[] = [];
     let totalWithLatency = 0;
     let avgResponseTime: number | undefined = undefined;
@@ -61,16 +61,16 @@ export async function calculateStats(): Promise<AnalyticsStats> {
 
     try {
       assistantMessages = await MessageModel.find({
-        role: 'assistant',
-        'metadata.latency': { $exists: true, $ne: null },
-      })
-        .select('metadata.latency metadata.error')
-        .lean();
+    role: 'assistant',
+    'metadata.latency': { $exists: true, $ne: null },
+  })
+    .select('metadata.latency metadata.error')
+    .lean();
 
       totalWithLatency = assistantMessages.length;
-      const totalLatency = assistantMessages.reduce((sum: number, msg: any) => {
-        return sum + (msg.metadata?.latency || 0);
-      }, 0);
+  const totalLatency = assistantMessages.reduce((sum: number, msg: any) => {
+    return sum + (msg.metadata?.latency || 0);
+  }, 0);
       avgResponseTime = totalWithLatency > 0 ? Math.round(totalLatency / totalWithLatency) : undefined;
     } catch (error) {
       console.error('Failed to calculate response time:', error);
@@ -78,30 +78,30 @@ export async function calculateStats(): Promise<AnalyticsStats> {
 
     try {
       totalErrors = await MessageModel.countDocuments({
-        role: 'assistant',
-        'metadata.error': { $exists: true, $ne: null, $ne: '' },
+    role: 'assistant',
+    'metadata.error': { $exists: true, $ne: null, $ne: '' },
       });
 
-      const totalAssistantMessages = await MessageModel.countDocuments({ role: 'assistant' });
+  const totalAssistantMessages = await MessageModel.countDocuments({ role: 'assistant' });
       errorRate = totalAssistantMessages > 0 
         ? Math.round((totalErrors / totalAssistantMessages) * 100 * 10) / 10 
-        : undefined;
+    : undefined;
     } catch (error) {
       console.error('Failed to calculate error rate:', error);
     }
 
-    return {
-      totalConversations,
-      totalMessages,
-      activeConversations,
-      last24hMessages,
-      last24hConversations,
-      avgMessagesPerConversation,
-      avgResponseTime,
-      errorRate,
+  return {
+    totalConversations,
+    totalMessages,
+    activeConversations,
+    last24hMessages,
+    last24hConversations,
+    avgMessagesPerConversation,
+    avgResponseTime,
+    errorRate,
       totalErrors,
-      totalWithLatency,
-    };
+    totalWithLatency,
+  };
   } catch (error) {
     console.error('Failed to calculate stats:', error);
     throw error;

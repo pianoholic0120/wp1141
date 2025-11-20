@@ -236,76 +236,76 @@ async function handleEvent(event: z.infer<typeof LineEventSchema>) {
     // 4. 章節系統：偵測是否命中章節關鍵字（如果沒有使用 FAQ）
     // 如果已經決定使用 FAQ，跳過章節檢測，避免返回通用流程
     if (!shouldUseFAQ) {
-      const section = detectSection(text);
-      if (section) {
+    const section = detectSection(text);
+    if (section) {
+      try {
+        // 重新獲取 locale，確保使用最新的語言設定
+        let currentLocale: Locale;
         try {
-          // 重新獲取 locale，確保使用最新的語言設定
-          let currentLocale: Locale;
-          try {
-            // 先嘗試從資料庫獲取最新的 locale
-            currentLocale = await getUserLocale(userId);
-            logger.info(`[Section] Fetched locale from DB: ${currentLocale} for section: ${section}`);
-          } catch (err) {
-            logger.warn('Failed to get locale for section, using cached:', err);
-            // 如果資料庫獲取失敗，使用當前 locale（可能已經在語言切換時更新）
-            currentLocale = locale;
-          }
-          const sectionResponse = await getSectionResponse(section, currentLocale);
-          logger.info(`[Section] Section response text: "${sectionResponse.text}", locale: ${currentLocale}`);
-          const messages: any[] = [];
-
-          if (sectionResponse.text) {
-            messages.push(textMessage(sectionResponse.text));
-          }
-
-          // 如果是 popularEvents/thisWeek，追加 Carousel
-          if (sectionResponse.hasCarousel && sectionResponse.flexMessage) {
-            messages.push(sectionResponse.flexMessage);
-            logger.info(
-              `Sending Carousel for section: ${section}, messages count: ${messages.length}`
-            );
-          }
-
-          // Quick Reply 必須附加在最後一個訊息上
-          // 根據章節類型選擇對應的 Quick Reply
-          const { textMessageWithQuickReply } = await import('@/lib/line/templates');
-          let sectionQuickReply;
-          
-          if (section === 'popularEvents' || section === 'thisWeek') {
-            // 熱門演出/本週演唱會：提供搜尋、其他演出選項
-            const { buildPopularEventsQuickReply } = await import('@/lib/line/templates');
-            sectionQuickReply = buildPopularEventsQuickReply(currentLocale);
-          } else {
-            // 其他章節（如何購票、退票政策等）：使用主選單
-            const { buildQuickReplies } = await import('@/lib/line/templates');
-            sectionQuickReply = buildQuickReplies(currentLocale);
-          }
-          
-          if (sectionResponse.hasCarousel && sectionResponse.flexMessage) {
-            // 有 Carousel 的情況：在 Carousel 之後追加一個帶有 Quick Reply 的文字訊息
-            const quickReplyText = currentLocale === 'zh-TW' 
-              ? '💡 需要其他協助嗎？請選擇下方功能：'
-              : '💡 Need more help? Please select a function below:';
-            messages.push(textMessageWithQuickReply(quickReplyText, sectionQuickReply));
-          } else if (sectionResponse.text) {
-            // 沒有 Carousel 的情況：將文字訊息替換為帶有 Quick Reply 的版本
-            messages[0] = textMessageWithQuickReply(sectionResponse.text, sectionQuickReply);
-          }
-
-          // 儲存到資料庫（失敗不影響回覆）
-          try {
-            await saveFAQMessage(userId, text, sectionResponse.text || '');
-          } catch (err) {
-            logger.warn('Failed to save section message (non-critical):', err);
-          }
-
-          if (messages.length > 0) {
-            await lineClient.replyMessage(replyToken, messages);
-            return;
-          }
+          // 先嘗試從資料庫獲取最新的 locale
+          currentLocale = await getUserLocale(userId);
+          logger.info(`[Section] Fetched locale from DB: ${currentLocale} for section: ${section}`);
         } catch (err) {
-          logger.warn('Failed to get section response:', err);
-          // 降級：繼續處理其他邏輯
+          logger.warn('Failed to get locale for section, using cached:', err);
+          // 如果資料庫獲取失敗，使用當前 locale（可能已經在語言切換時更新）
+          currentLocale = locale;
+        }
+        const sectionResponse = await getSectionResponse(section, currentLocale);
+        logger.info(`[Section] Section response text: "${sectionResponse.text}", locale: ${currentLocale}`);
+        const messages: any[] = [];
+
+        if (sectionResponse.text) {
+          messages.push(textMessage(sectionResponse.text));
+        }
+
+        // 如果是 popularEvents/thisWeek，追加 Carousel
+        if (sectionResponse.hasCarousel && sectionResponse.flexMessage) {
+          messages.push(sectionResponse.flexMessage);
+          logger.info(
+            `Sending Carousel for section: ${section}, messages count: ${messages.length}`
+          );
+        }
+
+        // Quick Reply 必須附加在最後一個訊息上
+        // 根據章節類型選擇對應的 Quick Reply
+        const { textMessageWithQuickReply } = await import('@/lib/line/templates');
+        let sectionQuickReply;
+        
+        if (section === 'popularEvents' || section === 'thisWeek') {
+          // 熱門演出/本週演唱會：提供搜尋、其他演出選項
+          const { buildPopularEventsQuickReply } = await import('@/lib/line/templates');
+          sectionQuickReply = buildPopularEventsQuickReply(currentLocale);
+        } else {
+          // 其他章節（如何購票、退票政策等）：使用主選單
+          const { buildQuickReplies } = await import('@/lib/line/templates');
+          sectionQuickReply = buildQuickReplies(currentLocale);
+        }
+        
+        if (sectionResponse.hasCarousel && sectionResponse.flexMessage) {
+          // 有 Carousel 的情況：在 Carousel 之後追加一個帶有 Quick Reply 的文字訊息
+          const quickReplyText = currentLocale === 'zh-TW' 
+            ? '💡 需要其他協助嗎？請選擇下方功能：'
+            : '💡 Need more help? Please select a function below:';
+          messages.push(textMessageWithQuickReply(quickReplyText, sectionQuickReply));
+        } else if (sectionResponse.text) {
+          // 沒有 Carousel 的情況：將文字訊息替換為帶有 Quick Reply 的版本
+          messages[0] = textMessageWithQuickReply(sectionResponse.text, sectionQuickReply);
+        }
+
+        // 儲存到資料庫（失敗不影響回覆）
+        try {
+          await saveFAQMessage(userId, text, sectionResponse.text || '');
+        } catch (err) {
+          logger.warn('Failed to save section message (non-critical):', err);
+        }
+
+        if (messages.length > 0) {
+          await lineClient.replyMessage(replyToken, messages);
+          return;
+        }
+      } catch (err) {
+        logger.warn('Failed to get section response:', err);
+        // 降級：繼續處理其他邏輯
         }
       }
     }

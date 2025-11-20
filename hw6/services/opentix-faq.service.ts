@@ -2,12 +2,10 @@
  * OPENTIX FAQ Knowledge Base Service
  * 提供 OPENTIX 常見問題的知識庫服務
  * 支持基於關鍵字和語義的 FAQ 檢索（RAG-ready）
- * 
- * 注意：為了在 Vercel 等無服務器環境中正常工作，
- * FAQ 內容已內嵌到代碼中，而不是從文件讀取。
  */
 
-import { OPENTIX_FAQ_MARKDOWN } from '@/lib/data/opentix-faq-content';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface FAQ {
   id: string;
@@ -27,47 +25,57 @@ export interface FAQSearchResult {
 let faqDatabase: FAQ[] | null = null;
 
 /**
- * 獲取 FAQ 知識庫內容
- * 
- * 注意：現在使用內嵌的內容，不再從文件系統讀取。
- * 這確保在 Vercel 等無服務器環境中也能正常工作。
+ * 獲取 FAQ 知識庫文件路徑
  */
-function getFAQKnowledgeBaseContent(): string {
-  // 直接返回內嵌的 Markdown 內容
-  // 這樣可以避免文件系統訪問問題，特別是在 Vercel 環境中
-  return OPENTIX_FAQ_MARKDOWN;
+function getFAQKnowledgeBasePath(): string {
+  // 在 Next.js 中，process.cwd() 通常指向專案根目錄
+  // 嘗試多種路徑（支持開發和生產環境）
+  const basePath = process.cwd();
+  const possiblePaths = [
+    path.join(basePath, 'OPENTIX-FAQ-Knowledge-Base.md'),
+    // 如果在 Next.js 構建後的 .next 目錄中運行
+    path.join(basePath, '..', 'OPENTIX-FAQ-Knowledge-Base.md'),
+  ];
+
+  for (const possiblePath of possiblePaths) {
+    if (fs.existsSync(possiblePath)) {
+      console.log(`[FAQ Service] Found FAQ file at: ${possiblePath}`);
+      return possiblePath;
+    }
+  }
+
+  // 返回默認路徑（即使不存在，讓調用者處理錯誤）
+  const defaultPath = path.join(basePath, 'OPENTIX-FAQ-Knowledge-Base.md');
+  console.warn(`[FAQ Service] FAQ file not found in any of these paths: ${possiblePaths.join(', ')}`);
+  return defaultPath;
 }
 
 /**
- * 初始化 FAQ 資料庫（從內嵌的 Markdown 內容解析）
- * 
- * 現在使用內嵌的內容，不再從文件系統讀取。
- * 這確保在 Vercel 等無服務器環境中也能正常工作。
+ * 初始化 FAQ 資料庫（從 Markdown 文件解析）
  */
 export async function initializeFAQDatabase(): Promise<FAQ[]> {
-  // 如果已經初始化，直接返回緩存的資料庫
   if (faqDatabase) {
     return faqDatabase;
   }
 
   try {
-    // 直接使用內嵌的 Markdown 內容
-    const content = getFAQKnowledgeBaseContent();
+    const faqPath = getFAQKnowledgeBasePath();
     
-    if (!content || content.length === 0) {
-      console.error(`[FAQ Service] ❌ FAQ content is empty`);
+    if (!fs.existsSync(faqPath)) {
+      console.warn(`[FAQ Service] FAQ knowledge base file not found at: ${faqPath}`);
+      console.warn(`[FAQ Service] Current working directory: ${process.cwd()}`);
+      console.warn(`[FAQ Service] __dirname equivalent: ${__dirname || 'N/A'}`);
       return [];
     }
-    
-    // 解析 Markdown 內容為 FAQ 資料庫
+
+    const content = fs.readFileSync(faqPath, 'utf-8');
     faqDatabase = parseFAQFromMarkdown(content);
-    console.log(`[FAQ Service] ✅ Successfully loaded ${faqDatabase.length} FAQs from embedded content`);
+    console.log(`[FAQ Service] Successfully loaded ${faqDatabase.length} FAQs from ${faqPath}`);
     return faqDatabase;
   } catch (error) {
-    console.error('[FAQ Service] ❌ Failed to load FAQ database:', error);
+    console.error('[FAQ Service] Failed to load FAQ database:', error);
     if (error instanceof Error) {
-      console.error('[FAQ Service] Error message:', error.message);
-      console.error('[FAQ Service] Error stack:', error.stack);
+      console.error('[FAQ Service] Error details:', error.message, error.stack);
     }
     return [];
   }

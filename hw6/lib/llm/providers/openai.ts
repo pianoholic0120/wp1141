@@ -2,15 +2,22 @@ import OpenAI from 'openai';
 
 export class OpenAIProvider {
   private client: OpenAI;
+  private modelName: string;
 
   constructor() {
-    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not set');
+    }
+    this.client = new OpenAI({ apiKey });
+    // Use gpt-4o-mini as default (fast and cost-effective), or allow override via env
+    this.modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   }
 
   async chat(messages: { role: 'system' | 'user' | 'assistant'; content: string }[]) {
     try {
       const res = await this.client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: this.modelName,
         messages,
       });
       
@@ -42,6 +49,7 @@ export class OpenAIProvider {
       }
       
       console.error('[OpenAI Provider Error]', {
+        model: this.modelName,
         error: errorMessage,
         status: err?.status,
         hasApiKey: !!process.env.OPENAI_API_KEY,

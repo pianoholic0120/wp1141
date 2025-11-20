@@ -144,13 +144,13 @@ export default function ConversationDetailPage() {
                 onChange={(e) => handleUpdateStatus(e.target.value as any)}
                 disabled={updatingStatus}
                 className={`px-3 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-primary-500 outline-none transition-all flex items-center gap-2 ${
-                  conversation.status === 'active'
-                    ? 'bg-green-100 text-green-800'
-                    : conversation.status === 'resolved'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
+                conversation.status === 'active'
+                  ? 'bg-green-100 text-green-800'
+                  : conversation.status === 'resolved'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-800'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
+            >
                 <option value="active">進行中</option>
                 <option value="resolved">已結束</option>
                 <option value="archived">封存</option>
@@ -209,7 +209,7 @@ export default function ConversationDetailPage() {
                 <option value="asc">舊到新（最早的在上面）</option>
               </select>
             </div>
-            <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600">
               最後更新: {lastUpdate.toLocaleTimeString('zh-TW')}
             </div>
           </div>

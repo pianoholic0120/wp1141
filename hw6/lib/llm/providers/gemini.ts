@@ -55,14 +55,6 @@ export class GeminiProvider {
         throw new Error('LLM_QUOTA_EXCEEDED');
       }
       
-      // 檢測地理位置限制錯誤（Gemini 在某些地區不可用）
-      if (errorMessage.includes('location is not supported') || 
-          errorMessage.includes('User location is not supported') ||
-          (err?.status === 400 && errorMessage.includes('location'))) {
-        console.error('[Gemini Provider Error] Location not supported:', errorMessage);
-        throw new Error('LLM_LOCATION_NOT_SUPPORTED');
-      }
-      
       console.error('[Gemini Provider Error]', {
         model: this.modelName,
         error: errorMessage,

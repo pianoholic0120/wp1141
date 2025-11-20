@@ -171,18 +171,18 @@ export function isEventRelevantToArtist(event: any, artistName: string): boolean
         console.log('[Relevance Check] ✅ Match found in artists array (all words present):', { eventArtist, searchArtist: artistLower, words });
         return true;
       }
-      // 進一步檢查順序：確保單詞的順序大致正確
-      // 例如 "Eric Lu" 應該匹配 "Eric Lu" 或 "Lu, Eric" 但不應該匹配 "Lu Eric"（如果中間有其他詞）
-      const firstWordIndex = eventArtist.indexOf(words[0]);
-      const lastWordIndex = eventArtist.indexOf(words[words.length - 1]);
-      
-      // 如果第一個和最後一個單詞都找到，且最後一個在第一個之後，則認為匹配
-      if (firstWordIndex >= 0 && lastWordIndex >= firstWordIndex) {
-        // 檢查中間是否有太多其他字符（超過 10 個字符可能表示不相關）
-        const middleText = eventArtist.substring(firstWordIndex + words[0].length, lastWordIndex);
-        if (middleText.length <= 10) {
+        // 進一步檢查順序：確保單詞的順序大致正確
+        // 例如 "Eric Lu" 應該匹配 "Eric Lu" 或 "Lu, Eric" 但不應該匹配 "Lu Eric"（如果中間有其他詞）
+        const firstWordIndex = eventArtist.indexOf(words[0]);
+        const lastWordIndex = eventArtist.indexOf(words[words.length - 1]);
+        
+        // 如果第一個和最後一個單詞都找到，且最後一個在第一個之後，則認為匹配
+        if (firstWordIndex >= 0 && lastWordIndex >= firstWordIndex) {
+          // 檢查中間是否有太多其他字符（超過 10 個字符可能表示不相關）
+          const middleText = eventArtist.substring(firstWordIndex + words[0].length, lastWordIndex);
+          if (middleText.length <= 10) {
           console.log('[Relevance Check] ✅ Match found in artists array (words in order):', { eventArtist, searchArtist: artistLower });
-          return true;
+            return true;
         }
       }
     } else {

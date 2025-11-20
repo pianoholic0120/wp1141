@@ -672,125 +672,125 @@ async function handleAnswerEventQuestion(
     // 優先使用 data 中的 event
     let event = data.event;
   
-    // 如果沒有，從最近的對話消息中提取事件信息
-    if (!event && session.conversationId) {
-      const recentMessages = await MessageModel.find({
-        conversationId: session.conversationId,
-      })
-        .sort({ timestamp: -1 })
-        .limit(10) // 擴大範圍，確保能找到最近的事件
-        .lean();
-      
-      // 從最近的助手消息中查找事件 URL 或事件信息
-      // 優先查找包含事件列表的消息（通常是最新的搜索結果）
-      // 只查找第一條助手消息（最新的），避免找到舊的事件
-      for (const msg of recentMessages) {
-        if (msg.role === 'assistant' && msg.content) {
-          // 嘗試從消息中提取所有事件 URL
-          const urlMatches = Array.from(msg.content.matchAll(/https:\/\/www\.opentix\.life\/event\/(\d+)/g));
-          const eventIds: string[] = [];
-          for (const match of urlMatches) {
-            eventIds.push(match[1]);
+  // 如果沒有，從最近的對話消息中提取事件信息
+  if (!event && session.conversationId) {
+    const recentMessages = await MessageModel.find({
+      conversationId: session.conversationId,
+    })
+      .sort({ timestamp: -1 })
+      .limit(10) // 擴大範圍，確保能找到最近的事件
+      .lean();
+    
+    // 從最近的助手消息中查找事件 URL 或事件信息
+    // 優先查找包含事件列表的消息（通常是最新的搜索結果）
+    // 只查找第一條助手消息（最新的），避免找到舊的事件
+    for (const msg of recentMessages) {
+      if (msg.role === 'assistant' && msg.content) {
+        // 嘗試從消息中提取所有事件 URL
+        const urlMatches = Array.from(msg.content.matchAll(/https:\/\/www\.opentix\.life\/event\/(\d+)/g));
+        const eventIds: string[] = [];
+        for (const match of urlMatches) {
+          eventIds.push(match[1]);
+        }
+        
+        // 如果找到事件 URL，優先使用第一個（通常是最相關的）
+        if (eventIds.length > 0) {
+          const eventId = eventIds[0]; // 使用第一個事件 ID
+          // 從資料庫中查找該事件
+          const { EventModel } = await import('@/models/Event');
+          const foundEvent = await EventModel.findOne({ 
+            $or: [
+              { opentixId: eventId },
+              { opentixUrl: { $regex: eventId } },
+              { url: { $regex: eventId } }
+            ]
+          }).lean();
+          if (foundEvent) {
+            event = foundEvent;
+            console.log('[Event Question] Found event from recent message:', foundEvent.title, 'URL:', foundEvent.opentixUrl || foundEvent.url);
+            break; // 找到第一個匹配的事件就停止
           }
-          
-          // 如果找到事件 URL，優先使用第一個（通常是最相關的）
-          if (eventIds.length > 0) {
-            const eventId = eventIds[0]; // 使用第一個事件 ID
+        }
+        
+        // 如果沒有找到 URL，嘗試從消息中提取事件標題
+        // 通常助手消息的格式是：1. 事件標題\n   場館: ...\n   購票: ...
+        if (!event) {
+          const titleMatch = msg.content.match(/^\d+\.\s*([^\n]+)/m);
+          if (titleMatch) {
+            const eventTitle = titleMatch[1].trim();
             // 從資料庫中查找該事件
             const { EventModel } = await import('@/models/Event');
             const foundEvent = await EventModel.findOne({ 
-              $or: [
-                { opentixId: eventId },
-                { opentixUrl: { $regex: eventId } },
-                { url: { $regex: eventId } }
-              ]
+              title: { $regex: eventTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
             }).lean();
             if (foundEvent) {
               event = foundEvent;
-              console.log('[Event Question] Found event from recent message:', foundEvent.title, 'URL:', foundEvent.opentixUrl || foundEvent.url);
-              break; // 找到第一個匹配的事件就停止
+              console.log('[Event Question] Found event from title:', foundEvent.title);
+              break;
             }
           }
-          
-          // 如果沒有找到 URL，嘗試從消息中提取事件標題
-          // 通常助手消息的格式是：1. 事件標題\n   場館: ...\n   購票: ...
-          if (!event) {
-            const titleMatch = msg.content.match(/^\d+\.\s*([^\n]+)/m);
-            if (titleMatch) {
-              const eventTitle = titleMatch[1].trim();
-              // 從資料庫中查找該事件
-              const { EventModel } = await import('@/models/Event');
-              const foundEvent = await EventModel.findOne({ 
-                title: { $regex: eventTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
-              }).lean();
-              if (foundEvent) {
-                event = foundEvent;
-                console.log('[Event Question] Found event from title:', foundEvent.title);
-                break;
-              }
-            }
-          }
-          
-          // 如果找到事件，就停止搜索（只使用最新的助手消息）
-          if (event) {
-            break;
-          }
+        }
+        
+        // 如果找到事件，就停止搜索（只使用最新的助手消息）
+        if (event) {
+          break;
         }
       }
     }
-    
-    // 如果還是沒有，從 session context 獲取（優先使用第一個）
-    if (!event && session.userId) {
-      event = await sessionManager.getContextEvent(session.userId);
-      console.log('[Event Question] Got event from session context:', event?.title);
-    }
-    if (!event && session.context) {
-      event = session.context.selectedEvent || session.context.lastSearchResults?.[0];
-      console.log('[Event Question] Got event from session.context:', event?.title);
-    }
-    
-    if (!event) {
-      console.log('[Event Question] No event found, userId:', session.userId);
-      return {
-        reply: userLocale === 'zh-TW'
-          ? '很抱歉，我無法找到相關的演出資訊。請重新搜尋。'
-          : 'Sorry, I cannot find the related event information. Please search again.',
-        quickReply: buildQuickReplies(userLocale),
-      };
-    }
-    
-    console.log('[Event Question] Using event:', event.title);
-    
-    // 格式化事件資訊
-    const formattedEvent = formatEventForDisplay(event, { keepFullDescription: false });
-    
-    // 根據問題類型生成回應
-    const questionType = data.questionType || data.intent;
-    let answer = '';
+  }
   
-    if (questionType === 'ask_time' || questionType === 'ASK_TIME') {
-      // 由於 Opentix 平台的資料安全機制，無法直接顯示即時的場次時間和剩餘票數
-      // 統一返回資料安全說明，引導使用者前往購票頁面查看
-      const ticketUrl = formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/';
-        answer = userLocale === 'zh-TW'
-        ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的場次時間和剩餘票數。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${ticketUrl}`
-        : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time show times and remaining tickets. Please visit the ticket page to view the latest prices, show times, and remaining tickets: ${ticketUrl}`;
-    } else if (questionType === 'ask_price' || questionType === 'ASK_PRICE') {
+    // 如果還是沒有，從 session context 獲取（優先使用第一個）
+  if (!event && session.userId) {
+    event = await sessionManager.getContextEvent(session.userId);
+    console.log('[Event Question] Got event from session context:', event?.title);
+  }
+  if (!event && session.context) {
+    event = session.context.selectedEvent || session.context.lastSearchResults?.[0];
+    console.log('[Event Question] Got event from session.context:', event?.title);
+  }
+  
+  if (!event) {
+    console.log('[Event Question] No event found, userId:', session.userId);
+    return {
+      reply: userLocale === 'zh-TW'
+        ? '很抱歉，我無法找到相關的演出資訊。請重新搜尋。'
+        : 'Sorry, I cannot find the related event information. Please search again.',
+      quickReply: buildQuickReplies(userLocale),
+    };
+  }
+  
+  console.log('[Event Question] Using event:', event.title);
+  
+  // 格式化事件資訊
+  const formattedEvent = formatEventForDisplay(event, { keepFullDescription: false });
+  
+  // 根據問題類型生成回應
+  const questionType = data.questionType || data.intent;
+  let answer = '';
+  
+  if (questionType === 'ask_time' || questionType === 'ASK_TIME') {
+    // 由於 Opentix 平台的資料安全機制，無法直接顯示即時的場次時間和剩餘票數
+    // 統一返回資料安全說明，引導使用者前往購票頁面查看
+    const ticketUrl = formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/';
       answer = userLocale === 'zh-TW'
-        ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的票價資訊。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/'}`
-        : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time ticket pricing. Please visit the ticket page to view the latest prices, show times, and remaining tickets: ${formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/'}`;
-    } else if (questionType === 'ask_venue' || questionType === 'ASK_VENUE') {
-      const eventTitle = formattedEvent.title || event.title || 'This event';
-      const venue = formattedEvent.venue || event.venue || (userLocale === 'zh-TW' ? '資訊未提供' : 'Information not available');
-      answer = userLocale === 'zh-TW'
-        ? `「${eventTitle}」的演出地點：${venue}`
-        : `"${eventTitle}" venue: ${venue}`;
-      console.log('[Event Question] ASK_VENUE response:', { eventTitle, venue, userLocale, answer });
-    } else if (questionType === 'ask_artist' || questionType === 'ASK_ARTIST') {
-      const artists = formattedEvent.artists?.slice(0, 3).join(', ') || '資訊未提供';
-      answer = userLocale === 'zh-TW'
-        ? `「${formattedEvent.title}」的演出者：${artists}`
-        : `"${formattedEvent.title}" performers: ${artists}`;
+      ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的場次時間和剩餘票數。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${ticketUrl}`
+      : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time show times and remaining tickets. Please visit the ticket page to view the latest prices, show times, and remaining tickets: ${ticketUrl}`;
+  } else if (questionType === 'ask_price' || questionType === 'ASK_PRICE') {
+    answer = userLocale === 'zh-TW'
+      ? `很抱歉，由於 Opentix 平台的資料安全機制，我無法直接顯示即時的票價資訊。建議您前往購票頁面查看最新的票價、場次時間和剩餘票數：${formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/'}`
+      : `Sorry, due to Opentix platform's data security mechanism, I cannot directly display real-time ticket pricing. Please visit the ticket page to view the latest prices, show times, and remaining tickets: ${formattedEvent.url || formattedEvent.opentixUrl || 'https://www.opentix.life/'}`;
+  } else if (questionType === 'ask_venue' || questionType === 'ASK_VENUE') {
+    const eventTitle = formattedEvent.title || event.title || 'This event';
+    const venue = formattedEvent.venue || event.venue || (userLocale === 'zh-TW' ? '資訊未提供' : 'Information not available');
+    answer = userLocale === 'zh-TW'
+      ? `「${eventTitle}」的演出地點：${venue}`
+      : `"${eventTitle}" venue: ${venue}`;
+    console.log('[Event Question] ASK_VENUE response:', { eventTitle, venue, userLocale, answer });
+  } else if (questionType === 'ask_artist' || questionType === 'ASK_ARTIST') {
+    const artists = formattedEvent.artists?.slice(0, 3).join(', ') || '資訊未提供';
+    answer = userLocale === 'zh-TW'
+      ? `「${formattedEvent.title}」的演出者：${artists}`
+      : `"${formattedEvent.title}" performers: ${artists}`;
     } else if (!questionType || questionType === 'FOLLOW_UP_QUESTION' || questionType === 'GENERAL') {
       // **改進：如果用户只是输入事件名称（没有明确的问题类型），显示事件详情**
       // 检查消息是否主要包含事件名称（而不是其他问题）
@@ -841,7 +841,7 @@ async function handleAnswerEventQuestion(
           quickReply: buildQuickReplies(userLocale),
         };
       }
-    } else {
+  } else {
     // 檢查是否是 FAQ 問題（優先處理 FAQ，即使有事件上下文）
     // 如果問題明顯是關於 OPENTIX 平台（如會員、購票、退票等），優先使用 FAQ
     const { searchFAQ, isFAQQuery } = await import('@/services/opentix-faq.service');
@@ -1097,7 +1097,7 @@ async function handleShowFAQ(
         faqResults: faqResults,
       });
       
-      return {
+  return {
         reply: cleanMarkdown(answer),
         quickReply: buildPurchaseFAQQuickReply(userLocale),
       };
@@ -1107,8 +1107,8 @@ async function handleShowFAQ(
         reply: isZh
           ? '很抱歉，目前無法找到相關的常見問題。建議您可以：\n1. 嘗試使用不同的關鍵字搜尋\n2. 前往 OPENTIX 官網查看：https://www.opentix.life/\n3. 聯繫客服中心：(02)3393-9888'
           : 'Sorry, I couldn\'t find relevant FAQs. You can:\n1. Try different keywords\n2. Visit OPENTIX website: https://www.opentix.life/\n3. Contact customer service: (02)3393-9888',
-        quickReply: buildQuickReplies(userLocale),
-      };
+    quickReply: buildQuickReplies(userLocale),
+  };
     }
   } catch (error) {
     console.error('[FAQ] Error:', error);

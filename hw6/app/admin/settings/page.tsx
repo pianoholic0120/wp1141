@@ -75,10 +75,10 @@ export default function SettingsPage() {
         </div>
       ) : config ? (
         <>
-          <div className="card mb-6">
+      <div className="card mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">系統配置狀態</h3>
             <div className="space-y-4">
-              <div>
+          <div>
                 <h4 className="text-sm font-semibold text-gray-800 mb-3">LLM 設定</h4>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
@@ -97,8 +97,8 @@ export default function SettingsPage() {
                       {config.hasGoogleApiKey ? '✓ 已設定' : '✗ 未設定'}
                     </span>
                   </div>
-                </div>
-              </div>
+            </div>
+          </div>
               
               <div className="border-t border-gray-200 pt-4">
                 <h4 className="text-sm font-semibold text-gray-800 mb-3">資料庫狀態</h4>
@@ -117,8 +117,8 @@ export default function SettingsPage() {
                       <span className="text-sm font-medium text-gray-900">{config.dbName}</span>
                     </div>
                   )}
-                </div>
-              </div>
+            </div>
+          </div>
 
               <div className="border-t border-gray-200 pt-4">
                 <h4 className="text-sm font-semibold text-gray-800 mb-3">LINE Bot 設定</h4>
@@ -135,12 +135,12 @@ export default function SettingsPage() {
                       {config.hasLineChannelSecret ? '✓ 已設定' : '✗ 未設定'}
                     </span>
                   </div>
-                </div>
-              </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="card mb-6">
+      <div className="card mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">環境變數說明</h3>
             <div className="space-y-4 text-sm text-gray-600">
               <div>
@@ -162,37 +162,37 @@ export default function SettingsPage() {
                 <h4 className="font-semibold text-gray-800 mb-2">Database</h4>
                 <ul className="space-y-1 ml-4 list-disc">
                   <li>MONGODB_URI (MongoDB 連線字串)</li>
-                </ul>
+        </ul>
               </div>
             </div>
-          </div>
+      </div>
 
           <div className="card bg-blue-50 border-blue-200">
-            <div className="flex items-start">
-              <svg
+        <div className="flex items-start">
+          <svg
                 className="w-5 h-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <div>
+            />
+          </svg>
+          <div>
                 <h3 className="text-sm font-semibold text-blue-900 mb-2">配置說明</h3>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• 環境變數應儲存在 <code className="bg-blue-100 px-1 rounded text-xs">.env.local</code> 檔案中</li>
-                  <li>• 請勿將敏感資訊提交到版本控制系統</li>
+              <li>• 請勿將敏感資訊提交到版本控制系統</li>
                   <li>• 生產環境建議使用環境變數管理服務</li>
                   <li>• 修改環境變數後需要重新部署才能生效</li>
-                </ul>
-              </div>
-            </div>
+            </ul>
           </div>
+        </div>
+      </div>
         </>
       ) : (
         <div className="card">
