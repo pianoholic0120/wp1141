@@ -2,10 +2,12 @@
  * OPENTIX FAQ Knowledge Base Service
  * 提供 OPENTIX 常見問題的知識庫服務
  * 支持基於關鍵字和語義的 FAQ 檢索（RAG-ready）
+ * 
+ * 注意：為了在 Vercel 等無服務器環境中正常工作，
+ * FAQ 內容已內嵌到代碼中，而不是從文件讀取。
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import { OPENTIX_FAQ_MARKDOWN } from '@/lib/data/opentix-faq-content';
 
 export interface FAQ {
   id: string;
@@ -25,123 +27,47 @@ export interface FAQSearchResult {
 let faqDatabase: FAQ[] | null = null;
 
 /**
- * 獲取 FAQ 知識庫文件路徑
- * 在 Vercel 環境中，文件路徑可能不同，需要特別處理
+ * 獲取 FAQ 知識庫內容
+ * 
+ * 注意：現在使用內嵌的內容，不再從文件系統讀取。
+ * 這確保在 Vercel 等無服務器環境中也能正常工作。
  */
-function getFAQKnowledgeBasePath(): string {
-  // 在 Next.js 中，process.cwd() 通常指向專案根目錄
-  // 在 Vercel 環境中，可能是 /var/task 或其他路徑
-  const basePath = process.cwd();
-  
-  // 嘗試多種路徑（支持開發和生產環境，包括 Vercel）
-  const possiblePaths = [
-    // 標準路徑（本地開發和大多數部署環境）
-    path.join(basePath, 'OPENTIX-FAQ-Knowledge-Base.md'),
-    // 如果在 Next.js 構建後的 .next 目錄中運行
-    path.join(basePath, '..', 'OPENTIX-FAQ-Knowledge-Base.md'),
-    // Vercel 環境可能的路徑
-    path.join(basePath, '.next', 'server', 'OPENTIX-FAQ-Knowledge-Base.md'),
-    // 嘗試從項目根目錄（在 Vercel 中可能是 /var/task）
-    '/var/task/OPENTIX-FAQ-Knowledge-Base.md',
-    // 嘗試相對路徑（從當前文件所在位置）
-    path.join(__dirname || basePath, '..', '..', 'OPENTIX-FAQ-Knowledge-Base.md'),
-    path.join(__dirname || basePath, '..', 'OPENTIX-FAQ-Knowledge-Base.md'),
-  ];
-
-  // 在 Vercel 中，可能需要使用 require.resolve 來找到文件
-  try {
-    // 嘗試使用 require.resolve 來解析文件路徑（更可靠）
-    const resolvedPath = require.resolve('./OPENTIX-FAQ-Knowledge-Base.md', {
-      paths: [basePath, path.join(basePath, '..')]
-    });
-    if (fs.existsSync(resolvedPath)) {
-      console.log(`[FAQ Service] Found FAQ file via require.resolve at: ${resolvedPath}`);
-      return resolvedPath;
-    }
-  } catch (e) {
-    // require.resolve 失敗，繼續嘗試其他路徑
-  }
-
-  for (const possiblePath of possiblePaths) {
-    if (fs.existsSync(possiblePath)) {
-      console.log(`[FAQ Service] Found FAQ file at: ${possiblePath}`);
-      return possiblePath;
-    }
-  }
-
-  // 返回默認路徑（即使不存在，讓調用者處理錯誤）
-  const defaultPath = path.join(basePath, 'OPENTIX-FAQ-Knowledge-Base.md');
-  console.warn(`[FAQ Service] FAQ file not found. Searched paths:`, possiblePaths);
-  console.warn(`[FAQ Service] Current working directory: ${basePath}`);
-  return defaultPath;
+function getFAQKnowledgeBaseContent(): string {
+  // 直接返回內嵌的 Markdown 內容
+  // 這樣可以避免文件系統訪問問題，特別是在 Vercel 環境中
+  return OPENTIX_FAQ_MARKDOWN;
 }
 
 /**
- * 初始化 FAQ 資料庫（從 Markdown 文件解析）
+ * 初始化 FAQ 資料庫（從內嵌的 Markdown 內容解析）
+ * 
+ * 現在使用內嵌的內容，不再從文件系統讀取。
+ * 這確保在 Vercel 等無服務器環境中也能正常工作。
  */
 export async function initializeFAQDatabase(): Promise<FAQ[]> {
+  // 如果已經初始化，直接返回緩存的資料庫
   if (faqDatabase) {
     return faqDatabase;
   }
 
   try {
-    const faqPath = getFAQKnowledgeBasePath();
+    // 直接使用內嵌的 Markdown 內容
+    const content = getFAQKnowledgeBaseContent();
     
-    // 詳細日誌用於調試 Vercel 部署問題
-    console.log(`[FAQ Service] Attempting to load FAQ file from: ${faqPath}`);
-    console.log(`[FAQ Service] Current working directory: ${process.cwd()}`);
-    console.log(`[FAQ Service] NODE_ENV: ${process.env.NODE_ENV}`);
-    console.log(`[FAQ Service] VERCEL: ${process.env.VERCEL || 'false'}`);
-    
-    if (!fs.existsSync(faqPath)) {
-      console.error(`[FAQ Service] ❌ FAQ knowledge base file not found at: ${faqPath}`);
-      console.error(`[FAQ Service] File system check failed. This may indicate a deployment issue.`);
-      console.error(`[FAQ Service] Please ensure OPENTIX-FAQ-Knowledge-Base.md is included in the deployment.`);
-      
-      // 在 Vercel 環境中，嘗試使用絕對路徑或環境變量指定的路徑
-      if (process.env.VERCEL) {
-        // Vercel 環境的特殊處理
-        const vercelPaths = [
-          '/var/task/OPENTIX-FAQ-Knowledge-Base.md',
-          path.join(process.cwd(), 'OPENTIX-FAQ-Knowledge-Base.md'),
-          path.join(process.cwd(), '.next', 'server', 'OPENTIX-FAQ-Knowledge-Base.md'),
-        ];
-        
-        for (const vercelPath of vercelPaths) {
-          if (fs.existsSync(vercelPath)) {
-            console.log(`[FAQ Service] ✅ Found FAQ file in Vercel environment at: ${vercelPath}`);
-            const content = fs.readFileSync(vercelPath, 'utf-8');
-            faqDatabase = parseFAQFromMarkdown(content);
-            console.log(`[FAQ Service] Successfully loaded ${faqDatabase.length} FAQs from ${vercelPath}`);
-            return faqDatabase;
-          }
-        }
-      }
-      
-      return [];
-    }
-
-    const content = fs.readFileSync(faqPath, 'utf-8');
     if (!content || content.length === 0) {
-      console.error(`[FAQ Service] ❌ FAQ file is empty at: ${faqPath}`);
+      console.error(`[FAQ Service] ❌ FAQ content is empty`);
       return [];
     }
     
+    // 解析 Markdown 內容為 FAQ 資料庫
     faqDatabase = parseFAQFromMarkdown(content);
-    console.log(`[FAQ Service] ✅ Successfully loaded ${faqDatabase.length} FAQs from ${faqPath}`);
+    console.log(`[FAQ Service] ✅ Successfully loaded ${faqDatabase.length} FAQs from embedded content`);
     return faqDatabase;
   } catch (error) {
     console.error('[FAQ Service] ❌ Failed to load FAQ database:', error);
     if (error instanceof Error) {
       console.error('[FAQ Service] Error message:', error.message);
       console.error('[FAQ Service] Error stack:', error.stack);
-      
-      // 額外的錯誤信息用於調試
-      if (error.message.includes('ENOENT')) {
-        console.error('[FAQ Service] File not found error. Check if OPENTIX-FAQ-Knowledge-Base.md is in the repository and deployed.');
-      } else if (error.message.includes('EACCES')) {
-        console.error('[FAQ Service] Permission denied error. Check file permissions.');
-      }
     }
     return [];
   }
