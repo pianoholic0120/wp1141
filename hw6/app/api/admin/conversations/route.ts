@@ -6,6 +6,9 @@ import { ConversationsQuerySchema } from '@/lib/validators/admin';
 import { ConversationsListResponseSchema } from '@/lib/validators/response';
 import { logger } from '@/lib/utils/logger';
 
+// 明确指定使用 Node.js runtime（需要 MongoDB 连接）
+export const runtime = 'nodejs';
+export const preferredRegion = 'sfo1';
 export async function GET(req: Request) {
   await connectMongo();
   

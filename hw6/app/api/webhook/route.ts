@@ -18,6 +18,11 @@ import { Locale } from '@/lib/i18n';
 import { LineWebhookRequestSchema, LineEventSchema } from '@/lib/validators/line';
 import { z } from 'zod';
 
+// 明确指定使用 Node.js runtime（而不是 edge runtime）
+// 这是必需的，因为我们需要使用 Node.js API（如 LLM API 调用、文件系统等）
+export const runtime = 'nodejs';
+
+export const preferredRegion = 'sfo1';
 export async function POST(req: Request) {
   try {
     const signature = req.headers.get('x-line-signature');
@@ -271,7 +276,7 @@ async function handleEvent(event: z.infer<typeof LineEventSchema>) {
         const { textMessageWithQuickReply } = await import('@/lib/line/templates');
         let sectionQuickReply;
         
-        if (section === 'popularEvents' || section === 'thisWeek') {
+        if (section === 'popularEvents') {
           // 熱門演出/本週演唱會：提供搜尋、其他演出選項
           const { buildPopularEventsQuickReply } = await import('@/lib/line/templates');
           sectionQuickReply = buildPopularEventsQuickReply(currentLocale);

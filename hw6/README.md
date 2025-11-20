@@ -54,19 +54,19 @@ Before setting up the project, ensure you have the following:
 
 1. **Clone the repository**:
 
-   ```bash
+     ```bash
    git clone <your-repository-url>
    cd hw6
-   ```
+     ```
 2. **Install dependencies**:
 
-   ```bash
-   npm install
+     ```bash
+     npm install
    # or
    pnpm install
    # or
-   yarn install
-   ```
+     yarn install
+     ```
 3. **Create environment file**:
    Create a `.env.local` file in the project root with the following variables:
 

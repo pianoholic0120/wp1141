@@ -6,6 +6,9 @@ import mongoose from 'mongoose';
 import { z } from 'zod';
 import { logger } from '@/lib/utils/logger';
 
+// 明确指定使用 Node.js runtime（需要 MongoDB 连接）
+export const runtime = 'nodejs';
+export const preferredRegion = 'sfo1';
 const BatchDeleteSchema = z.object({
   ids: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid MongoDB ObjectId format')).min(1),
 });

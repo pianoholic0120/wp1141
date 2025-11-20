@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { connectMongo } from '@/lib/db/mongodb';
 import mongoose from 'mongoose';
 
+// 明确指定使用 Node.js runtime（而不是 edge runtime）
+// 这是必需的，因为我们需要使用 Node.js API（如 MongoDB 连接等）
+export const runtime = 'nodejs';
+export const preferredRegion = 'sfo1';
 export async function GET() {
   try {
     // 檢查 MongoDB 連接狀態

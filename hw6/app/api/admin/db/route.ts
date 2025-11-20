@@ -3,6 +3,9 @@ import { connectMongo } from '@/lib/db/mongodb';
 import mongoose from 'mongoose';
 import { DatabaseStatusResponseSchema } from '@/lib/validators/response';
 
+// 明确指定使用 Node.js runtime（需要 MongoDB 连接）
+export const runtime = 'nodejs';
+export const preferredRegion = 'sfo1';
 export async function GET() {
   try {
     await connectMongo();
