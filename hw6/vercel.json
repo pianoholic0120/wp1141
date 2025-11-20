@@ -1,11 +1,10 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "regions": ["iad1"],
+  "regions": ["sfo1"],
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 60,
-      "regions": ["iad1", "sfo1", "cle1"]
+      "maxDuration": 60
     }
   }
 }
