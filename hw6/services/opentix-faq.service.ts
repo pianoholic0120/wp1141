@@ -27,22 +27,27 @@ let faqDatabase: FAQ[] | null = null;
 /**
  * 獲取 FAQ 知識庫文件路徑
  * 文件位於 public/ 目錄中，使用 process.cwd() 指向專案根目錄來讀取
+ * 使用防呆機制：嘗試多個可能的路徑，並提供詳細的調試信息
  */
 function getFAQKnowledgeBasePath(): string {
-  // 在 Next.js 中，process.cwd() 通常指向專案根目錄
-  // 文件位於 public/ 目錄中
+  // 在 Next.js/Vercel 中，process.cwd() 通常是 /var/task/hw6 或專案根目錄
   const basePath = process.cwd();
   
   // 構建所有可能的路徑（支持開發和生產環境）
   const possiblePaths = [
-    // 1. 專案根目錄下的 public/ 目錄（主要路徑）
+    // 1. 專案根目錄下的 public/ 目錄（主要路徑，Vercel 部署後通常在這裡）
     path.join(basePath, 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
-    // 2. 如果在 Next.js 構建後的 .next 目錄中運行（從 .next/server 向上查找）
+    // 2. 如果直接在根目錄（備案）
+    path.join(basePath, 'OPENTIX-FAQ-Knowledge-Base.md'),
+    // 3. 如果在 Next.js 構建後的 .next 目錄中運行（從 .next/server 向上查找）
     path.join(basePath, '..', 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
     path.join(basePath, '..', '..', 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
-    // 3. Vercel 部署環境可能的路徑
+    // 4. Vercel 部署環境的絕對路徑（備案）
     path.join('/var/task', 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
     path.join('/var/task', 'hw6', 'public', 'OPENTIX-FAQ-Knowledge-Base.md'),
+    // 5. 如果 Vercel 將 public 複製到根目錄
+    path.join('/var/task', 'OPENTIX-FAQ-Knowledge-Base.md'),
+    path.join('/var/task', 'hw6', 'OPENTIX-FAQ-Knowledge-Base.md'),
   ];
 
   console.log(`[FAQ Service] Searching for FAQ file. CWD: ${basePath}`);
@@ -61,17 +66,36 @@ function getFAQKnowledgeBasePath(): string {
     }
   }
 
-  // 如果所有路徑都失敗，記錄詳細信息
-  console.warn(`[FAQ Service] ❌ FAQ file not found in any of these paths:`);
+  // 如果所有路徑都失敗，記錄詳細信息（防呆機制）
+  console.error(`[FAQ Service] ❌ FAQ file not found in any of these paths:`);
   possiblePaths.forEach((p, i) => {
     try {
       const normalizedPath = path.resolve(p);
-      console.warn(`  ${i + 1}. ${normalizedPath}`);
+      console.error(`  ${i + 1}. ${normalizedPath}`);
     } catch {
-      console.warn(`  ${i + 1}. ${p} (invalid path)`);
+      console.error(`  ${i + 1}. ${p} (invalid path)`);
     }
   });
-  console.warn(`[FAQ Service] Current working directory: ${basePath}`);
+  console.error(`[FAQ Service] Current working directory: ${basePath}`);
+  
+  // 列出當前目錄的內容，幫助調試
+  try {
+    console.error(`[FAQ Service] [Debug] Files in CWD:`, fs.readdirSync(basePath));
+  } catch (e) {
+    console.error(`[FAQ Service] [Debug] Cannot read CWD directory.`);
+  }
+  
+  // 嘗試列出 public 目錄的內容
+  try {
+    const publicPath = path.join(basePath, 'public');
+    if (fs.existsSync(publicPath)) {
+      console.error(`[FAQ Service] [Debug] Files in public/:`, fs.readdirSync(publicPath));
+    } else {
+      console.error(`[FAQ Service] [Debug] public/ folder not found in CWD.`);
+    }
+  } catch (e) {
+    console.error(`[FAQ Service] [Debug] Cannot read public directory.`);
+  }
   
   // 返回第一個可能的路徑（即使不存在，讓調用者處理錯誤）
   const defaultPath = path.resolve(path.join(basePath, 'public', 'OPENTIX-FAQ-Knowledge-Base.md'));

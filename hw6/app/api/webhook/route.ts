@@ -415,25 +415,9 @@ async function handleEvent(event: z.infer<typeof LineEventSchema>) {
       return;
     }
 
-    // 注意：LINE 不支援 Typing Indicator
-    // 改用立即發送「正在處理中...」訊息來改善 UX（使用 Push Message，因為 replyToken 只能使用一次）
-    // 這在企業級應用中是常見的做法
-    // 注意：這個消息是可選的，如果失敗（如 429 錯誤）不應該阻止主要消息的發送
-    const processingMsg = locale === 'zh-TW' 
-      ? '正在為您搜尋相關資訊，請稍候...'
-      : 'Searching for information, please wait...';
-    try {
-      await lineClient.pushMessage(userId, [textMessage(processingMsg)]);
-    } catch (pushErr) {
-      // 靜默處理 pushMessage 錯誤（429、503 等），因為這只是可選的 UX 改進
-      // 主要消息（replyMessage）仍然可以正常發送
-      const errorMessage = pushErr instanceof Error ? pushErr.message : String(pushErr);
-      if (errorMessage === 'LINE_API_RATE_LIMIT' || errorMessage === 'LINE_API_SERVICE_UNAVAILABLE') {
-        logger.warn(`[Webhook] Push message failed (${errorMessage}), but continuing with main reply`);
-      } else {
-        logger.warn('[Webhook] Push message failed, but continuing with main reply:', pushErr);
-      }
-    }
+    // 注意：不應該使用 pushMessage（會消耗 Push Message 額度，免費版每個月只有 200 則）
+    // 應該只使用 replyMessage（完全免費且無上限）
+    // 移除了 "正在處理中..." 的 pushMessage，直接處理主要消息
 
     try {
       // 使用新的狀態機架構處理訊息
