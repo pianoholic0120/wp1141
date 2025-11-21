@@ -1232,7 +1232,7 @@ export async function handleUserMessageWithStateMachine(params: {
     
     // 檢查取消收藏命令（支持全角和半角冒號，大小寫不敏感）
     // 使用大小寫不敏感的匹配，確保 "Remove:1" 和 "remove:1" 都能識別
-    const normalizedMessage = params.message.trim();
+    // 使用前面已經定義的 normalizedMessage
     const removeFavoritePattern = /^(取消收藏[:：]|remove[:：]|unfavorite[:：])/i;
     if (removeFavoritePattern.test(normalizedMessage)) {
       return await handleRemoveFavorite(params.message, params.userId, userLocale);
