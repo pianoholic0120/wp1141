@@ -1119,7 +1119,10 @@ async function handleShowFAQ(
         faqResults: faqResults,
       });
       
-  return {
+      // 导入 buildPurchaseFAQQuickReply
+      const { buildPurchaseFAQQuickReply } = await import('@/lib/line/templates');
+      
+      return {
         reply: cleanMarkdown(answer),
         quickReply: buildPurchaseFAQQuickReply(userLocale),
       };
@@ -1221,14 +1224,17 @@ export async function handleUserMessageWithStateMachine(params: {
       }
     }
     
-    // 檢查是否匹配傳統命令格式
-    if (addFavoritePrefixes.some(prefix => params.message.startsWith(prefix))) {
+    // 檢查是否匹配傳統命令格式（大小寫不敏感）
+    const addFavoritePattern = /^(收藏[:：]|favorite[:：])/i;
+    if (addFavoritePattern.test(normalizedMessage)) {
       return await handleAddFavorite(params.message, params.userId, userLocale);
     }
     
-    // 檢查取消收藏命令（支持全角和半角冒號）
-    const removeFavoritePrefixes = ['取消收藏:', '取消收藏：', 'Remove:', 'Remove：', 'Unfavorite:', 'Unfavorite：'];
-    if (removeFavoritePrefixes.some(prefix => params.message.startsWith(prefix))) {
+    // 檢查取消收藏命令（支持全角和半角冒號，大小寫不敏感）
+    // 使用大小寫不敏感的匹配，確保 "Remove:1" 和 "remove:1" 都能識別
+    const normalizedMessage = params.message.trim();
+    const removeFavoritePattern = /^(取消收藏[:：]|remove[:：]|unfavorite[:：])/i;
+    if (removeFavoritePattern.test(normalizedMessage)) {
       return await handleRemoveFavorite(params.message, params.userId, userLocale);
     }
     
@@ -1326,9 +1332,10 @@ export async function handleUserMessageWithStateMachine(params: {
 async function handleAddFavorite(message: string, userId: string, userLocale: Locale) {
   const isZh = userLocale === 'zh-TW';
   
-  // 提取 eventId（支持中英文命令，支持全角和半角冒號）
+  // 提取 eventId（支持中英文命令，支持全角和半角冒號，大小寫不敏感）
   const eventId = message
-    .replace(/^收藏[:：]/, '')  // 移除中文前缀（全角和半角冒號）
+    .replace(/^收藏[:：]/i, '')  // 移除中文前缀（全角和半角冒號）
+    .replace(/^favorite[:：]/i, '')  // 移除英文前缀（全角和半角冒號，大小寫不敏感）
     .replace(/^Favorite[:：]/, '') // 移除英文前缀（全角和半角冒號）
     .trim();
   
@@ -1438,11 +1445,11 @@ async function handleAddFavorite(message: string, userId: string, userLocale: Lo
 async function handleRemoveFavorite(message: string, userId: string, userLocale: Locale) {
   const isZh = userLocale === 'zh-TW';
   
-  // 提取參數（可能是編號或 eventId，支持中英文命令，支持全角和半角冒號）
+  // 提取參數（可能是編號或 eventId，支持中英文命令，支持全角和半角冒號，大小寫不敏感）
   let param = message
-    .replace(/^取消收藏[:：]/, '')  // 移除中文前缀（全角和半角冒號）
-    .replace(/^Remove[:：]/, '')    // 移除英文前缀（全角和半角冒號）
-    .replace(/^Unfavorite[:：]/, '') // 移除英文前缀（全角和半角冒號）
+    .replace(/^取消收藏[:：]/i, '')  // 移除中文前缀（全角和半角冒號）
+    .replace(/^remove[:：]/i, '')    // 移除英文前缀（全角和半角冒號，大小寫不敏感）
+    .replace(/^unfavorite[:：]/i, '') // 移除英文前缀（全角和半角冒號，大小寫不敏感）
     .trim();
   
   if (!param) {

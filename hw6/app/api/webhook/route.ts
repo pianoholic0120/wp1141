@@ -222,8 +222,8 @@ async function handleEvent(event: z.infer<typeof LineEventSchema>) {
             }
             
             // 根據 FAQ 類型選擇對應的 Quick Reply
-            const { textMessageWithQuickReply } = await import('@/lib/line/templates');
-            const { buildPurchaseFAQQuickReply } = await import('@/lib/line/templates');
+            const templates = await import('@/lib/line/templates');
+            const { textMessageWithQuickReply, buildPurchaseFAQQuickReply } = templates;
             const faqQuickReply = buildPurchaseFAQQuickReply(locale);
             
             const faqMsg = textMessageWithQuickReply(answer, faqQuickReply);
