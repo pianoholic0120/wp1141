@@ -5,6 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 export interface Artist {
   name: string; // 主要名稱（中文或英文）
@@ -28,7 +29,10 @@ export interface KnowledgeBase {
 }
 
 let knowledgeBase: KnowledgeBase | null = null;
-const KNOWLEDGE_BASE_PATH = path.join(process.cwd(), 'data', 'knowledge-base.json');
+// ✅ 使用 /tmp 目錄（Vercel Serverless 環境唯一可寫入的目錄）
+// 注意：/tmp 的內容在 Function 執行完一段時間後會被清空，不能拿來存永久資料
+// 但對於該次請求的緩存加速，使用 /tmp 是沒問題的
+const KNOWLEDGE_BASE_PATH = path.join(os.tmpdir(), 'knowledge-base.json');
 
 /**
  * 初始化知識庫（從網站資料中提取）
@@ -56,8 +60,11 @@ export async function initializeKnowledgeBase(): Promise<KnowledgeBase> {
   // 從網站資料中提取
   knowledgeBase = await extractKnowledgeFromWebsite();
   
-  // 儲存快取
+  // 儲存快取到 /tmp 目錄（Vercel Serverless 環境唯一可寫入的目錄）
+  // 注意：/tmp 的內容在 Function 執行完一段時間後會被清空，但對於該次請求的緩存加速是沒問題的
   try {
+    // /tmp 目錄通常已存在，不需要創建
+    // 如果需要創建子目錄，確保使用 { recursive: true }
     const dir = path.dirname(KNOWLEDGE_BASE_PATH);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });

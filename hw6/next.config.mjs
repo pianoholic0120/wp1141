@@ -9,7 +9,10 @@ const nextConfig = {
       bodySizeLimit: '2mb'
     },
     outputFileTracingIncludes: {
-      '/api/**/*': ['./public/*.md'], 
+      '/api/**/*': [
+        './output_site/pages/**/*', 
+        './public/**/*'
+      ], 
     },
   },
   webpack: (config, { isServer }) => {
